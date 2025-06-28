@@ -1,0 +1,36 @@
+[
+  {
+    "id": "internal_delivery",
+    "name": "التوصيل الداخلي",
+    "description": "خدمات التوصيل والمشاوير داخل المدينة",
+    "icon": "🚚",
+    "color": "blue",
+    "price": "20 ريال",
+    "formType": "internal_delivery",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "external_trips",
+    "name": "الرحلات الخارجية",
+    "description": "رحلات للمدن الخارجية بحد أقصى 9 ساعات",
+    "icon": "🗺️",
+    "color": "green",
+    "pricing": {
+      "khamis_mushait": "250 ريال",
+      "abha": "300 ريال"
+    },
+    "maxDuration": "9 ساعات",
+    "formType": "external_trips",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "home_maintenance",
+    "name": "الصيانة المنزلية",
+    "description": "خدمات الصيانة والإصلاح المنزلي المتخصصة",
+    "icon": "🔧",
+    "color": "orange",
+    "price": "حسب نوع الخدمة",
+    "formType": "home_maintenance",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+] 

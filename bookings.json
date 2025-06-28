@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "serviceId": 8,
+    "serviceName": "خدمات دهانات",
+    "serviceCategory": "home_maintenance",
+    "fullName": "أحمد محمد الأحمد",
+    "phoneNumber": "0501234567",
+    "address": "الرياض، حي النرجس، شارع الأمير سعود بن عبدالله",
+    "serviceDetails": "أرغب في دهان غرفة المعيشة الرئيسية في منزلي بألوان هادئة ومريحة",
+    "customAnswers": {
+      "room_type": "صالة معيشة",
+      "room_size": "35",
+      "preferred_colors": ["بيج", "أبيض", "رمادي"],
+      "completion_date": "2024-01-15",
+      "special_requirements": "يفضل استخدام دهانات عديمة الرائحة حيث يوجد أطفال في المنزل، والعمل خلال النهار فقط"
+    },
+    "status": "pending",
+    "estimatedPrice": "750 ريال",
+    "createdAt": "2024-01-01T10:30:00Z",
+    "updatedAt": "2024-01-01T10:30:00Z"
+  }
+] 

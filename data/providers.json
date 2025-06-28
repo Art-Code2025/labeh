@@ -1,0 +1,77 @@
+[
+  {
+    "id": 1,
+    "name": "أحمد التوصيل السريع",
+    "category": "internal_delivery",
+    "phone": "+966501234567",
+    "whatsapp": "966501234567",
+    "services": ["توصيل صيدلية", "توصيل بقالة", "مشاوير سريعة"],
+    "rating": 4.8,
+    "available": true
+  },
+  {
+    "id": 2,
+    "name": "محمد الخدمات السريعة",
+    "category": "internal_delivery", 
+    "phone": "+966507654321",
+    "whatsapp": "966507654321",
+    "services": ["توصيل طعام", "مشاوير داخلية"],
+    "rating": 4.5,
+    "available": true
+  },
+  {
+    "id": 3,
+    "name": "سالم الرحلات الخارجية",
+    "category": "external_trips",
+    "phone": "+966502345678",
+    "whatsapp": "966502345678",
+    "services": ["رحلات خميس مشيط", "رحلات أبها", "رحلات المطار"],
+    "rating": 4.9,
+    "available": true,
+    "destinations": ["khamis_mushait", "abha", "airport"]
+  },
+  {
+    "id": 4,
+    "name": "عبدالله الرحلات المميزة",
+    "category": "external_trips",
+    "phone": "+966508765432",
+    "whatsapp": "966508765432", 
+    "services": ["رحلات صالونات", "رحلات طبية", "رحلات عائلية"],
+    "rating": 4.7,
+    "available": true,
+    "destinations": ["khamis_mushait", "abha"]
+  },
+  {
+    "id": 5,
+    "name": "فني خالد للسباكة",
+    "category": "home_maintenance",
+    "phone": "+966503456789",
+    "whatsapp": "966503456789",
+    "services": ["سباكة", "إصلاح تسريبات", "تركيب مواسير"],
+    "rating": 4.6,
+    "available": true,
+    "specialties": ["plumbing"]
+  },
+  {
+    "id": 6,
+    "name": "كهربائي ناصر",
+    "category": "home_maintenance",
+    "phone": "+966509876543",
+    "whatsapp": "966509876543",
+    "services": ["كهرباء", "إصلاح أعطال", "تركيب إضاءة"],
+    "rating": 4.8,
+    "available": true,
+    "specialties": ["electrical"]
+  },
+  {
+    "id": 7,
+    "name": "مقاول عبدالرحمن",
+    "category": "home_maintenance",
+    "phone": "+966504567890",
+    "whatsapp": "966504567890",
+    "services": ["دهانات", "ترميم", "صيانة عامة"],
+    "rating": 4.4,
+    "available": true,
+    "specialties": ["painting", "general_maintenance"]
+  }
+] 

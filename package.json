@@ -1,0 +1,65 @@
+{
+  "name": "ho-care-platform",
+  "version": "2.0.0",
+  "description": "Professional Home Services Platform - Modern, responsive web platform for home service bookings with clean design",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "concurrently \"node server.js\" \"cd frontend && npm run dev\"",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "install-all": "npm install && cd frontend && npm install",
+    "clean": "rm -rf node_modules frontend/node_modules frontend/dist",
+    "setup": "npm run install-all && npm run build",
+    "seed-firebase": "node seed-firebase.js"
+  },
+  "keywords": [
+    "home-services",
+    "booking-platform",
+    "react",
+    "typescript",
+    "tailwind",
+    "express",
+    "nodejs",
+    "professional-services",
+    "responsive-design",
+    "modern-ui",
+    "firebase",
+    "netlify",
+    "serverless"
+  ],
+  "author": "HO-CARE Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "firebase": "^11.9.1",
+    "multer": "^1.4.5-lts.1",
+    "path": "^0.12.7",
+    "recharts": "^3.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/ho-care-platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/ho-care-platform/issues"
+  },
+  "homepage": "https://github.com/your-username/ho-care-platform#readme",
+  "config": {
+    "ports": {
+      "backend": 3001,
+      "frontend": 5173,
+      "netlify": 8888
+    }
+  }
+}
