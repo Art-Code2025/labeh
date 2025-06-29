@@ -1,5 +1,5 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
@@ -15,22 +15,24 @@ const firebaseConfig = {
 // Initialize Firebase only if it hasn't been initialized
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firebase services
+// Initialize Firebase services with multi-tab persistence
+const initializeFirestore = async () => {
+  try {
+    await enableMultiTabIndexedDbPersistence(getFirestore(app));
+    console.log('Multi-tab persistence enabled successfully');
+  } catch (err) {
+    console.warn('Error enabling persistence:', err);
+    // Fall back to memory-only mode
+    return getFirestore(app);
+  }
+};
+
+// Initialize services
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const auth = getAuth(app);
 
-// Enable offline persistence
-enableIndexedDbPersistence(db)
-  .then(() => {
-    console.log('Offline persistence enabled');
-  })
-  .catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-    } else if (err.code === 'unimplemented') {
-      console.warn('The current browser does not support offline persistence');
-    }
-  });
+// Initialize persistence
+initializeFirestore().catch(console.error);
 
 export default app; 
