@@ -1,5 +1,5 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
@@ -15,20 +15,19 @@ const firebaseConfig = {
 // Initialize Firebase only if it hasn't been initialized
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore with specific settings
-const db = getFirestore(app);
+// Initialize Firebase services
+const db = getFirestore();
 const storage = getStorage(app);
 const auth = getAuth(app);
 
-// Configure Firestore
-const firestoreSettings = {
-  experimentalForceLongPolling: true, // This can help with CORS issues
-  useFetchStreams: false, // Disable streaming
-  merge: true // Enable document field merging
-};
-
-// @ts-ignore
-db.settings(firestoreSettings);
+// If in development, use emulators
+if (import.meta.env.DEV) {
+  try {
+    connectFirestoreEmulator(db, 'localhost', 8080);
+  } catch (error) {
+    console.warn('Failed to connect to Firestore emulator:', error);
+  }
+}
 
 export { db, storage, auth };
 export default app; 
