@@ -103,9 +103,11 @@ function Dashboard() {
   }, [activeTab]);
 
   const loadData = async (reset = false) => {
+    const start = Date.now();
     try {
       setLoading(true);
       setError(null);
+      console.log('[Dashboard] بدء تحميل البيانات...', { time: new Date().toISOString() });
       if(reset) {
         // Reset states
         setServices([]);
@@ -115,46 +117,65 @@ function Dashboard() {
         setLastVisible(null);
         setHasMore(true);
       }
-      
+      let logDetails = {};
       switch(activeTab) {
-        case 'services':
+        case 'services': {
           const serviceResponse = await servicesApi.getAll(null, 10);
           setServices(serviceResponse.services);
           setLastVisible(serviceResponse.lastVisible);
           setHasMore(serviceResponse.lastVisible !== null);
+          logDetails = { services: serviceResponse.services.length };
           break;
-        case 'categories':
+        }
+        case 'categories': {
           const categoryResponse = await categoriesApi.getAll();
           setCategories(categoryResponse);
+          logDetails = { categories: categoryResponse.length };
           break;
-        case 'providers':
-          // Assuming providersApi.getAll can be paginated in the future
+        }
+        case 'providers': {
           const providerResponse = await providersApi.getAll();
           setProviders(providerResponse);
+          logDetails = { providers: providerResponse.length };
           break;
-        case 'bookings':
-           const bookingResponse = await fetchBookings();
-           setBookings(bookingResponse);
-           lastBookingIdsRef.current = new Set(bookingResponse.map(booking => booking.id));
-           break;
-        case 'overview':
-            const [servicesData, categoriesData, providersData, bookingsData] = await Promise.all([
-                servicesApi.getAll(null, 5), // fetch only 5 for overview
-                categoriesApi.getAll(), // ok for now if categories are few
-                providersApi.getAll(),
-                fetchBookings()
-            ]);
-            setServices(servicesData.services);
-            setCategories(categoriesData);
-            setProviders(providersData);
-            setBookings(bookingsData);
-            break;
+        }
+        case 'bookings': {
+          const bookingResponse = await fetchBookings();
+          setBookings(bookingResponse);
+          lastBookingIdsRef.current = new Set(bookingResponse.map(booking => booking.id));
+          logDetails = { bookings: bookingResponse.length };
+          break;
+        }
+        case 'overview': {
+          const [servicesData, categoriesData, providersData, bookingsData] = await Promise.all([
+            servicesApi.getAll(null, 5),
+            categoriesApi.getAll(),
+            providersApi.getAll(),
+            fetchBookings()
+          ]);
+          setServices(servicesData.services);
+          setCategories(categoriesData);
+          setProviders(providersData);
+          setBookings(bookingsData);
+          logDetails = {
+            services: servicesData.services.length,
+            categories: categoriesData.length,
+            providers: providersData.length,
+            bookings: bookingsData.length
+          };
+          break;
+        }
       }
-      
       setLastBookingUpdate(new Date());
-    } catch (err) {
-      console.error('Error loading data:', err);
-      setError('فشل في تحميل البيانات');
+      console.log('[Dashboard] ✅ تم تحميل البيانات بنجاح', {
+        ...logDetails,
+        time: new Date().toISOString(),
+        durationMs: Date.now() - start
+      });
+    } catch (error: any) {
+      console.error('[Dashboard] ❌ خطأ أثناء تحميل البيانات:', error, { time: new Date().toISOString() });
+      setError(error.message || 'فشل في تحميل البيانات');
+      toast.error('فشل في تحميل البيانات');
     } finally {
       setLoading(false);
     }

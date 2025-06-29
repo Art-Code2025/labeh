@@ -111,33 +111,33 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      const start = Date.now();
       try {
         setLoading(true);
         setError(null);
-        
+        console.log('[Home] بدء تحميل البيانات...', { time: new Date().toISOString() });
         const [categoriesData, initialServicesData] = await Promise.all([
-          categoriesApi.getAll(),
-          servicesApi.getAll(null, 6)
+          categoriesApi.getAll().then(res => { console.log('[Home] الفئات المحملة:', res.length, res); return res; }),
+          servicesApi.getAll(null, 6).then(res => { console.log('[Home] الخدمات المحملة:', res.services.length, res); return res; })
         ]);
-        
         setCategories(categoriesData);
         setServices(initialServicesData.services.map(transformApiService));
         setLastVisible(initialServicesData.lastVisible);
         setHasMore(initialServicesData.lastVisible !== null);
-        
-        console.log('✅ Home data loaded:', { 
-          categories: categoriesData.length, 
-          services: initialServicesData.services.length 
+        console.log('[Home] ✅ تم تحميل البيانات بنجاح', {
+          categories: categoriesData.length,
+          services: initialServicesData.services.length,
+          time: new Date().toISOString(),
+          durationMs: Date.now() - start
         });
       } catch (error: any) {
-        console.error('❌ Error loading home data:', error);
+        console.error('[Home] ❌ خطأ أثناء تحميل البيانات:', error, { time: new Date().toISOString() });
         setError(error.message || 'فشل في تحميل البيانات');
         toast.error('فشل في تحميل البيانات');
       } finally {
         setLoading(false);
       }
     };
-
     loadData();
   }, []);
 
