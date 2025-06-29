@@ -1,5 +1,5 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 
@@ -21,28 +21,34 @@ export const storage = getStorage(app);
 export const auth = getAuth(app);
 
 // Enable offline persistence
-try {
-  const settings = {
-    cacheSizeBytes: 50000000, // 50 MB cache size
-    experimentalForceLongPolling: true,
-    useFetchStreams: false
-  };
-  
-  // @ts-ignore
-  db.settings(settings);
-  
-  console.log('Firestore settings applied successfully');
-} catch (error) {
-  console.error('Error applying Firestore settings:', error);
-}
-
-// Initialize anonymous authentication for public access
-signInAnonymously(auth)
+enableIndexedDbPersistence(db)
   .then(() => {
-    console.log('Anonymous auth successful');
+    console.log('Offline persistence enabled');
   })
-  .catch((error) => {
-    console.error('Anonymous auth failed:', error);
+  .catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+    } else if (err.code === 'unimplemented') {
+      console.warn('The current browser does not support offline persistence');
+    }
   });
+
+// Check if anonymous auth is already signed in
+auth.onAuthStateChanged((user) => {
+  if (!user) {
+    // Only sign in anonymously if no user is signed in
+    signInAnonymously(auth)
+      .then(() => {
+        console.log('Anonymous auth successful');
+      })
+      .catch((error) => {
+        if (error.code === 'auth/admin-restricted-operation') {
+          console.log('Anonymous auth is disabled, proceeding without authentication');
+        } else {
+          console.error('Anonymous auth failed:', error);
+        }
+      });
+  }
+});
 
 export default app; 
