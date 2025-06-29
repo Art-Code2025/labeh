@@ -1,7 +1,7 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { getAuth, signInAnonymously } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
@@ -32,23 +32,5 @@ enableIndexedDbPersistence(db)
       console.warn('The current browser does not support offline persistence');
     }
   });
-
-// Check if anonymous auth is already signed in
-auth.onAuthStateChanged((user) => {
-  if (!user) {
-    // Only sign in anonymously if no user is signed in
-    signInAnonymously(auth)
-      .then(() => {
-        console.log('Anonymous auth successful');
-      })
-      .catch((error) => {
-        if (error.code === 'auth/admin-restricted-operation') {
-          console.log('Anonymous auth is disabled, proceeding without authentication');
-        } else {
-          console.error('Anonymous auth failed:', error);
-        }
-      });
-  }
-});
 
 export default app; 
