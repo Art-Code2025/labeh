@@ -1,17 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "lbeh-81936.firebaseapp.com",
-  projectId: process.env.FIREBASE_PROJECT_ID || "lbeh-81936",
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "lbeh-81936.firebasestorage.app",
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "225834423678",
-  appId: process.env.FIREBASE_APP_ID || "1:225834423678:web:5955d5664e2a4793c40f2f"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from './config/firebase.config.js';
 
 export const handler = async (event, context) => {
   const headers = {
@@ -30,74 +18,28 @@ export const handler = async (event, context) => {
   }
 
   try {
-    const pathParts = event.path.split('/');
-    const serviceId = pathParts[pathParts.length - 1];
-    
-    if (serviceId && serviceId !== 'services') {
-      // Get single category as service
-      const categoriesRef = collection(db, 'categories');
-      const snapshot = await getDocs(categoriesRef);
-      
-      let category = null;
-      snapshot.forEach((doc) => {
-        if (doc.id === serviceId) {
-          category = { id: doc.id, ...doc.data() };
-        }
-      });
-
-      if (!category) {
-        return { statusCode: 404, headers, body: JSON.stringify({ error: 'Service not found' }) };
-      }
-
-      const service = {
-        id: category.id,
-        name: category.name,
-        category: category.id,
-        categoryName: category.name,
-        description: getDetailedDescription(category.id),
-        mainImage: getDefaultImage(category.id),
-        detailedImages: [getDefaultImage(category.id)],
-        features: getDefaultFeatures(category.id),
-        duration: getDefaultDuration(category.id),
-        availability: "متاح 24/7",
-        price: getDefaultPrice(category.id)
-      };
-
-      return { statusCode: 200, headers, body: JSON.stringify(service) };
-    }
-
-    // Get all categories as services
-    const categoriesRef = collection(db, 'categories');
-    const snapshot = await getDocs(categoriesRef);
+    const servicesRef = collection(db, 'services');
+    const snapshot = await getDocs(servicesRef);
     const services = [];
     
     snapshot.forEach((doc) => {
-      const category = doc.data();
       services.push({
         id: doc.id,
-        name: category.name,
-        category: doc.id,
-        categoryName: category.name,
-        homeShortDescription: category.description,
-        detailsShortDescription: category.description,
-        description: getDetailedDescription(doc.id),
-        mainImage: getDefaultImage(doc.id),
-        detailedImages: [getDefaultImage(doc.id)],
-        imageDetails: [category.description],
-        features: getDefaultFeatures(doc.id),
-        duration: getDefaultDuration(doc.id),
-        availability: "متاح 24/7",
-        price: getDefaultPrice(doc.id)
+        ...doc.data()
       });
     });
-
-    return { statusCode: 200, headers, body: JSON.stringify(services) };
+    
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(services)
+    };
   } catch (error) {
     console.error('Error:', error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Internal server error', details: error.message })
+      body: JSON.stringify({ error: 'Internal server error' })
     };
   }
 };

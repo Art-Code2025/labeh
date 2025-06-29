@@ -1,20 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '../firebase.config';
 import { toast } from 'react-toastify';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-  authDomain: "lbeh-81936.firebaseapp.com",
-  projectId: "lbeh-81936",
-  storageBucket: "lbeh-81936.firebasestorage.app",
-  messagingSenderId: "225834423678",
-  appId: "1:225834423678:web:5955d5664e2a4793c40f2f"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 interface Booking {
   id: string;
@@ -43,21 +30,18 @@ interface Booking {
 }
 
 interface UseRealTimeBookingsProps {
-  enabled: boolean;
-  soundEnabled: boolean;
   onNewBooking?: (booking: Booking) => void;
+  soundEnabled?: boolean;
 }
 
-export const useRealTimeBookings = ({ 
-  enabled, 
-  soundEnabled, 
-  onNewBooking 
-}: UseRealTimeBookingsProps) => {
+export const useRealTimeBookings = ({ onNewBooking, soundEnabled = false }: UseRealTimeBookingsProps = {}) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [lastCount, setLastCount] = useState(0);
   const [newBookingAlert, setNewBookingAlert] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout>();
 
   // Initialize audio
   useEffect(() => {
@@ -76,127 +60,63 @@ export const useRealTimeBookings = ({
     };
   }, []);
 
-  // Fetch bookings function using Firebase directly
-  const fetchBookings = async () => {
-    try {
-      // جلب الحجوزات من Firebase مباشرة
-      const bookingsRef = collection(db, 'bookings');
-      const q = query(bookingsRef, orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      
-      const data: Booking[] = [];
-      snapshot.forEach((doc) => {
-        data.push({
-          id: doc.id,
-          ...doc.data()
-        } as Booking);
-      });
-
-      // Check for new bookings
-      if (lastCount > 0 && data.length > lastCount) {
-        const newBookings = data.slice(0, data.length - lastCount);
-        handleNewBookings(newBookings);
-      }
-
-      setBookings(data);
-      setLastCount(data.length);
-      
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    }
-  };
-
   // Handle new bookings notifications
   const handleNewBookings = (newBookings: Booking[]) => {
-    newBookings.forEach((booking: Booking) => {
-      toast.success(
-        `🔔 طلب جديد: ${booking.serviceName} من ${booking.fullName}`,
-        {
-          position: "top-right",
-          autoClose: 8000,
-          className: 'rtl',
-          style: { direction: 'rtl' }
-        }
-      );
-      
-      if (onNewBooking) {
-        onNewBooking(booking);
-      }
-    });
-
-    // Play sound notification
-    if (soundEnabled) {
-      playNotificationSound();
-    }
-
-    // Show visual alert
     setNewBookingAlert(true);
-    setTimeout(() => setNewBookingAlert(false), 3000);
-  };
-
-  // Play notification sound
-  const playNotificationSound = () => {
-    try {
-      if (audioRef.current) {
-        audioRef.current.play().catch(() => {
-          // Fallback: create beep sound using Web Audio API
-          createBeepSound();
-        });
-      } else {
-        createBeepSound();
-      }
-    } catch (error) {
-      console.log('Could not play notification sound');
+    if (soundEnabled) {
+      // Play notification sound
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(console.error);
+    }
+    if (onNewBooking) {
+      newBookings.forEach(booking => onNewBooking(booking));
     }
   };
 
-  // Create beep sound using Web Audio API
-  const createBeepSound = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (error) {
-      console.log('Web Audio API not supported');
-    }
-  };
-
-  // Set up real-time polling
   useEffect(() => {
-    if (enabled) {
-      // Initial fetch
-      fetchBookings();
+    try {
+      const q = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
       
-      // Set up polling every 5 seconds
-      intervalRef.current = setInterval(fetchBookings, 5000);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const bookingsData: Booking[] = [];
+        snapshot.forEach((doc) => {
+          bookingsData.push({
+            id: doc.id,
+            ...doc.data()
+          } as Booking);
+        });
+        setBookings(bookingsData);
+        setLoading(false);
+        if (lastCount > 0 && bookingsData.length > lastCount) {
+          const newBookings = bookingsData.slice(0, bookingsData.length - lastCount);
+          handleNewBookings(newBookings);
+        }
+        setLastCount(bookingsData.length);
+      }, (err: Error) => {
+        console.error('Error fetching bookings:', err);
+        setError(err);
+        setLoading(false);
+      });
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      return () => unsubscribe();
+    } catch (err) {
+      console.error('Error setting up real-time listener:', err);
+      if (err instanceof Error) {
+        setError(err);
+      } else {
+        setError(new Error('An unknown error occurred'));
       }
-    };
-  }, [enabled, soundEnabled, lastCount]);
+      setLoading(false);
+    }
+  }, [lastCount, onNewBooking, soundEnabled]);
 
   return {
     bookings,
+    loading,
+    error,
     newBookingAlert,
-    refetch: fetchBookings
+    refetch: () => {
+      // Implementation of refetch function if needed
+    }
   };
 }; 

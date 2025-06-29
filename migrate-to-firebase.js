@@ -1,26 +1,11 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { db } from './netlify/functions/config/firebase.config.js';
 import fs from 'fs';
 import path from 'path';
-
-// Firebase configuration مع البيانات الحقيقية
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "lbeh-81936.firebaseapp.com",
-  projectId: process.env.FIREBASE_PROJECT_ID || "lbeh-81936",
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "lbeh-81936.firebasestorage.app",
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "225834423678",
-  appId: process.env.FIREBASE_APP_ID || "1:225834423678:web:5955d5664e2a4793c40f2f"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 async function migrateData() {
   try {
     console.log('🚀 بدء عملية نقل البيانات إلى Firebase...');
-    console.log('🔥 Project ID:', firebaseConfig.projectId);
 
     // قراءة بيانات الكاتيجوريز
     const categoriesPath = path.join(process.cwd(), 'data', 'categories.json');

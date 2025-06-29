@@ -32,6 +32,7 @@
   "author": "HO-CARE Team",
   "license": "MIT",
   "dependencies": {
+    "@types/firebase": "^2.4.32",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "firebase": "^11.9.1",

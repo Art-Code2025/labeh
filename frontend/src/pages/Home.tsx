@@ -31,18 +31,9 @@ import {
 } from 'lucide-react';
 import { db } from '../firebase.config';
 import { collection, getDocs, DocumentSnapshot } from 'firebase/firestore';
-import { categoriesApi, servicesApi } from '../services/servicesApi';
+import { categoriesApi, servicesApi, Category, Service as ApiService } from '../services/servicesApi';
 import { toast } from 'react-hot-toast';
 import BookingModal from '../components/BookingModal';
-
-interface Category {
-  id: string;
-  name: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-  createdAt?: string;
-}
 
 interface CustomQuestion {
   id: string;
@@ -90,26 +81,28 @@ const Home: React.FC = () => {
     }
   };
 
+  const transformApiService = (service: ApiService): Service => ({
+    id: service.id || '',
+    name: service.name || '',
+    category: service.category || '',
+    categoryName: service.categoryName || '',
+    homeShortDescription: service.homeShortDescription || '',
+    mainImage: service.mainImage,
+    price: service.price,
+    duration: service.duration,
+    description: service.homeShortDescription || '',
+    features: [],
+    detailedImages: [],
+    availability: '24/7',
+    customQuestions: service.customQuestions || []
+  });
+
   // Fetch services from Firebase/API  
   const fetchServices = async (): Promise<Service[]> => {
     try {
       const apiServices = await servicesApi.getAll();
       // Transform API services to match our local Service interface
-      return apiServices.map(service => ({
-        id: service.id || '',
-        name: service.name,
-        category: service.category || '',
-        categoryName: service.categoryName || '',
-        homeShortDescription: service.homeShortDescription || '',
-        mainImage: service.mainImage,
-        price: service.price,
-        duration: service.duration,
-        description: service.homeShortDescription || '',
-        features: [],
-        detailedImages: [],
-        availability: '24/7',
-        customQuestions: service.customQuestions || []
-      }));
+      return apiServices.services.map(transformApiService);
     } catch (error) {
       console.error('Error fetching services:', error);
       throw error;
@@ -124,11 +117,11 @@ const Home: React.FC = () => {
         
         const [categoriesData, initialServicesData] = await Promise.all([
           categoriesApi.getAll(),
-          servicesApi.getAll(null, 6) // Fetch initial 6 services
+          servicesApi.getAll(null, 6)
         ]);
         
         setCategories(categoriesData);
-        setServices(initialServicesData.services);
+        setServices(initialServicesData.services.map(transformApiService));
         setLastVisible(initialServicesData.lastVisible);
         setHasMore(initialServicesData.lastVisible !== null);
         
@@ -154,7 +147,7 @@ const Home: React.FC = () => {
     setLoadingMore(true);
     try {
       const { services: newServices, lastVisible: newLastVisible } = await servicesApi.getAll(lastVisible, 6);
-      setServices((prev: Service[]) => [...prev, ...newServices]);
+      setServices(prev => [...prev, ...newServices.map(transformApiService)]);
       setLastVisible(newLastVisible);
       setHasMore(newLastVisible !== null);
     } catch (error) {

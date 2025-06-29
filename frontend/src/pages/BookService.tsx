@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { collection, getDocs, DocumentData } from 'firebase/firestore';
+import { db } from '../firebase.config';
 
 // تعريف نوع الخدمة
 interface Service {
@@ -100,64 +102,29 @@ const BookService: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   useEffect(() => {
+    if (!id) return;
+    
     const fetchService = async () => {
-      if (!id) return;
-      
       try {
         setLoading(true);
-        
-        // جلب الخدمة من Firebase مباشرة
-        const { initializeApp } = await import('firebase/app');
-        const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-        
-        const firebaseConfig = {
-          apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-          authDomain: "lbeh-81936.firebaseapp.com",
-          projectId: "lbeh-81936",
-          storageBucket: "lbeh-81936.firebasestorage.app",
-          messagingSenderId: "225834423678",
-          appId: "1:225834423678:web:5955d5664e2a4793c40f2f"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        // البحث عن الخدمة
         const servicesRef = collection(db, 'services');
         const snapshot = await getDocs(servicesRef);
         
         let foundService: Service | null = null;
-        snapshot.forEach((doc) => {
+        snapshot.forEach((doc: DocumentData) => {
           if (doc.id === id) {
-            const s = doc.data();
-            foundService = {
-              id: doc.id,
-              name: s.name || '',
-              category: s.category || s.categoryId || '',
-              categoryName: s.categoryName || '',
-              description: s.description || s.homeShortDescription || '',
-              detailsShortDescription: s.detailsShortDescription || s.homeShortDescription || '',
-              mainImage: s.mainImage || getDefaultImage(s.category || ''),
-              price: s.price || s.pricing || getDefaultPrice(s.category || ''),
-              duration: s.duration || getDefaultDuration(s.category || ''),
-              detailedImages: s.detailedImages || [],
-              imageDetails: s.imageDetails || [],
-              features: s.features || [],
-              availability: s.availability || 'متاح 24/7',
-              homeShortDescription: s.homeShortDescription || '',
-              customQuestions: s.customQuestions || []
-            };
+            foundService = { id: doc.id, ...doc.data() } as Service;
           }
         });
 
         if (foundService) {
           setService(foundService);
         } else {
-          setError('الخدمة غير موجودة');
+          toast.error('الخدمة غير موجودة');
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error fetching service:', error);
-        setError('خطأ في جلب بيانات الخدمة');
+        toast.error('حدث خطأ أثناء تحميل الخدمة');
       } finally {
         setLoading(false);
       }

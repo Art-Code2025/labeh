@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { db } from '../firebase.config';
+import { collection, getDocs } from 'firebase/firestore';
 
 // تعريف نوع الخدمة
 interface Service {
@@ -145,21 +147,6 @@ function Services() {
 
   const fetchCategories = async () => {
     try {
-      const { initializeApp } = await import('firebase/app');
-      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-      
-      const firebaseConfig = {
-        apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-        authDomain: "lbeh-81936.firebaseapp.com",
-        projectId: "lbeh-81936",
-        storageBucket: "lbeh-81936.firebasestorage.app",
-        messagingSenderId: "225834423678",
-        appId: "1:225834423678:web:5955d5664e2a4793c40f2f"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      
       const categoriesRef = collection(db, 'categories');
       const categoriesSnapshot = await getDocs(categoriesRef);
       const categoriesData: Category[] = [];
@@ -184,43 +171,12 @@ function Services() {
 
   const fetchServices = async () => {
     try {
-      const { initializeApp } = await import('firebase/app');
-      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-      
-      const firebaseConfig = {
-        apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-        authDomain: "lbeh-81936.firebaseapp.com",
-        projectId: "lbeh-81936",
-        storageBucket: "lbeh-81936.firebasestorage.app",
-        messagingSenderId: "225834423678",
-        appId: "1:225834423678:web:5955d5664e2a4793c40f2f"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      
       const servicesRef = collection(db, 'services');
       const servicesSnapshot = await getDocs(servicesRef);
       const servicesData: Service[] = [];
       
       servicesSnapshot.forEach((doc) => {
-        const serviceData = doc.data();
-        servicesData.push({
-          id: doc.id,
-          name: serviceData.name || '',
-          category: serviceData.categoryId || serviceData.category || '',
-          categoryName: serviceData.categoryName || '',
-          homeShortDescription: serviceData.homeShortDescription || '',
-          detailsShortDescription: serviceData.detailsShortDescription || serviceData.homeShortDescription || '',
-          description: serviceData.description || serviceData.homeShortDescription || '',
-          mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
-          detailedImages: serviceData.detailedImages || [],
-          imageDetails: serviceData.imageDetails || [],
-          features: serviceData.features || getDefaultFeatures(serviceData.categoryId || serviceData.category || ''),
-          duration: serviceData.duration || getDefaultDuration(serviceData.categoryId || serviceData.category || ''),
-          availability: serviceData.availability || "متاح 24/7",
-          price: serviceData.price || serviceData.pricing || getDefaultPrice(serviceData.categoryId || serviceData.category || '')
-        });
+        servicesData.push({ id: doc.id, ...doc.data() } as Service);
       });
 
       setServices(servicesData);
@@ -232,6 +188,7 @@ function Services() {
       console.log('✅ Services loaded:', servicesData.length);
     } catch (error) {
       console.error('❌ Error fetching services:', error);
+      toast.error('حدث خطأ أثناء تحميل الخدمات');
     }
   };
 

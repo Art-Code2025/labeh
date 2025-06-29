@@ -1,18 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { db } from './netlify/functions/config/firebase.config.js';
 import fs from 'fs/promises';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-  authDomain: "lbeh-81936.firebaseapp.com",
-  projectId: "lbeh-81936",
-  storageBucket: "lbeh-81936.firebasestorage.app",
-  messagingSenderId: "225834423678",
-  appId: "1:225834423678:web:5955d5664e2a4793c40f2f"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 async function seedData() {
   try {

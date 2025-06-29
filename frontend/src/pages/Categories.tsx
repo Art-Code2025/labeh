@@ -1,8 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Search, Filter, Grid, List, Package, Truck, Wrench, MapPin, Settings } from 'lucide-react';
-import { categoriesApi, servicesApi, Category, Service } from '../services/servicesApi';
+import { categoriesApi, servicesApi, Category, Service as ApiService } from '../services/servicesApi';
 import { toast } from 'react-hot-toast';
+
+interface CustomQuestion {
+  id: string;
+  question: string;
+  type: 'text' | 'number' | 'select_single' | 'select_multiple' | 'date' | 'file';
+  required: boolean;
+  options?: string[];
+  placeholder?: string;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  category: string;
+  categoryName: string;
+  homeShortDescription: string;
+  mainImage?: string;
+  price?: string;
+  duration?: string;
+  description?: string;
+  features?: string[];
+  detailedImages?: string[];
+  availability?: string;
+  customQuestions?: CustomQuestion[];
+}
 
 const Categories: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -14,6 +39,22 @@ const Categories: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const transformApiService = (service: ApiService): Service => ({
+    id: service.id || '',
+    name: service.name || '',
+    category: service.category || '',
+    categoryName: service.categoryName || '',
+    homeShortDescription: service.homeShortDescription || '',
+    mainImage: service.mainImage,
+    price: service.price,
+    duration: service.duration,
+    description: service.homeShortDescription || '',
+    features: [],
+    detailedImages: [],
+    availability: '24/7',
+    customQuestions: service.customQuestions || []
+  });
 
   // Fetch data from API/Firebase
   useEffect(() => {
@@ -29,11 +70,11 @@ const Categories: React.FC = () => {
         ]);
         
         setCategories(categoriesData);
-        setServices(servicesData);
+        setServices(servicesData.services.map(transformApiService));
         
         console.log('✅ Categories data loaded:', { 
           categories: categoriesData.length, 
-          services: servicesData.length 
+          services: servicesData.services.length 
         });
       } catch (error: any) {
         console.error('❌ Error loading categories data:', error);

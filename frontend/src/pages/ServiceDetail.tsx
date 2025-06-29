@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, Star, Clock, MapPin, CheckCircle, Package, Truck, Wrench, User, Phone, Home, MessageSquare, Calendar, AlertCircle, X } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { db } from '../firebase.config';
 
 interface Service {
   id: string; // تغيير من number إلى string
@@ -65,27 +66,14 @@ export default function ServiceDetail() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-  const fetchService = async () => {
+    const fetchService = async () => {
       if (!id) return;
       
-    try {
-      setLoading(true);
+      try {
+        setLoading(true);
         
         // جلب الخدمة من Firebase مباشرة
-        const { initializeApp } = await import('firebase/app');
-        const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-        
-        const firebaseConfig = {
-          apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-          authDomain: "lbeh-81936.firebaseapp.com",
-          projectId: "lbeh-81936",
-          storageBucket: "lbeh-81936.firebasestorage.app",
-          messagingSenderId: "225834423678",
-          appId: "1:225834423678:web:5955d5664e2a4793c40f2f"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const { collection, getDocs } = await import('firebase/firestore');
         
         // البحث عن الخدمة بـ ID
         const servicesRef = collection(db, 'services');
@@ -120,10 +108,10 @@ export default function ServiceDetail() {
       } catch (error) {
         console.error('Error fetching service:', error);
         setError('فشل في تحميل الخدمة');
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchService();
   }, [id]);
@@ -228,20 +216,7 @@ export default function ServiceDetail() {
       };
 
       // إرسال البيانات إلى Firebase
-      const { initializeApp } = await import('firebase/app');
-      const { getFirestore, collection, addDoc } = await import('firebase/firestore');
-      
-      const firebaseConfig = {
-        apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-        authDomain: "lbeh-81936.firebaseapp.com",
-        projectId: "lbeh-81936",
-        storageBucket: "lbeh-81936.firebasestorage.app",
-        messagingSenderId: "225834423678",
-        appId: "1:225834423678:web:5955d5664e2a4793c40f2f"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
+      const { collection, addDoc } = await import('firebase/firestore');
       
       await addDoc(collection(db, 'bookings'), bookingData);
       

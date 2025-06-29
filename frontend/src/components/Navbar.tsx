@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Home, Users, Phone, LogIn, Package } from 'lucide-react';
+import { db } from '../firebase.config';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,20 +16,7 @@ const Navbar: React.FC = () => {
   const fetchServicesCount = async () => {
     try {
       // جلب الخدمات من Firebase مباشرة
-      const { initializeApp } = await import('firebase/app');
-      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-      
-      const firebaseConfig = {
-        apiKey: "AIzaSyCU3gkAwZGeyww7XjcODeEjl-kS9AcOyio",
-        authDomain: "lbeh-81936.firebaseapp.com",
-        projectId: "lbeh-81936",
-        storageBucket: "lbeh-81936.firebasestorage.app",
-        messagingSenderId: "225834423678",
-        appId: "1:225834423678:web:5955d5664e2a4793c40f2f"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
+      const { collection, getDocs } = await import('firebase/firestore');
       
       // جلب الفئات كخدمات
       const categoriesRef = collection(db, 'categories');
