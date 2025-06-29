@@ -1,5 +1,5 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
@@ -15,24 +15,20 @@ const firebaseConfig = {
 // Initialize Firebase only if it hasn't been initialized
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firebase services with multi-tab persistence
-const initializeFirestore = async () => {
-  try {
-    await enableMultiTabIndexedDbPersistence(getFirestore(app));
-    console.log('Multi-tab persistence enabled successfully');
-  } catch (err) {
-    console.warn('Error enabling persistence:', err);
-    // Fall back to memory-only mode
-    return getFirestore(app);
-  }
+// Initialize Firestore with specific settings
+const db = getFirestore(app);
+const storage = getStorage(app);
+const auth = getAuth(app);
+
+// Configure Firestore
+const firestoreSettings = {
+  experimentalForceLongPolling: true, // This can help with CORS issues
+  useFetchStreams: false, // Disable streaming
+  merge: true // Enable document field merging
 };
 
-// Initialize services
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-export const auth = getAuth(app);
+// @ts-ignore
+db.settings(firestoreSettings);
 
-// Initialize persistence
-initializeFirestore().catch(console.error);
-
+export { db, storage, auth };
 export default app; 
