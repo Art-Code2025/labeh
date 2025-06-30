@@ -34,7 +34,7 @@ import { DocumentSnapshot } from 'firebase/firestore';
 
 // Services
 import { servicesApi, categoriesApi, Service, Category } from './services/servicesApi';
-import { fetchBookings, Booking, updateBooking } from './services/bookingsApi';
+import { fetchBookings, Booking, updateBooking, bookingsAPI } from './services/bookingsApi';
 import { testCloudinaryConnection } from './services/cloudinary';
 import { providersApi, Provider } from './services/providersApi';
 
@@ -80,18 +80,6 @@ const customScrollbarStyles = `
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
   }
-
-  .animate-fade-in {
-    animation: fade-in 0.6s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.8s ease-out both;
-  }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
 `;
 
 // Inject styles
@@ -135,6 +123,14 @@ function Dashboard() {
   // Provider modal states
   const [showProviderModalForm, setShowProviderModalForm] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
+  
+  // Booking edit modal states - جديد
+  const [showBookingEditModal, setShowBookingEditModal] = useState(false);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  
+  // Provider selection states - محدث
+  const [showProviderModal, setShowProviderModal] = useState(false);
+  const [selectedBookingForSend, setSelectedBookingForSend] = useState<any | null>(null);
 
   // Initialize notification sound
   useEffect(() => {
@@ -203,10 +199,16 @@ function Dashboard() {
           break;
         }
         case 'bookings': {
-          const bookingResponse = await fetchBookings();
-          setBookings(bookingResponse);
-          lastBookingIdsRef.current = new Set(bookingResponse.map(booking => booking.id));
-          logDetails.bookings = bookingResponse.length;
+          const bookingsData = await fetchBookings();
+          // ترتيب الحجوزات من الأحدث إلى الأقدم
+          const sortedBookings = bookingsData.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA; // الأحدث أولاً
+          });
+          setBookings(sortedBookings);
+          lastBookingIdsRef.current = new Set(sortedBookings.map(booking => booking.id));
+          logDetails.bookings = sortedBookings.length;
           break;
         }
         case 'overview': {
@@ -266,45 +268,45 @@ function Dashboard() {
 
   // Real-time bookings polling
   const startRealTimeBookings = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     intervalRef.current = setInterval(async () => {
       try {
-        const newBookingsData = await fetchBookings();
-        const newBookingIds = new Set(newBookingsData.map(booking => booking.id));
+        const freshBookings = await fetchBookings();
+        // ترتيب الحجوزات من الأحدث إلى الأقدم
+        const sortedBookings = freshBookings.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA; // الأحدث أولاً
+        });
         
-        // التحقق من الحجوزات الجديدة الفعلية باستعمال ref دائم التحديث
-        const actualNewBookings = newBookingsData.filter(booking => 
-          !lastBookingIdsRef.current.has(booking.id)
-        );
-        
-        if (actualNewBookings.length > 0) {
-          setNewBookingsCount(prev => prev + actualNewBookings.length);
+        setBookings(prevBookings => {
+          const currentIds = new Set(prevBookings.map(booking => booking.id));
+          const newBookings = sortedBookings.filter(booking => !lastBookingIdsRef.current.has(booking.id));
           
-          // Play notification sound only once
-          if (audioRef.current) {
-            audioRef.current.currentTime = 0; // Reset audio to start
-            audioRef.current.play().catch((e: any) => console.log('Audio play failed:', e));
+          if (newBookings.length > 0) {
+            const increment = newBookings.length;
+            setNewBookingsCount(prev => prev + increment);
+            
+            // Play notification sound for new bookings
+            if (audioRef.current && newBookings.some(booking => !currentIds.has(booking.id))) {
+              audioRef.current.play().catch(() => {
+                // Ignore audio play errors
+              });
+            }
           }
           
-          // Show toast notification
-          toast.success(`🔔 ${actualNewBookings.length} حجز جديد وصل!`, {
-            position: "top-left",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-          
-          // تحديث الـ ref بمعرفات الحجوزات الأحدث
-          lastBookingIdsRef.current = newBookingIds;
-        }
+          lastBookingIdsRef.current = new Set(sortedBookings.map(booking => booking.id));
+          return sortedBookings;
+        });
         
-        setBookings(newBookingsData);
         setLastBookingUpdate(new Date());
       } catch (error) {
         console.error('Error fetching real-time bookings:', error);
       }
-    }, 5000); // Check every 5 seconds instead of 3
+    }, 30000); // كل 30 ثانية
   };
 
   // Service handlers
@@ -470,9 +472,6 @@ function Dashboard() {
   // ];
 
   /* =======================  حالة مودال اختيار المورّد  ======================= */
-  const [showProviderModal, setShowProviderModal] = useState(false);
-  const [selectedBookingForSend, setSelectedBookingForSend] = useState<any | null>(null);
-
   const openProviderModal = (booking: any) => {
     setSelectedBookingForSend(booking);
     setShowProviderModal(true);
@@ -484,22 +483,51 @@ function Dashboard() {
   };
 
   const buildWhatsAppMessage = (booking: any) => {
-    let msg = `حجز جديد لخدمة ${booking.serviceName}\n`;
-    msg += `الاسم: ${booking.fullName}\n`;
-    msg += `الهاتف: ${booking.phoneNumber}\n`;
-    msg += `العنوان: ${booking.address}\n`;
-    if (booking.serviceDetails) msg += `تفاصيل الخدمة: ${booking.serviceDetails}\n`;
-    if (booking.customAnswers && Object.keys(booking.customAnswers).length > 0) {
-      msg += '\nالإجابات التفصيلية:\n';
-      Object.entries(booking.customAnswers).forEach(([key, val]) => {
-        if (Array.isArray(val)) {
-          msg += `• ${val.join(', ')}\n`;
-        } else {
-          msg += `• ${val}\n`;
-        }
-      });
+    let msg = `🔔 *حجز جديد لخدمة ${booking.serviceName}*\n\n`;
+    msg += `👤 *العميل:* ${booking.customerName}\n`;
+    msg += `📞 *الهاتف:* ${booking.customerPhone}\n`;
+    msg += `🏠 *العنوان:* ${booking.address}\n`;
+    msg += `🆔 *رقم الحجز:* ${booking.id}\n`;
+    msg += `📅 *تاريخ الحجز:* ${new Date(booking.createdAt).toLocaleString('ar-SA')}\n\n`;
+    
+    if (booking.serviceDetails) {
+      msg += `📝 *تفاصيل الخدمة:* ${booking.serviceDetails}\n\n`;
     }
-    msg += '\nيرجى التواصل مع العميل في أقرب وقت.';
+    
+    // إضافة الأسئلة المخصصة مع معلومات كاملة
+    if (booking.customAnswersWithQuestions && Object.keys(booking.customAnswersWithQuestions).length > 0) {
+      msg += `🔍 *أسئلة مخصصة:*\n`;
+      Object.entries(booking.customAnswersWithQuestions).forEach(([key, data]: [string, any]) => {
+        const answer = Array.isArray(data.answer) ? data.answer.join(', ') : String(data.answer);
+        msg += `• *${data.question}:* ${answer}\n`;
+      });
+      msg += '\n';
+    } else if (booking.customAnswers && Object.keys(booking.customAnswers).length > 0) {
+      msg += `📋 *تفاصيل إضافية:*\n`;
+      Object.entries(booking.customAnswers).forEach(([key, val]) => {
+        const value = Array.isArray(val) ? val.join(', ') : String(val);
+        msg += `• *${key}:* ${value}\n`;
+      });
+      msg += '\n';
+    }
+    
+    // معلومات إضافية حسب نوع الخدمة
+    if (booking.destination) {
+      msg += `📍 *الوجهة:* ${booking.destination}\n`;
+    }
+    if (booking.startLocation) {
+      msg += `🚩 *نقطة البداية:* ${booking.startLocation}\n`;
+    }
+    if (booking.preferredTime) {
+      msg += `⏰ *الوقت المفضل:* ${booking.preferredTime}\n`;
+    }
+    if (booking.urgentDelivery) {
+      msg += `🚨 *توصيل عاجل* ⚡\n`;
+    }
+    
+    msg += '\n⚡ *يرجى التواصل مع العميل في أقرب وقت ممكن*\n';
+    msg += '🙏 شكراً لتعاونكم';
+    
     return encodeURIComponent(msg);
   };
 
@@ -544,6 +572,212 @@ function Dashboard() {
       } catch (err) {
         toast.error('❌ فشل في حذف المورّد');
       }
+    }
+  };
+
+  // إضافة modal جديد لتعديل الحجوزات
+  const BookingEditModal = ({ booking, isOpen, onClose, onSave, onDelete }: {
+    booking: Booking | null;
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (id: string, data: Partial<Booking>) => Promise<void>;
+    onDelete: (id: string) => Promise<void>;
+  }) => {
+    const [formData, setFormData] = useState({
+      customerName: '',
+      customerPhone: '',
+      customerEmail: '',
+      notes: '',
+      status: 'pending' as Booking['status']
+    });
+    const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    useEffect(() => {
+      if (booking) {
+        setFormData({
+          customerName: booking.customerName || '',
+          customerPhone: booking.customerPhone || '',
+          customerEmail: booking.customerEmail || '',
+          notes: booking.notes || '',
+          status: booking.status
+        });
+      }
+    }, [booking]);
+
+    const handleSave = async () => {
+      if (!booking) return;
+      setSaving(true);
+      try {
+        await onSave(booking.id, formData);
+        onClose();
+      } catch (error) {
+        console.error('Error saving booking:', error);
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const handleDelete = async () => {
+      if (!booking) return;
+      if (!window.confirm('هل أنت متأكد من حذف هذا الحجز؟')) return;
+      
+      setDeleting(true);
+      try {
+        await onDelete(booking.id);
+        onClose();
+      } catch (error) {
+        console.error('Error deleting booking:', error);
+      } finally {
+        setDeleting(false);
+      }
+    };
+
+    if (!isOpen || !booking) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
+        <div className="bg-white rounded-2xl p-8 max-w-md w-full border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+          <button onClick={onClose} className="absolute top-3 left-3 text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+          
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Edit className="w-5 h-5 text-blue-500" />
+            تعديل الحجز
+          </h3>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">اسم العميل</label>
+              <input
+                type="text"
+                value={formData.customerName}
+                onChange={(e) => setFormData(prev => ({ ...prev, customerName: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
+              <input
+                type="tel"
+                value={formData.customerPhone}
+                onChange={(e) => setFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني (اختياري)</label>
+              <input
+                type="email"
+                value={formData.customerEmail}
+                onChange={(e) => setFormData(prev => ({ ...prev, customerEmail: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">حالة الحجز</label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Booking['status'] }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="pending">معلق</option>
+                <option value="confirmed">مؤكد</option>
+                <option value="in_progress">قيد التنفيذ</option>
+                <option value="completed">مكتمل</option>
+                <option value="cancelled">ملغي</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  جاري الحفظ...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  حفظ التغييرات
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  جاري الحذف...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  حذف
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // دوال جديدة لحفظ وحذف الحجوزات
+  const handleBookingEdit = (booking: Booking) => {
+    setEditingBooking(booking);
+    setShowBookingEditModal(true);
+  };
+
+  const handleBookingSave = async (bookingId: string, data: Partial<Booking>) => {
+    try {
+      await bookingsAPI.update(bookingId, {
+        ...data,
+        updatedAt: new Date().toISOString()
+      });
+      toast.success('✅ تم تحديث الحجز بنجاح');
+      setShowBookingEditModal(false);
+      setEditingBooking(null);
+      await loadData(); // إعادة تحميل البيانات
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      toast.error('❌ فشل في تحديث الحجز');
+    }
+  };
+
+  const handleBookingDelete = async (bookingId: string) => {
+    try {
+      await bookingsAPI.delete(bookingId);
+      toast.success('✅ تم حذف الحجز بنجاح');
+      setShowBookingEditModal(false);
+      setEditingBooking(null);
+      await loadData(); // إعادة تحميل البيانات
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      toast.error('❌ فشل في حذف الحجز');
     }
   };
 
@@ -899,17 +1133,48 @@ function Dashboard() {
                           </div>
 
                           <div className="flex flex-col gap-2 ml-4">
+                            {/* أزرار الإدارة الجديدة */}
+                            <div className="flex flex-col gap-2 mb-2">
+                              <button
+                                onClick={() => openProviderModal(booking)}
+                                className="px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1"
+                                title="إرسال للمورد"
+                              >
+                                <Send className="w-3 h-3" />
+                                إرسال للمورد
+                              </button>
+                              
+                              <button
+                                onClick={() => handleBookingEdit(booking)}
+                                className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1"
+                                title="تعديل الحجز"
+                              >
+                                <Edit className="w-3 h-3" />
+                                تعديل
+                              </button>
+                              
+                              <button
+                                onClick={() => handleBookingDelete(booking.id)}
+                                className="px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1"
+                                title="حذف الحجز"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                حذف
+                              </button>
+                            </div>
+
+                            {/* أزرار تغيير الحالة */}
                             {booking.status === 'pending' && (
                               <>
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
-                                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white text-sm rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                                 >
                                   تأكيد
                                 </button>
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'cancelled')}
-                                  className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                                  className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white text-sm rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                                 >
                                   إلغاء
                                 </button>
@@ -918,7 +1183,7 @@ function Dashboard() {
                             {booking.status === 'confirmed' && (
                               <button
                                 onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
-                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                                className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                               >
                                 إكمال
                               </button>
@@ -1264,17 +1529,48 @@ function Dashboard() {
                           </div>
 
                           <div className="flex flex-col gap-2 ml-4">
+                            {/* أزرار الإدارة الجديدة */}
+                            <div className="flex flex-col gap-2 mb-2">
+                              <button
+                                onClick={() => openProviderModal(booking)}
+                                className="px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1"
+                                title="إرسال للمورد"
+                              >
+                                <Send className="w-3 h-3" />
+                                إرسال للمورد
+                              </button>
+                              
+                              <button
+                                onClick={() => handleBookingEdit(booking)}
+                                className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1"
+                                title="تعديل الحجز"
+                              >
+                                <Edit className="w-3 h-3" />
+                                تعديل
+                              </button>
+                              
+                              <button
+                                onClick={() => handleBookingDelete(booking.id)}
+                                className="px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1"
+                                title="حذف الحجز"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                حذف
+                              </button>
+                            </div>
+
+                            {/* أزرار تغيير الحالة */}
                             {booking.status === 'pending' && (
                               <>
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
-                                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white text-sm rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                                 >
                                   تأكيد
                                 </button>
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'cancelled')}
-                                  className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                                  className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white text-sm rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                                 >
                                   إلغاء
                                 </button>
@@ -1283,7 +1579,7 @@ function Dashboard() {
                             {booking.status === 'confirmed' && (
                               <button
                                 onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
-                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                                className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                               >
                                 إكمال
                               </button>
@@ -1364,6 +1660,18 @@ function Dashboard() {
         onSave={handleProviderSave}
         editingProvider={editingProvider}
         categories={categories}
+      />
+
+      {/* Booking Edit Modal - جديد */}
+      <BookingEditModal
+        booking={editingBooking}
+        isOpen={showBookingEditModal}
+        onClose={() => {
+          setShowBookingEditModal(false);
+          setEditingBooking(null);
+        }}
+        onSave={handleBookingSave}
+        onDelete={handleBookingDelete}
       />
 
       {/* Enhanced Toast Container */}
