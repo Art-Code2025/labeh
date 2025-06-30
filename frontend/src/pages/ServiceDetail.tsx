@@ -55,6 +55,8 @@ export default function ServiceDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [priceOptions, setPriceOptions] = useState<Array<{ name: string; price: string }>>([]);
+  const [selectedPrice, setSelectedPrice] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     phoneNumber: '',
@@ -87,31 +89,46 @@ export default function ServiceDetail() {
         // البحث عن الخدمة بـ ID
         const servicesRef = collection(db, 'services');
         const servicesSnapshot = await getDocs(servicesRef);
-        let foundService: Service | null = null;
         
-        servicesSnapshot.forEach((doc) => {
-          if (doc.id === id) {
-            const serviceData = doc.data();
-            foundService = {
-              id: doc.id,
-              name: serviceData.name || '',
-              category: serviceData.categoryId || serviceData.category || '',
-              categoryName: serviceData.categoryName || '',
-              description: serviceData.description || serviceData.homeShortDescription || getDetailedDescription(serviceData.categoryId || serviceData.category || ''),
-              mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
-              detailedImages: serviceData.detailedImages || [],
-              features: serviceData.features || getDefaultFeatures(serviceData.categoryId || serviceData.category || ''),
-              duration: serviceData.duration || getDefaultDuration(serviceData.categoryId || serviceData.category || ''),
-              availability: serviceData.availability || "متاح 24/7",
-              price: serviceData.price || serviceData.pricing || getDefaultPrice(serviceData.categoryId || serviceData.category || ''),
-              homeShortDescription: serviceData.homeShortDescription || '',
-              customQuestions: serviceData.customQuestions || [] // إضافة الأسئلة المخصصة
-            };
-          }
-        });
+        const serviceDoc = servicesSnapshot.docs.find(doc => doc.id === id);
 
-        if (foundService) {
+        if (serviceDoc) {
+          const serviceData = serviceDoc.data();
+          const foundService: Service = {
+            id: serviceDoc.id,
+            name: serviceData.name || '',
+            category: serviceData.categoryId || serviceData.category || '',
+            categoryName: serviceData.categoryName || '',
+            description: serviceData.description || serviceData.homeShortDescription || getDetailedDescription(serviceData.categoryId || serviceData.category || ''),
+            mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
+            detailedImages: serviceData.detailedImages || [],
+            features: serviceData.features || getDefaultFeatures(serviceData.categoryId || serviceData.category || ''),
+            duration: serviceData.duration ? serviceData.duration : getDefaultDuration(serviceData.categoryId || serviceData.category || ''),
+            availability: serviceData.availability || "متاح 24/7",
+            price: serviceData.price || serviceData.pricing || getDefaultPrice(serviceData.categoryId || serviceData.category || ''),
+            homeShortDescription: serviceData.homeShortDescription || '',
+            customQuestions: serviceData.customQuestions || []
+          };
+          
           setService(foundService);
+
+          const isComplexPrice = foundService.price && typeof foundService.price === 'string' && foundService.price.includes('|');
+
+          if (isComplexPrice) {
+            const options = (foundService.price as string).split('|').map((item: string) => {
+              const parts = item.trim().split(/(\s+)/);
+              const price = parts.pop() || '';
+              const name = parts.join('').trim();
+              return { name, price: price.replace('ريال', '').trim() + ' ريال' };
+            });
+            setPriceOptions(options);
+            if (options.length > 0) {
+              setSelectedPrice(`${options[0].name} ${options[0].price}`);
+              setFormData(prev => ({...prev, selectedDestination: options[0].name }));
+            }
+          } else if (foundService.price) {
+            setSelectedPrice(foundService.price);
+          }
         } else {
           setError('الخدمة غير موجودة');
         }
@@ -228,6 +245,7 @@ export default function ServiceDetail() {
         serviceId: service.id,
         serviceName: service.name,
         serviceCategory: service.category,
+        price: selectedPrice,
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         address: formData.address,
@@ -287,6 +305,15 @@ export default function ServiceDetail() {
       toast.error('فشل في إرسال طلب الحجز. حاول مرة أخرى');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handlePriceSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = e.target.value;
+    const option = priceOptions.find(o => o.name === selected);
+    if(option) {
+      setSelectedPrice(`${option.name} ${option.price}`);
+      setFormData(prev => ({...prev, selectedDestination: option.name }));
     }
   };
 
@@ -897,24 +924,43 @@ export default function ServiceDetail() {
                     </h3>
 
                     <div className="space-y-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-3">
-                          نوع الخدمة المطلوبة
-                        </label>
-                        <select
-                          name="selectedOption"
-                          value={formData.selectedOption}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 shadow-sm transition-all duration-300"
-                        >
-                          <option value="">اختر نوع الخدمة</option>
-                          {getCategoryOptions()?.options.map((option, index) => (
-                            <option key={index} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* إضافة الخيارات المخصصة هنا بنفس التحسينات */}
+                      {priceOptions.length > 0 ? (
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-3">
+                            اختر الباقة أو الوجهة *
+                          </label>
+                          <select
+                            name="selectedDestination"
+                            value={formData.selectedDestination}
+                            onChange={handlePriceSelectionChange}
+                            required
+                            className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 shadow-sm transition-all duration-300"
+                          >
+                            {priceOptions.map((option, index) => (
+                              <option key={index} value={option.name}>
+                                {option.name} ({option.price})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-3">
+                            نوع الخدمة المطلوبة
+                          </label>
+                          <select
+                            name="selectedOption"
+                            value={formData.selectedOption}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 shadow-sm transition-all duration-300"
+                          >
+                            <option value="">اختر نوع الخدمة</option>
+                            {getCategoryOptions()?.options.map((option, index) => (
+                              <option key={index} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
