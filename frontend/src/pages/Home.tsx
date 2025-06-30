@@ -900,7 +900,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-gradient-to-b from-[#f0faff] to-[#e0f2fe] relative overflow-hidden">
+      <section className="py-20 bg-gradient-to-b from-[#f0faff] to-white relative overflow-hidden">
         {/* Background Animation */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-br from-cyan-200/20 to-blue-200/20 rounded-full blur-3xl animate-pulse"></div>
@@ -1054,22 +1054,19 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-
-      {/* Premium Footer - Enhanced */}
-      <footer className="relative bg-gradient-to-br from-white via-blue-50 to-cyan-50 overflow-hidden">
-        {/* Enhanced Background Patterns */}
+      {/* Enhanced Footer - Fixed */}
+      <footer className="relative bg-white border-t border-gray-200 mt-16">
+        {/* Background Patterns - Subtle */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600"></div>
-          <div className="absolute top-10 left-1/4 w-32 h-32 md:w-48 md:h-48 bg-gradient-to-br from-blue-100/40 to-cyan-100/40 rounded-full blur-2xl animate-pulse"></div>
-          <div className="absolute bottom-10 right-1/4 w-40 h-40 md:w-56 md:h-56 bg-gradient-to-br from-cyan-100/30 to-blue-100/30 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-blue-200/20 to-cyan-200/20 rounded-full blur-xl animate-float" style={{animationDelay: '4s'}}></div>
+          <div className="absolute top-10 left-1/4 w-32 h-32 bg-blue-100/30 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-1/4 w-40 h-40 bg-cyan-100/20 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
         </div>
         
         <div className="container-custom relative z-10 px-4 sm:px-6 lg:px-8 pt-16 pb-8">
           {/* Main Footer Content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12 scroll-animate opacity-0 translate-y-8">
             
-            {/* Company Info - Enhanced */}
+            {/* Company Info - Clean */}
             <div className="lg:col-span-2">
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative">
@@ -1081,35 +1078,35 @@ const Home: React.FC = () => {
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
                 </div>
                 <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">لبيه</h3>
                   <p className="text-sm md:text-base text-blue-600 font-semibold">خدمات متكاملة لحياة أسهل</p>
+                  <p className="text-xs text-gray-500 mt-1">نحن في خدمتكم على مدار الساعة</p>
                 </div>
               </div>
               
-              <p className="text-slate-600 leading-relaxed mb-6 max-w-md text-sm md:text-base">
+              <p className="text-gray-600 leading-relaxed mb-6 max-w-md text-sm md:text-base">
                 نحن نقدم خدمات متكاملة وحلول مبتكرة لتلبية احتياجاتكم اليومية. نسعى دائماً لتقديم أفضل تجربة ممكنة لعملائنا الكرام بأعلى معايير الجودة والاحترافية.
               </p>
               
               {/* Enhanced Stats */}
-              <div className="grid grid-cols-3 gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-blue-100/50 shadow-sm">
+              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
                 <div className="text-center">
                   <div className="text-xl md:text-2xl font-bold text-blue-600 mb-1">+1500</div>
-                  <div className="text-xs md:text-sm text-slate-600">عميل سعيد</div>
+                  <div className="text-xs md:text-sm text-gray-600">عميل سعيد</div>
                 </div>
-                <div className="text-center border-x border-blue-100">
+                <div className="text-center border-x border-gray-200">
                   <div className="text-xl md:text-2xl font-bold text-cyan-600 mb-1">24/7</div>
-                  <div className="text-xs md:text-sm text-slate-600">خدمة مستمرة</div>
+                  <div className="text-xs md:text-sm text-gray-600">خدمة مستمرة</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl md:text-2xl font-bold text-blue-600 mb-1">4.9★</div>
-                  <div className="text-xs md:text-sm text-slate-600">تقييم ممتاز</div>
+                  <div className="text-xs md:text-sm text-gray-600">تقييم ممتاز</div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Links - Enhanced */}
+            {/* Quick Links - Clean */}
             <div>
-              <h4 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <h4 className="text-lg md:text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full"></div>
                 روابط سريعة
               </h4>
@@ -1123,7 +1120,7 @@ const Home: React.FC = () => {
                   <li key={index}>
                     <a 
                       href={link.href} 
-                      className="flex items-center gap-3 text-slate-600 hover:text-blue-600 transition-all duration-300 group py-2 px-3 rounded-lg hover:bg-white/40 hover:backdrop-blur-sm"
+                      className="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-all duration-300 group py-2 px-3 rounded-lg hover:bg-blue-50"
                     >
                       <span className="text-lg group-hover:scale-110 transition-transform duration-300">{link.icon}</span>
                       <span className="font-medium">{link.name}</span>
@@ -1134,45 +1131,45 @@ const Home: React.FC = () => {
               </ul>
             </div>
 
-            {/* Contact Info - Enhanced */}
+            {/* Contact Info - Clean */}
             <div>
-              <h4 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <h4 className="text-lg md:text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <div className="w-1 h-6 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></div>
                 تواصل معنا
               </h4>
               <ul className="space-y-4">
-                <li className="flex items-center gap-3 text-slate-600 group">
+                <li className="flex items-center gap-3 text-gray-600 group">
                   <div className="p-2 bg-blue-100 group-hover:bg-blue-200 text-blue-600 rounded-lg transition-colors duration-300">
                     <Phone className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-800">+966 56 980 6839</p>
-                    <p className="text-xs text-slate-500">متاح 24/7</p>
+                    <p className="font-semibold text-gray-900">+966 56 980 6839</p>
+                    <p className="text-xs text-gray-500">متاح 24/7</p>
                   </div>
                 </li>
-                <li className="flex items-center gap-3 text-slate-600 group">
+                <li className="flex items-center gap-3 text-gray-600 group">
                   <div className="p-2 bg-cyan-100 group-hover:bg-cyan-200 text-cyan-600 rounded-lg transition-colors duration-300">
                     <Mail className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-800">elsadig6839@gmail.com</p>
-                    <p className="text-xs text-slate-500">رد سريع</p>
+                    <p className="font-semibold text-gray-900">elsadig6839@gmail.com</p>
+                    <p className="text-xs text-gray-500">رد سريع</p>
                   </div>
                 </li>
-                <li className="flex items-center gap-3 text-slate-600 group">
+                <li className="flex items-center gap-3 text-gray-600 group">
                   <div className="p-2 bg-blue-100 group-hover:bg-blue-200 text-blue-600 rounded-lg transition-colors duration-300">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-800">خدمة مستمرة</p>
-                    <p className="text-xs text-slate-500">طوال أيام الأسبوع</p>
+                    <p className="font-semibold text-gray-900">خدمة مستمرة</p>
+                    <p className="text-xs text-gray-500">طوال أيام الأسبوع</p>
                   </div>
                 </li>
               </ul>
 
-              {/* Social Links - New */}
-              <div className="mt-6 pt-6 border-t border-blue-100">
-                <p className="text-sm font-semibold text-slate-700 mb-3">تابعنا</p>
+              {/* Social Links */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-sm font-semibold text-gray-700 mb-3">تابعنا</p>
                 <div className="flex items-center gap-3">
                   <a href="#" className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-all duration-300 transform hover:scale-110">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -1194,7 +1191,7 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-          {/* Enhanced Newsletter Section */}
+          {/* Newsletter Section - Clean */}
           <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl p-6 md:p-8 mb-8 text-white scroll-animate opacity-0 translate-y-8">
             <div className="text-center max-w-2xl mx-auto">
               <h4 className="text-xl md:text-2xl font-bold mb-3">ابق على اطلاع بآخر العروض</h4>
@@ -1203,7 +1200,7 @@ const Home: React.FC = () => {
                 <input
                   type="email"
                   placeholder="أدخل بريدك الإلكتروني"
-                  className="flex-1 px-4 py-3 rounded-xl text-slate-800 placeholder-slate-500 border-0 focus:ring-2 focus:ring-white/50 transition-all duration-300"
+                  className="flex-1 px-4 py-3 rounded-xl text-gray-800 placeholder-gray-500 border-0 focus:ring-2 focus:ring-white/50 transition-all duration-300"
                 />
                 <button className="px-6 py-3 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105">
                   <Send className="w-4 h-4" />
@@ -1213,10 +1210,10 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-          {/* Bottom Bar - Enhanced */}
-          <div className="pt-6 border-t border-blue-200/50">
+          {/* Bottom Bar - Clean */}
+          <div className="pt-6 border-t border-gray-200">
             <div className="flex flex-col lg:flex-row justify-between items-center gap-4 text-sm">
-              <div className="text-slate-600 text-center lg:text-right order-2 lg:order-1">
+              <div className="text-gray-600 text-center lg:text-right order-2 lg:order-1">
                 <p className="mb-1">© {new Date().getFullYear()} <span className="text-blue-600 font-bold">لبيه</span> - جميع الحقوق محفوظة</p>
                 <p className="flex items-center justify-center lg:justify-start gap-1">
                   تم التطوير بواسطة 
@@ -1232,7 +1229,7 @@ const Home: React.FC = () => {
                 </p>
               </div>
               
-              <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 text-slate-600 order-1 lg:order-2">
+              <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 text-gray-600 order-1 lg:order-2">
                 <a href="#" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
                   <FileText className="w-4 h-4" />
                   سياسة الخصوصية
