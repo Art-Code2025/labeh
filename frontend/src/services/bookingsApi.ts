@@ -9,15 +9,14 @@ export interface Booking {
   id: string;
   serviceId: string;
   serviceName: string;
-  serviceCategory?: string;
-  fullName: string;
-  phoneNumber: string;
-  address: string;
-  serviceDetails?: string;
-  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
-  estimatedPrice?: string;
-  appointmentTime?: string;
-  urgencyLevel?: 'low' | 'medium' | 'high';
+  serviceCategory: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'in_progress';
+  bookingDate: string;
+  createdAt: string;
+  updatedAt: string;
   notes?: string;
   customAnswers?: Record<string, any>;
   
@@ -30,9 +29,6 @@ export interface Booking {
   preferredTime?: string;
   deliveryLocation?: string;
   urgentDelivery?: boolean;
-  
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface BookingStats {
@@ -172,16 +168,18 @@ export const createBooking = async (bookingData: any): Promise<{id: string}> => 
     }
 };
 
-export const updateBooking = async (id: string, bookingData: any): Promise<{message: string}> => {
-    try {
-        return await makeApiCall(`/bookings`, {
-            method: 'PUT',
-            body: JSON.stringify({ id, ...bookingData }),
-        });
-    } catch (error) {
-        console.log('🔄 Using Firebase for booking update');
-        return await updateBookingInFirebase(id, bookingData);
-    }
+export const updateBooking = async (bookingId: string, status: Booking['status']) => {
+  try {
+    const bookingRef = doc(db, 'bookings', bookingId);
+    await updateDoc(bookingRef, {
+      status,
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    return false;
+  }
 };
 
 export const deleteBooking = async (id: string): Promise<{message: string}> => {

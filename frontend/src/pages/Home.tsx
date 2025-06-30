@@ -28,9 +28,7 @@ import {
   Send,
   Loader2,
   ChevronRight,
-  Facebook,
-  Twitter,
-  Instagram
+ 
 } from 'lucide-react';
 import { db } from '../firebase.config';
 import { collection, getDocs, DocumentSnapshot } from 'firebase/firestore';
@@ -1071,28 +1069,15 @@ const Home: React.FC = () => {
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-white text-2xl font-bold">ل</span>
-                </div>
+                
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">لبيه</h3>
                   <p className="text-blue-600">خدمات متكاملة</p>
                 </div>
               </div>
               <p className="text-gray-600 leading-relaxed mb-8 max-w-lg">
                 نحن نقدم خدمات متكاملة وحلول مبتكرة لتلبية احتياجاتكم. نسعى دائماً لتقديم أفضل تجربة ممكنة لعملائنا الكرام.
               </p>
-              <div className="flex items-center gap-4">
-                <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
-                  <Facebook className="w-5 h-5" />
-                </a>
-                <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
-                  <Twitter className="w-5 h-5" />
-                </a>
-                <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
-                  <Instagram className="w-5 h-5" />
-                </a>
-              </div>
+              
             </div>
 
             {/* Quick Links */}
@@ -1117,17 +1102,14 @@ const Home: React.FC = () => {
               <div>
                 <h4 className="text-lg font-bold text-gray-900 mb-4">معلومات التواصل</h4>
                 <ul className="space-y-3">
-                  <li className="flex items-center gap-2 text-gray-600">
-                    <MapPin className="w-5 h-5 text-blue-600" />
-                    <span>الخارجة، الوادي الجديد</span>
-                  </li>
+                 
                   <li className="flex items-center gap-2 text-gray-600">
                     <Phone className="w-5 h-5 text-blue-600" />
-                    <span>+20 123 456 7890</span>
+                    <span>+966 56 980 6839</span>
                   </li>
                   <li className="flex items-center gap-2 text-gray-600">
                     <Mail className="w-5 h-5 text-blue-600" />
-                    <span>info@labeeh.com</span>
+                    <span>elsadig6839@gmail.com</span>
                   </li>
                   <li className="flex items-center gap-2 text-gray-600">
                     <Clock className="w-5 h-5 text-blue-600" />

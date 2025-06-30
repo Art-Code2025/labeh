@@ -23,10 +23,12 @@ import {
   RefreshCw,
   Volume2,
   FileText,
-  Send
+  Send,
+  Home
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Link } from 'react-router-dom';
 
 import { DocumentSnapshot } from 'firebase/firestore';
 
@@ -501,11 +503,11 @@ function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
         <div className="text-center">
           <div className="relative">
-            <Loader2 className="w-16 h-16 text-blue-400 animate-spin mx-auto mb-4" />
-            <div className="absolute inset-0 w-16 h-16 border-4 border-blue-400/20 rounded-full animate-pulse mx-auto"></div>
+            <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
+            <div className="absolute inset-0 w-16 h-16 border-4 border-white/20 rounded-full animate-pulse mx-auto"></div>
           </div>
           <p className="text-gray-300 text-lg font-medium">جاري تحميل لوحة التحكم...</p>
           <p className="text-gray-500 text-sm mt-2">يرجى الانتظار</p>
@@ -634,6 +636,13 @@ function Dashboard() {
               >
                 <Menu className="w-6 h-6" />
               </button>
+              <Link
+                to="/overview"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+              >
+                <Home className="w-5 h-5" />
+                <span>الصفحة الرئيسية</span>
+              </Link>
               <h2 className="text-xl font-bold text-gray-900">
                 {activeTab === 'overview' && '📊 نظرة عامة'}
                 {activeTab === 'categories' && '🏷️ إدارة الفئات'}
@@ -717,52 +726,37 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  onClick={() => setActiveTab('services')}
-                  className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 transform hover:scale-105 text-right"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Package className="w-5 h-5 text-gray-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-gray-900 font-bold text-sm">إدارة الخدمات</h4>
-                      <p className="text-gray-500 text-xs">إضافة وتعديل الخدمات</p>
-                    </div>
+              {/* Recent Bookings */}
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">آخر الحجوزات</h3>
+                  <div className="space-y-4">
+                    {bookings.slice(0, 5).map((booking) => (
+                      <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <Calendar className="w-6 h-6 text-gray-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">{booking.serviceName}</h4>
+                            <p className="text-sm text-gray-500">{booking.customerName}</p>
+                          </div>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          booking.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                          booking.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {booking.status === 'pending' ? 'معلق' :
+                           booking.status === 'confirmed' ? 'مؤكد' :
+                           booking.status === 'completed' ? 'مكتمل' :
+                           'ملغي'}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('categories')}
-                  className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 transform hover:scale-105 text-right"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Tag className="w-5 h-5 text-gray-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-gray-900 font-bold text-sm">إدارة الفئات</h4>
-                      <p className="text-gray-500 text-xs">تنظيم وإدارة الفئات</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('providers')}
-                  className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 transform hover:scale-105 text-right"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Users className="w-5 h-5 text-gray-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-gray-900 font-bold text-sm">إدارة المورّدين</h4>
-                      <p className="text-gray-500 text-xs">إدارة فريق العمل</p>
-                    </div>
-                  </div>
-                </button>
+                </div>
               </div>
             </div>
           )}
