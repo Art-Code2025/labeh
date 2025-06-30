@@ -75,6 +75,10 @@ export default function ServiceDetail() {
     customAnswers: {} as Record<string, any> // إضافة إجابات الأسئلة المخصصة
   });
   const [submitting, setSubmitting] = useState(false);
+  const [showQuickBookingServices, setShowQuickBookingServices] = useState(false);
+  const [selectedQuickCategory, setSelectedQuickCategory] = useState<string>('');
+  const [quickCategoryServices, setQuickCategoryServices] = useState<Service[]>([]);
+  const [loadingQuickServices, setLoadingQuickServices] = useState(false);
 
   useEffect(() => {
     const fetchService = async () => {

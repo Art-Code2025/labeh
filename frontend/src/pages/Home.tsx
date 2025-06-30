@@ -28,7 +28,7 @@ import {
   Send,
   Loader2,
   ChevronRight,
- 
+  X,
 } from 'lucide-react';
 import { db } from '../firebase.config';
 import { collection, getDocs, DocumentSnapshot } from 'firebase/firestore';
@@ -71,6 +71,12 @@ const Home: React.FC = () => {
   const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  
+  // إضافة state جديد للحجز السريع
+  const [showQuickBookingServices, setShowQuickBookingServices] = useState(false);
+  const [selectedQuickCategory, setSelectedQuickCategory] = useState<string>('');
+  const [quickCategoryServices, setQuickCategoryServices] = useState<Service[]>([]);
+  const [loadingQuickServices, setLoadingQuickServices] = useState(false);
         
   // Fetch categories from Firebase/API
   const fetchCategories = async (): Promise<Category[]> => {
@@ -285,78 +291,93 @@ const Home: React.FC = () => {
     setShowBookingModal(true);
   };
 
-  // Handle quick booking with default service data - محسن للأسئلة المخصصة
+  // Handle quick booking with category selection - محسن لعرض خدمات الفئة
   const handleQuickBookingByCategory = async (category: string) => {
     try {
-      console.log('[Home] 🔍 البحث عن خدمات الفئة:', category);
-      const categoryServices = services.filter(s => s.category === category);
-      let serviceWithQuestions = null;
+      console.log('[Home] 🔍 عرض خدمات الفئة:', category);
+      setSelectedQuickCategory(category);
+      setLoadingQuickServices(true);
       
-      if (categoryServices.length > 0) {
-        console.log('[Home] 📋 خدمات الفئة الموجودة:', categoryServices.length);
-        // جلب بيانات الخدمة الأولى الكاملة مع الأسئلة المخصصة
-        try {
-          const fullService = await servicesApi.getById(categoryServices[0].id);
-          if (fullService && fullService.customQuestions) {
-            serviceWithQuestions = fullService;
-            console.log('[Home] ✅ تم جلب خدمة مع أسئلة مخصصة:', fullService.customQuestions.length);
-          }
-        } catch (error) {
-          console.warn('[Home] ⚠️ فشل في جلب تفاصيل الخدمة:', error);
-        }
-      }
+      // جلب جميع خدمات الفئة
+      const allServicesData = await servicesApi.getAll();
+      const categoryServices = allServicesData.services
+        .filter((service: ApiService) => service.category === category)
+        .map(transformApiService);
       
-      const defaultService: Service = {
-        id: serviceWithQuestions?.id || `quick-${category}`,
-        name: category === 'internal_delivery' ? 'توصيل أغراض داخلي' : 
-              category === 'external_trips' ? 'مشاوير خارجية' : 
-              'صيانة منزلية',
-        category: category || '',
-        categoryName: category === 'internal_delivery' ? 'توصيل داخلي' : 
-                     category === 'external_trips' ? 'مشاوير خارجية' : 
-                     'صيانة منزلية',
-        homeShortDescription: category === 'internal_delivery' ? 'خدمة توصيل سريعة داخل المدينة' : 
-                             category === 'external_trips' ? 'مشاوير خارجية لخميس مشيط وأبها' : 
-                             'خدمات صيانة منزلية شاملة',
-        price: category === 'internal_delivery' ? '20 ريال' : 
-               category === 'external_trips' ? 'من 250 ريال' : 
-               'حسب المطلوب',
-        customQuestions: serviceWithQuestions?.customQuestions || [] // ضمان وجود الأسئلة المخصصة
-      };
+      console.log('[Home] 📋 خدمات الفئة الموجودة:', categoryServices.length);
       
-      console.log('[Home] 🎯 الخدمة الافتراضية مع الأسئلة:', defaultService.customQuestions?.length || 0);
-      setSelectedService(defaultService);
-      setShowBookingModal(true);
+      setQuickCategoryServices(categoryServices);
+      setShowQuickBookingServices(true);
+      
     } catch (error) {
       console.error('[Home] ❌ خطأ في handleQuickBookingByCategory:', error);
-      // خدمة افتراضية بدون أسئلة مخصصة في حالة الخطأ
-      const defaultService: Service = {
-        id: `quick-${category}`,
-        name: category === 'internal_delivery' ? 'توصيل أغراض داخلي' : 
-              category === 'external_trips' ? 'مشاوير خارجية' : 
-              'صيانة منزلية',
-        category: category || '',
-        categoryName: category === 'internal_delivery' ? 'توصيل داخلي' : 
-                     category === 'external_trips' ? 'مشاوير خارجية' : 
-                     'صيانة منزلية',
-        homeShortDescription: category === 'internal_delivery' ? 'خدمة توصيل سريعة داخل المدينة' : 
-                             category === 'external_trips' ? 'مشاوير خارجية لخميس مشيط وأبها' : 
-                             'خدمات صيانة منزلية شاملة',
-        price: category === 'internal_delivery' ? '20 ريال' : 
-               category === 'external_trips' ? 'من 250 ريال' : 
-               'حسب المطلوب',
-        customQuestions: []
-      };
+      toast.error('فشل في تحميل خدمات الفئة');
+    } finally {
+      setLoadingQuickServices(false);
+    }
+  };
+
+  // Handle service selection from quick booking
+  const handleQuickServiceSelect = async (service: Service) => {
+    try {
+      console.log('[Home] 🔍 جاري جلب تفاصيل الخدمة:', service.id, service.name);
+      const fullService = await servicesApi.getById(service.id);
+      console.log('[Home] 📦 تفاصيل الخدمة المجلبة:', fullService);
       
-      setSelectedService(defaultService);
+      if (fullService) {
+        const formattedService: Service = {
+          ...service,
+          ...fullService,
+          id: service.id,
+          category: fullService.category || service.category || '',
+          categoryName: fullService.categoryName || service.categoryName || '',
+          homeShortDescription: fullService.homeShortDescription || service.homeShortDescription || '',
+          customQuestions: fullService.customQuestions || service.customQuestions || []
+        };
+        
+        console.log('[Home] ✅ الخدمة المنسقة:', formattedService);
+        console.log('[Home] 🔧 الأسئلة المخصصة:', formattedService.customQuestions);
+        
+        setSelectedService(formattedService);
+      } else {
+        console.warn('[Home] ⚠️ لم يتم العثور على تفاصيل الخدمة، استخدام البيانات الأساسية');
+        setSelectedService(service);
+      }
+      
+      // إخفاء قائمة الخدمات وإظهار فورم الحجز
+      setShowQuickBookingServices(false);
+      setShowBookingModal(true);
+      
+    } catch (error) {
+      console.error('[Home] ❌ خطأ في جلب تفاصيل الخدمة:', error);
+      toast.error('حدث خطأ في جلب تفاصيل الخدمة');
+      setSelectedService(service);
+      setShowQuickBookingServices(false);
       setShowBookingModal(true);
     }
+  };
+
+  // Close quick booking services modal
+  const closeQuickBookingServices = () => {
+    setShowQuickBookingServices(false);
+    setSelectedQuickCategory('');
+    setQuickCategoryServices([]);
   };
 
   // Close booking modal
   const closeBookingModal = () => {
     setShowBookingModal(false);
     setSelectedService(null);
+  };
+
+  // Get category name in Arabic
+  const getCategoryName = (category: string) => {
+    switch (category) {
+      case 'internal_delivery': return 'توصيل أغراض داخلي';
+      case 'external_trips': return 'مشاوير خارجية';
+      case 'home_maintenance': return 'صيانة منزلية';
+      default: return 'خدمة غير محددة';
+    }
   };
 
   return (
@@ -1245,12 +1266,121 @@ const Home: React.FC = () => {
         </button>
       </footer>
 
+      {/* Quick Booking Services Modal */}
+      {showQuickBookingServices && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" dir="rtl">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <Package className="w-6 h-6 text-cyan-600" />
+                خدمات {getCategoryName(selectedQuickCategory)}
+              </h2>
+              <button
+                onClick={closeQuickBookingServices}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {loadingQuickServices ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+                <p className="text-slate-600 text-lg">جاري تحميل الخدمات...</p>
+              </div>
+            ) : quickCategoryServices.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Package className="w-10 h-10 text-slate-400" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">لا توجد خدمات في هذه الفئة</h3>
+                <p className="text-slate-500 mb-6">لم نجد خدمات متاحة في فئة {getCategoryName(selectedQuickCategory)} حالياً</p>
+                <button
+                  onClick={closeQuickBookingServices}
+                  className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl transition-colors"
+                >
+                  إغلاق
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {quickCategoryServices.map((service) => (
+                  <div key={service.id} className="bg-gradient-to-br from-slate-50 to-cyan-50 rounded-2xl p-6 border border-cyan-100 hover:shadow-xl transition-all duration-300 group">
+                    {/* Service Image */}
+                    <div className="relative h-40 mb-4 rounded-xl overflow-hidden bg-slate-100">
+                      {service.mainImage ? (
+                        <img
+                          src={service.mainImage}
+                          alt={service.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cyan-100 to-blue-100">
+                          <div className="text-4xl">
+                            {selectedQuickCategory === 'internal_delivery' && '🚚'}
+                            {selectedQuickCategory === 'external_trips' && '🗺️'}
+                            {selectedQuickCategory === 'home_maintenance' && '🔧'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Service Info */}
+                    <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-cyan-600 transition-colors">
+                      {service.name}
+                    </h3>
+                    <p className="text-slate-600 text-sm mb-4 line-clamp-2">
+                      {service.homeShortDescription}
+                    </p>
+                    
+                    {/* Price and Duration */}
+                    <div className="flex items-center justify-between mb-4">
+                      {service.duration && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                          <Clock className="w-3 h-3" />
+                          {service.duration}
+                        </span>
+                      )}
+                      {service.price && (
+                        <span className="text-lg font-bold text-amber-600">
+                          {service.price}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Action Button */}
+                    <button
+                      onClick={() => handleQuickServiceSelect(service)}
+                      className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-md"
+                    >
+                      احجز هذه الخدمة
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Back to Categories */}
+            <div className="text-center mt-8">
+              <button
+                onClick={closeQuickBookingServices}
+                className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl transition-colors"
+              >
+                العودة لاختيار فئة أخرى
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Booking Modal */}
-      <BookingModal
-        isOpen={showBookingModal}
-        onClose={closeBookingModal}
-        service={selectedService}
-      />
+      {showBookingModal && (
+        <BookingModal
+          isOpen={showBookingModal}
+          onClose={closeBookingModal}
+          service={selectedService}
+        />
+      )}
     </div>
   );
 };

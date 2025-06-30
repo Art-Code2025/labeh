@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Layout, { ProtectedRoute } from './components/Layout';
 import Home from './pages/Home';
 import Categories from './pages/Categories';
+import CategoryServices from './pages/CategoryServices';
 import Services from './pages/Services';
 import ServiceDetail from './pages/ServiceDetail';
 import BookService from './pages/BookService';
@@ -20,6 +21,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/categories" element={<Categories />} />
+        <Route path="/category/:categoryId" element={<CategoryServices />} />
         <Route path="/services" element={<Services />} />
         <Route path="/services/:id" element={<ServiceDetail />} />
         <Route path="/book/:id" element={<BookService />} />
