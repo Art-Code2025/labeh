@@ -407,21 +407,21 @@ const Home: React.FC = () => {
                   />
                   
                   {/* Professional Floating Elements */}
-                  <div className="absolute -top-6 -right-6 bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl animate-float">
-                    <div className="flex items-center space-x-reverse space-x-3">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-semibold text-slate-700">خدمة متاحة</span>
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                  <div className="absolute -top-3 -right-3 bg-white/90 backdrop-blur-sm rounded-xl p-2 shadow-xl animate-float">
+                    <div className="flex items-center space-x-reverse space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-semibold text-slate-700">خدمة متاحة</span>
+                      <CheckCircle className="w-4 h-4 text-green-500" />
                   </div>
                   </div>
                   
-                  <div className="absolute -bottom-6 -left-6 bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl animate-float" style={{animationDelay: '1s'}}>
-                    <div className="flex items-center space-x-reverse space-x-3">
-                      <div className="flex -space-x-2">
-                        <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white text-xs font-bold">4.9</div>
-                        <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                  <div className="absolute -bottom-3 -left-3 bg-white/90 backdrop-blur-sm rounded-xl p-2 shadow-xl animate-float" style={{animationDelay: '1s'}}>
+                    <div className="flex items-center space-x-reverse space-x-2">
+                      <div className="flex -space-x-1">
+                        <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-white text-xs font-bold">4.9</div>
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
                 </div>
-                      <span className="text-sm font-semibold text-slate-700">تقييم ممتاز</span>
+                      <span className="text-xs font-semibold text-slate-700">تقييم ممتاز</span>
                   </div>
                   </div>
                 </div>
