@@ -1268,9 +1268,7 @@ function Dashboard() {
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-900 text-lg">{category.name}</h4>
-                          <p className="text-gray-500 text-sm">
-                            {services.filter(s => s.category === category.id).length} خدمة
-                          </p>
+    
                         </div>
                       </div>
                       <div className="flex gap-2">
