@@ -301,502 +301,427 @@ export default function ServiceDetail() {
   if (!service) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-transparent"></div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-gradient-to-b from-[#f0faff] to-[#e0f2fe]">
+      {/* Navigation Bar */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-cyan-100 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Link
+            to="/categories"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300"
+          >
+            <ArrowRight className="w-4 h-4" />
+            العودة للخدمات
+          </Link>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+        {/* Service Image Section - First */}
+        <div className="mb-8 sm:mb-12">
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl bg-white">
+            <div className="aspect-w-16 aspect-h-9 sm:aspect-h-6">
+              <img
+                src={service.mainImage}
+                alt={service.name}
+                className="w-full h-64 sm:h-80 lg:h-96 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
             </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-          {/* Navigation */}
-          <div className="mb-8">
-            <Link
-              to="/services"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-xl font-medium transition-all duration-300 border border-white/20"
-            >
-              <ArrowRight className="w-4 h-4" />
-              العودة للخدمات
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Service Info */}
-            <div className="text-white">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+            {/* Floating Service Badge */}
+            <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-cyan-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl">
                   {getCategoryIcon(service.category)}
                 </div>
-                <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium border border-white/20">
-                  {service.categoryName || categoryOptions[service.category as keyof typeof categoryOptions]?.name}
-                </span>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">
+                    {service.categoryName || categoryOptions[service.category as keyof typeof categoryOptions]?.name}
+                  </p>
+                  <p className="text-xs text-cyan-600 font-semibold">متاح الآن</p>
+                </div>
               </div>
-              
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+            </div>
+
+            {/* Price Badge */}
+            <div className="absolute top-6 left-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
+              {service.price}
+            </div>
+          </div>
+        </div>
+
+        {/* Service Info Section - Second */}
+        <div className="mb-8 sm:mb-12">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl border border-cyan-100">
+            <div className="text-center mb-8">
+              {/* Service Name - After Image */}
+              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-slate-800 mb-4 sm:mb-6">
                 {service.name}
               </h1>
               
-              <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+              {/* Service Description - After Name */}
+              <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 max-w-4xl mx-auto leading-relaxed">
                 {service.description}
               </p>
-
-              {/* Quick Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                <div className="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-100">المدة</p>
-                    <p className="font-semibold">{service.duration}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Star className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-100">السعر</p>
-                    <p className="font-semibold">{service.price}</p>
-        </div>
-      </div>
-
-                <div className="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-100">التوفر</p>
-                    <p className="font-semibold">{service.availability}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* CTA Button */}
-              <button
-                onClick={() => setShowBookingForm(true)}
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white hover:bg-gray-50 text-blue-600 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-              >
-                <Calendar className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                احجز الخدمة الآن
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </button>
             </div>
 
-            {/* Service Image */}
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-3xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
-                <img
-                  src={service.mainImage}
-                  alt={service.name}
-                  className="w-full h-96 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+            {/* Quick Info Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+              <div className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4 sm:p-6 rounded-2xl border border-cyan-200 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-sm text-slate-600 mb-1">المدة المتوقعة</p>
+                <p className="font-bold text-slate-800">{service.duration}</p>
+              </div>
+              
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6 rounded-2xl border border-green-200 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-sm text-slate-600 mb-1">حالة التوفر</p>
+                <p className="font-bold text-slate-800">{service.availability}</p>
               </div>
 
-              {/* Floating Badge */}
-              <div className="absolute -bottom-6 -left-6 p-4 bg-white rounded-2xl shadow-xl border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-full">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">متاح الآن</p>
-                    <p className="text-lg font-bold text-gray-800">خدمة فورية</p>
-                  </div>
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 sm:p-6 rounded-2xl border border-amber-200 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Star className="w-6 h-6 text-white" />
                 </div>
+                <p className="text-sm text-slate-600 mb-1">تقييم الخدمة</p>
+                <p className="font-bold text-slate-800">⭐ 4.9/5</p>
               </div>
+            </div>
+
+            {/* Main CTA Button */}
+            <div className="text-center">
+              <button
+                onClick={() => setShowBookingForm(true)}
+                className="group inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-6 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-2xl font-bold text-lg sm:text-xl transition-all duration-300 shadow-2xl hover:shadow-cyan-500/25 transform hover:-translate-y-1 hover:scale-105"
+              >
+                <Calendar className="w-6 h-6 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform" />
+                احجز الخدمة الآن
+                <ArrowRight className="w-5 h-5 transform -rotate-180 group-hover:-translate-x-1 transition-transform" />
+              </button>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Features Section */}
-      <div className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">مميزات الخدمة</h2>
-            <p className="text-xl text-gray-600">نقدم لك أفضل خدمة بأعلى معايير الجودة</p>
-            </div>
+        {/* Features Section */}
+        <div className="mb-8 sm:mb-12">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-4">
+              مميزات الخدمة
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              نقدم لك أفضل خدمة بأعلى معايير الجودة والاحترافية
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {service.features.map((feature, index) => (
-                    <div
-                      key={index}
-                className="group p-6 bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-2xl border border-blue-100 hover:border-blue-200 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {service.features.map((feature, index) => (
+              <div
+                key={index}
+                className="group bg-white/80 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-slate-200 hover:border-cyan-300 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
+                  <div className="p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                     <CheckCircle className="w-6 h-6 text-white" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">{feature}</h3>
-                    <p className="text-gray-600">ميزة متقدمة تضمن لك أفضل تجربة خدمة</p>
-                    </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-cyan-600 transition-colors">
+                      {feature}
+                    </h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      ميزة متقدمة تضمن لك أفضل تجربة خدمة ممكنة
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Booking Form Modal */}
-      {showBookingForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
-          <div className="bg-white rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-100">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">احجز خدمة: {service.name}</h2>
-                <p className="text-gray-600">املأ البيانات التالية لإتمام الحجز</p>
-              </div>
-              <button
-                onClick={() => setShowBookingForm(false)}
-                className="text-gray-400 hover:text-gray-600 p-3 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
+        {/* Category Options Section */}
+        {getCategoryOptions() && (
+          <div className="mb-8 sm:mb-12">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-4">
+                خيارات الخدمة المتاحة
+              </h2>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                اختر من بين مجموعة متنوعة من الخيارات المتخصصة
+              </p>
             </div>
 
-            <form onSubmit={handleBookingSubmit} className="space-y-8">
-              {/* البيانات الأساسية */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
-                  <div className="p-2 bg-blue-600 rounded-lg">
-                    <User className="w-5 h-5 text-white" />
-                  </div>
-                  البيانات الشخصية
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      الاسم الكريم *
-                    </label>
-                    <div className="relative">
-                      <User className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        className="w-full pr-12 pl-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder-gray-400 shadow-sm"
-                        placeholder="أدخل اسمك الكامل"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      رقم الجوال *
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type="tel"
-                        name="phoneNumber"
-                        value={formData.phoneNumber}
-                        onChange={handleInputChange}
-                        className="w-full pr-12 pl-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder-gray-400 shadow-sm"
-                        placeholder="05xxxxxxxx"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    العنوان بالتفصيل *
-                  </label>
-                  <div className="relative">
-                    <Home className="absolute right-3 top-4 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      className="w-full pr-12 pl-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder-gray-400 shadow-sm"
-                      placeholder="أدخل عنوانك بالتفصيل (الحي، الشارع، رقم المبنى)"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* خيارات مخصصة حسب الفئة */}
-              {getCategoryOptions() && (
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
-                    <div className="p-2 bg-indigo-600 rounded-lg">
-                      {getCategoryIcon(service.category)}
-                    </div>
-                    تفاصيل الخدمة
-                  </h3>
-
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        نوع الخدمة المطلوبة
-                      </label>
-                      <select
-                        name="selectedOption"
-                        value={formData.selectedOption}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 shadow-sm"
-                      >
-                        <option value="">اختر نوع الخدمة</option>
-                        {getCategoryOptions()?.options.map((option, index) => (
-                          <option key={index} value={option}>{option}</option>
-                        ))}
-                      </select>
-          </div>
-
-                    {/* خيارات خاصة بالتوصيل الداخلي */}
-                    {service.category === 'internal_delivery' && (
-                      <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            id="urgentDelivery"
-                            name="urgentDelivery"
-                            checked={formData.urgentDelivery}
-                            onChange={handleInputChange}
-                            className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <label htmlFor="urgentDelivery" className="text-gray-700 font-medium">
-                            توصيل عاجل (+10 ريال)
-                          </label>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-2 mr-8">
-                          سيتم التوصيل خلال 30 دقيقة كحد أقصى
-                        </p>
-                  </div>
-                )}
-
-                    {/* خيارات خاصة بالمشاوير الخارجية */}
-                    {service.category === 'external_trips' && (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                              نقطة الانطلاق
-                            </label>
-                            <div className="relative">
-                              <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <input
-                                type="text"
-                                name="startLocation"
-                                value={formData.startLocation}
-                                onChange={handleInputChange}
-                                className="w-full pr-12 pl-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder-gray-400 shadow-sm"
-                                placeholder="من أين تريد الانطلاق؟"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                              الوجهة
-                            </label>
-                            <select
-                              name="selectedDestination"
-                              value={formData.selectedDestination}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 shadow-sm"
-                            >
-                              <option value="">اختر الوجهة</option>
-                              {service.category === 'external_trips' && 'destinations' in categoryOptions.external_trips && 
-                                Object.entries(categoryOptions.external_trips.destinations).map(([dest, info]) => (
-                                  <option key={dest} value={dest}>{dest} - {info.price}</option>
-                                ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                              وقت الموعد المفضل
-                            </label>
-                            <div className="relative">
-                              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <input
-                                type="datetime-local"
-                                name="appointmentTime"
-                                value={formData.appointmentTime}
-                                onChange={handleInputChange}
-                                className="w-full pr-12 pl-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 shadow-sm"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                              عدد المسافرين
-                            </label>
-                            <input
-                              type="number"
-                              name="passengers"
-                              value={formData.passengers}
-                              onChange={handleInputChange}
-                              min="1"
-                              max="8"
-                              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 shadow-sm"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              id="returnTrip"
-                              name="returnTrip"
-                              checked={formData.returnTrip}
-                              onChange={handleInputChange}
-                              className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <label htmlFor="returnTrip" className="text-gray-700 font-medium">
-                              رحلة ذهاب وإياب
-                            </label>
-                          </div>
-                          <p className="text-sm text-gray-500 mt-2 mr-8">
-                            سيتم انتظارك في الوجهة والعودة معك
-                          </p>
-                        </div>
-                  </div>
-                )}
-
-                    {/* خيارات خاصة بالصيانة المنزلية */}
-                    {service.category === 'home_maintenance' && (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                              مستوى الأولوية
-                            </label>
-                            <select
-                              name="urgencyLevel"
-                              value={formData.urgencyLevel}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 shadow-sm"
-                            >
-                              <option value="normal">عادي</option>
-                              <option value="medium">متوسط</option>
-                              <option value="urgent">عاجل</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                              الوقت المفضل
-                            </label>
-                            <select
-                              name="preferredTime"
-                              value={formData.preferredTime}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 shadow-sm"
-                            >
-                              <option value="morning">صباحاً (8 ص - 12 م)</option>
-                              <option value="afternoon">بعد الظهر (12 م - 6 م)</option>
-                              <option value="evening">مساءً (6 م - 10 م)</option>
-                            </select>
-                          </div>
-                        </div>
-                  </div>
-                )}
-              </div>
-                </div>
-              )}
-
-              {/* تفاصيل إضافية */}
-              <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6 border border-green-100">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
-                  <div className="p-2 bg-green-600 rounded-lg">
-                    <MessageSquare className="w-5 h-5 text-white" />
-                </div>
-                  تفاصيل إضافية
-                </h3>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    ملاحظات خاصة (اختياري)
-                  </label>
-                  <textarea
-                    name="serviceDetails"
-                    value={formData.serviceDetails}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder-gray-400 resize-none shadow-sm"
-                    placeholder="أي تفاصيل إضافية تود إضافتها..."
-                  />
-        </div>
-      </div>
-
-              {/* أزرار التحكم */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowBookingForm(false)}
-                  className="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {submitting ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      جاري الإرسال...
-                    </div>
-                  ) : (
-                    'تأكيد الحجز'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Category Options Section */}
-      {getCategoryOptions() && (
-        <div className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">خيارات الخدمة المتاحة</h2>
-              <p className="text-xl text-gray-600">اختر من بين مجموعة متنوعة من الخيارات</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {getCategoryOptions()?.options.map((option, index) => (
                 <div
                   key={index}
-                  className="group p-6 bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 rounded-2xl border border-gray-200 hover:border-blue-200 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
+                  className="group bg-white/80 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-slate-200 hover:border-cyan-300 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
+                    <div className="p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                       {getCategoryIcon(service.category)}
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800">{option}</h3>
+                    <h3 className="text-lg font-bold text-slate-800 group-hover:text-cyan-600 transition-colors">
+                      {option}
+                    </h3>
                   </div>
-                  <p className="text-gray-600">خدمة متخصصة ومهنية بأعلى معايير الجودة</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-blue-600 font-semibold">متاح الآن</span>
+                  <p className="text-slate-600 text-sm mb-4 leading-relaxed">
+                    خدمة متخصصة ومهنية بأعلى معايير الجودة والأمان
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      متاح الآن
+                    </span>
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Additional Info Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Why Choose Us */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl border border-cyan-100">
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg">
+                <Star className="w-5 h-5 text-white" />
+              </div>
+              لماذا تختارنا؟
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                <p className="text-slate-600">فريق عمل محترف ومدرب على أعلى مستوى</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                <p className="text-slate-600">خدمة عملاء متميزة على مدار الساعة</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                <p className="text-slate-600">أسعار تنافسية وشفافية كاملة في التعامل</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                <p className="text-slate-600">ضمان الجودة والرضا التام للعملاء</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Info */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl border border-cyan-100">
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg">
+                <Phone className="w-5 h-5 text-white" />
+              </div>
+              تواصل معنا
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                <Phone className="w-5 h-5 text-cyan-600" />
+                <div>
+                  <p className="text-sm text-slate-600">هاتف</p>
+                  <p className="font-semibold text-slate-800">0123-456-789</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                <MessageSquare className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="text-sm text-slate-600">واتساب</p>
+                  <p className="font-semibold text-slate-800">0123-456-789</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                <Clock className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-sm text-slate-600">ساعات العمل</p>
+                  <p className="font-semibold text-slate-800">24/7 طوال الأسبوع</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Booking Form Modal */}
+      {showBookingForm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-cyan-100">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-6 sm:p-8 rounded-t-3xl">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    احجز خدمة: {service.name}
+                  </h2>
+                  <p className="text-cyan-100">املأ البيانات التالية لإتمام الحجز</p>
+                </div>
+                <button
+                  onClick={() => setShowBookingForm(false)}
+                  className="text-white/80 hover:text-white p-3 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 sm:p-8">
+              <form onSubmit={handleBookingSubmit} className="space-y-8">
+                {/* البيانات الأساسية */}
+                <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-6 border border-cyan-200">
+                  <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    البيانات الشخصية
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-3">
+                        الاسم الكريم *
+                      </label>
+                      <div className="relative">
+                        <User className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleInputChange}
+                          className="w-full pr-12 pl-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                          placeholder="أدخل اسمك الكامل"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-3">
+                        رقم الجوال *
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <input
+                          type="tel"
+                          name="phoneNumber"
+                          value={formData.phoneNumber}
+                          onChange={handleInputChange}
+                          className="w-full pr-12 pl-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                          placeholder="05xxxxxxxx"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">
+                      العنوان بالتفصيل *
+                    </label>
+                    <div className="relative">
+                      <Home className="absolute right-3 top-4 h-5 w-5 text-slate-400" />
+                      <input
+                        type="text"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        className="w-full pr-12 pl-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                        placeholder="أدخل عنوانك بالتفصيل (الحي، الشارع، رقم المبنى)"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* خيارات مخصصة حسب الفئة */}
+                {getCategoryOptions() && (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+                    <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg">
+                        {getCategoryIcon(service.category)}
+                      </div>
+                      تفاصيل الخدمة
+                    </h3>
+
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-3">
+                          نوع الخدمة المطلوبة
+                        </label>
+                        <select
+                          name="selectedOption"
+                          value={formData.selectedOption}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 shadow-sm transition-all duration-300"
+                        >
+                          <option value="">اختر نوع الخدمة</option>
+                          {getCategoryOptions()?.options.map((option, index) => (
+                            <option key={index} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* إضافة الخيارات المخصصة هنا بنفس التحسينات */}
+                    </div>
+                  </div>
+                )}
+
+                {/* تفاصيل إضافية */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+                  <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                      <MessageSquare className="w-5 h-5 text-white" />
+                    </div>
+                    تفاصيل إضافية
+                  </h3>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">
+                      ملاحظات خاصة (اختياري)
+                    </label>
+                    <textarea
+                      name="serviceDetails"
+                      value={formData.serviceDetails}
+                      onChange={handleInputChange}
+                      rows={4}
+                      className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 placeholder-slate-400 resize-none shadow-sm transition-all duration-300"
+                      placeholder="أي تفاصيل إضافية تود إضافتها..."
+                    />
+                  </div>
+                </div>
+
+                {/* أزرار التحكم */}
+                <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowBookingForm(false)}
+                    className="flex-1 px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-all duration-300"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 px-6 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {submitting ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        جاري الإرسال...
+                      </div>
+                    ) : (
+                      'تأكيد الحجز'
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

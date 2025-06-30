@@ -243,33 +243,91 @@ const Home: React.FC = () => {
   }
 
   // Handle quick booking
-  const handleQuickBooking = (service?: Service) => {
-    setSelectedService(service || null);
+  const handleQuickBooking = async (service?: Service) => {
+    if (service && service.id) {
+      // جلب بيانات الخدمة الكاملة مع الأسئلة المخصصة
+      try {
+        const fullService = await servicesApi.getById(service.id);
+        if (fullService) {
+          // تحويل البيانات للنوع المطلوب
+          const formattedService: Service = {
+            ...fullService,
+            category: fullService.category || service.category || '',
+            categoryName: fullService.categoryName || service.categoryName || '',
+            homeShortDescription: fullService.homeShortDescription || service.homeShortDescription || '',
+            customQuestions: fullService.customQuestions || []
+          };
+          setSelectedService(formattedService);
+        } else {
+          setSelectedService(service);
+        }
+      } catch (error) {
+        console.error('Error fetching service details:', error);
+        setSelectedService(service);
+      }
+    } else {
+      setSelectedService(service || null);
+    }
     setShowBookingModal(true);
   };
 
   // Handle quick booking with default service data
-  const handleQuickBookingByCategory = (category: string) => {
-    const defaultService: Service = {
-      id: `quick-${category}`,
-      name: category === 'internal_delivery' ? 'توصيل أغراض داخلي' : 
-            category === 'external_trips' ? 'مشاوير خارجية' : 
-            'صيانة منزلية',
-      category: category || '',
-      categoryName: category === 'internal_delivery' ? 'توصيل داخلي' : 
-                   category === 'external_trips' ? 'مشاوير خارجية' : 
-                   'صيانة منزلية',
-      homeShortDescription: category === 'internal_delivery' ? 'خدمة توصيل سريعة داخل المدينة' : 
-                           category === 'external_trips' ? 'مشاوير خارجية لخميس مشيط وأبها' : 
-                           'خدمات صيانة منزلية شاملة',
-      price: category === 'internal_delivery' ? '20 ريال' : 
-             category === 'external_trips' ? 'من 250 ريال' : 
-             'حسب المطلوب',
-      customQuestions: []
-    };
-    
-    setSelectedService(defaultService);
-    setShowBookingModal(true);
+  const handleQuickBookingByCategory = async (category: string) => {
+    // البحث عن أول خدمة في هذه الفئة لجلب الأسئلة المخصصة
+    try {
+      const categoryServices = services.filter(s => s.category === category);
+      let serviceWithQuestions = null;
+      
+      if (categoryServices.length > 0) {
+        // جلب بيانات الخدمة الأولى الكاملة
+        const fullService = await servicesApi.getById(categoryServices[0].id);
+        serviceWithQuestions = fullService;
+      }
+      
+      const defaultService: Service = {
+        id: serviceWithQuestions?.id || `quick-${category}`,
+        name: category === 'internal_delivery' ? 'توصيل أغراض داخلي' : 
+              category === 'external_trips' ? 'مشاوير خارجية' : 
+              'صيانة منزلية',
+        category: category || '',
+        categoryName: category === 'internal_delivery' ? 'توصيل داخلي' : 
+                     category === 'external_trips' ? 'مشاوير خارجية' : 
+                     'صيانة منزلية',
+        homeShortDescription: category === 'internal_delivery' ? 'خدمة توصيل سريعة داخل المدينة' : 
+                             category === 'external_trips' ? 'مشاوير خارجية لخميس مشيط وأبها' : 
+                             'خدمات صيانة منزلية شاملة',
+        price: category === 'internal_delivery' ? '20 ريال' : 
+               category === 'external_trips' ? 'من 250 ريال' : 
+               'حسب المطلوب',
+        customQuestions: serviceWithQuestions?.customQuestions || []
+      };
+      
+      setSelectedService(defaultService);
+      setShowBookingModal(true);
+    } catch (error) {
+      console.error('Error fetching category service:', error);
+      // استخدام البيانات الافتراضية في حالة الخطأ
+      const defaultService: Service = {
+        id: `quick-${category}`,
+        name: category === 'internal_delivery' ? 'توصيل أغراض داخلي' : 
+              category === 'external_trips' ? 'مشاوير خارجية' : 
+              'صيانة منزلية',
+        category: category || '',
+        categoryName: category === 'internal_delivery' ? 'توصيل داخلي' : 
+                     category === 'external_trips' ? 'مشاوير خارجية' : 
+                     'صيانة منزلية',
+        homeShortDescription: category === 'internal_delivery' ? 'خدمة توصيل سريعة داخل المدينة' : 
+                             category === 'external_trips' ? 'مشاوير خارجية لخميس مشيط وأبها' : 
+                             'خدمات صيانة منزلية شاملة',
+        price: category === 'internal_delivery' ? '20 ريال' : 
+               category === 'external_trips' ? 'من 250 ريال' : 
+               'حسب المطلوب',
+        customQuestions: []
+      };
+      
+      setSelectedService(defaultService);
+      setShowBookingModal(true);
+    }
   };
 
   // Close booking modal
@@ -297,9 +355,9 @@ const Home: React.FC = () => {
             <div className="order-2 lg:order-1 text-right space-y-8 scroll-animate opacity-0 translate-y-8 px-4 sm:px-6 lg:px-0">
               <div className="space-y-6">
                 <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-slate-800 leading-tight">
-                  <span className="text-gradient bg-clip-text text-transparent bg-gradient-to-l from-cyan-600 to-blue-600">لبيه</span>
+                  <span className="text-gradient bg-clip-text text-transparent bg-gradient-to-l from-cyan-600 to-blue-600"> لبيه </span>
                   <br className="hidden sm:block" /> 
-                  <span className="text-3xl sm:text-4xl lg:text-5xl">طلبك بين ايديك</span>
+                  <span className="text-3xl sm:text-4xl lg:text-5xl">طلبك بين ايديك </span>
                 </h1>
                 <p className="text-lg sm:text-xl lg:text-2xl text-slate-700 max-w-2xl leading-relaxed font-medium">
                   عالم جديد في خدمة توصيل الطلبات ومشاويرك الخاصة لأهالي الخارجة وما حولها.
@@ -326,20 +384,14 @@ const Home: React.FC = () => {
               </div>
 
               {/* Professional CTA Buttons */}
-              <div className="flex flex-wrap gap-4 justify-end pt-6">
+              <div className="flex justify-center lg:justify-end pt-6">
                 <Link 
                   to="/categories" 
-                  className="inline-flex items-center space-x-reverse space-x-3 px-8 py-4 bg-gradient-to-l from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  className="inline-flex items-center space-x-reverse space-x-3 px-12 py-6 bg-gradient-to-l from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-2xl text-xl font-bold transition-all duration-300 shadow-2xl hover:shadow-cyan-500/25 transform hover:-translate-y-1 hover:scale-105"
                 >
-                  <Package className="w-6 h-6" />
+                  <Package className="w-8 h-8" />
                   <span>تصفح خدماتنا</span>
-                </Link>
-                <Link 
-                  to="/contact" 
-                  className="inline-flex items-center space-x-reverse space-x-3 px-8 py-4 bg-white/80 backdrop-blur-sm hover:bg-white text-cyan-600 rounded-xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-cyan-200 hover:border-cyan-300 transform hover:-translate-y-1"
-                >
-                  <Phone className="w-6 h-6" />
-                  <span>اتصل بنا</span>
+                  <ArrowRight className="w-6 h-6 transform -rotate-180" />
                 </Link>
               </div>
             </div>
@@ -634,9 +686,9 @@ const Home: React.FC = () => {
         
         <div className="container-custom px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12 scroll-animate opacity-0 translate-y-8">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">إحصائيات مباشرة</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">خدماتنا المتميزة</h2>
             <p className="text-lg text-cyan-100 max-w-2xl mx-auto">
-              أرقام حقيقية تعكس مستوى خدماتنا وثقة عملائنا
+              نقدم خدمات عالية الجودة ومتنوعة لتلبية جميع احتياجاتكم
             </p>
           </div>
 
@@ -644,29 +696,29 @@ const Home: React.FC = () => {
             <div className="text-center scroll-animate opacity-0 translate-y-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-4 hover-lift">
                 <Users className="w-8 h-8 text-white mx-auto mb-3" />
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">{services.length}</div>
-                <div className="text-cyan-100 text-sm">خدمة متاحة</div>
+                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">متنوعة</div>
+                <div className="text-cyan-100 text-sm">خدمات شاملة</div>
               </div>
             </div>
             <div className="text-center scroll-animate opacity-0 translate-y-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-4 hover-lift">
                 <Award className="w-8 h-8 text-white mx-auto mb-3" />
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">{categories.length}</div>
-                <div className="text-cyan-100 text-sm">فئة خدمات</div>
+                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">متخصصة</div>
+                <div className="text-cyan-100 text-sm">فئات متميزة</div>
               </div>
             </div>
             <div className="text-center scroll-animate opacity-0 translate-y-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-4 hover-lift">
                 <Star className="w-8 h-8 text-white mx-auto mb-3" />
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">4.9</div>
-                <div className="text-cyan-100 text-sm">تقييم العملاء</div>
+                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">ممتازة</div>
+                <div className="text-cyan-100 text-sm">جودة عالية</div>
               </div>
             </div>
             <div className="text-center scroll-animate opacity-0 translate-y-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-4 hover-lift">
                 <CheckCircle className="w-8 h-8 text-white mx-auto mb-3" />
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">24/7</div>
-                <div className="text-cyan-100 text-sm">خدمة مستمرة</div>
+                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">موثوقة</div>
+                <div className="text-cyan-100 text-sm">دائماً متاحة</div>
               </div>
             </div>
           </div>
@@ -1084,13 +1136,7 @@ const Home: React.FC = () => {
               <div>
                 <h4 className="text-white font-bold text-lg mb-4">تواصل معنا</h4>
                 <ul className="space-y-3 text-sm md:text-base">
-                  <li className="flex items-start gap-3 text-slate-300">
-                    <MapPin className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-white">موقعنا</p>
-                      <p>الخارجة، محافظة الوادي الجديد</p>
-                    </div>
-                  </li>
+                 
                   <li className="flex items-start gap-3 text-slate-300">
                     <Phone className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
                     <div>
@@ -1122,7 +1168,7 @@ const Home: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="text-slate-400 text-center sm:text-left">
                 <p>&copy; {new Date().getFullYear()} <span className="text-cyan-400 font-semibold">لبيه</span> - جميع الحقوق محفوظة</p>
-                <p className="mt-1">تم التطوير بـ ❤️ لخدمة أهالي الخارجة</p>
+                <p className="mt-1"> © 2025 لبيه -  LBEH | تم التطوير بواسطة <a href="https://www.instagram.com/artc.ode39?igsh=aW4zZTM4Z2I1a29l" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-500 transition-colors duration-300">ArtCode</a>  </p>
               </div>
               <div className="flex items-center gap-4 text-slate-400">
                 <a href="#" className="hover:text-cyan-400 transition-colors duration-300">سياسة الخصوصية</a>

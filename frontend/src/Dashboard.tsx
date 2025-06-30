@@ -41,6 +41,31 @@ import ServiceModal from './components/ServiceModal';
 import CategoryModal from './components/CategoryModal';
 import ProviderModal from './components/ProviderModal';
 
+// Add custom scrollbar styles
+const customScrollbarStyles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(75, 85, 99, 0.3);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.6);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.8);
+  }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = customScrollbarStyles;
+  document.head.appendChild(styleSheet);
+}
+
 function Dashboard() {
   // State
   const [services, setServices] = useState<Service[]>([]);
@@ -117,49 +142,50 @@ function Dashboard() {
         setLastVisible(null);
         setHasMore(true);
       }
-      let logDetails = {};
+
+      // تحميل الفئات دائماً لأنها مطلوبة في جميع المودالز
+      const categoriesData = await categoriesApi.getAll();
+      setCategories(categoriesData);
+
+      let logDetails: any = { categories: categoriesData.length };
       switch(activeTab) {
         case 'services': {
           const serviceResponse = await servicesApi.getAll(null, 10);
           setServices(serviceResponse.services);
           setLastVisible(serviceResponse.lastVisible);
           setHasMore(serviceResponse.lastVisible !== null);
-          logDetails = { services: serviceResponse.services.length };
+          logDetails.services = serviceResponse.services.length;
           break;
         }
         case 'categories': {
-          const categoryResponse = await categoriesApi.getAll();
-          setCategories(categoryResponse);
-          logDetails = { categories: categoryResponse.length };
+          // الفئات تم تحميلها فعلاً في الأعلى
           break;
         }
         case 'providers': {
           const providerResponse = await providersApi.getAll();
           setProviders(providerResponse);
-          logDetails = { providers: providerResponse.length };
+          logDetails.providers = providerResponse.length;
           break;
         }
         case 'bookings': {
           const bookingResponse = await fetchBookings();
           setBookings(bookingResponse);
           lastBookingIdsRef.current = new Set(bookingResponse.map(booking => booking.id));
-          logDetails = { bookings: bookingResponse.length };
+          logDetails.bookings = bookingResponse.length;
           break;
         }
         case 'overview': {
-          const [servicesData, categoriesData, providersData, bookingsData] = await Promise.all([
+          const [servicesData, providersData, bookingsData] = await Promise.all([
             servicesApi.getAll(null, 5),
-            categoriesApi.getAll(),
             providersApi.getAll(),
             fetchBookings()
           ]);
           setServices(servicesData.services);
-          setCategories(categoriesData);
           setProviders(providersData);
           setBookings(bookingsData);
           logDetails = {
+            ...logDetails,
             services: servicesData.services.length,
-            categories: categoriesData.length,
             providers: providersData.length,
             bookings: bookingsData.length
           };
@@ -496,7 +522,7 @@ function Dashboard() {
           <h2 className="text-xl font-bold text-white mb-2">عذراً، حدث خطأ</h2>
           <p className="text-gray-300 mb-6">{error}</p>
           <button
-            onClick={loadData}
+            onClick={() => loadData()}
             className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl transition-all duration-200 shadow-lg transform hover:scale-105 flex items-center gap-2 mx-auto"
           >
             <RefreshCw className="w-4 h-4" />
@@ -624,7 +650,7 @@ function Dashboard() {
               <span>اختبار Cloudinary</span>
               </button>
               <button
-              onClick={loadData}
+              onClick={() => loadData()}
               className="w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-xl font-medium transition-colors group"
             >
               <RefreshCw className="w-5 h-5 group-hover:animate-spin transition-all" />
@@ -671,91 +697,283 @@ function Dashboard() {
         {/* Enhanced Content */}
         <div className="p-6">
           {activeTab === 'overview' && (
-            <div className="space-y-8">
-              {/* Enhanced Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-lg rounded-2xl p-6 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 transform hover:scale-105 shadow-xl">
+            <div className="space-y-6">
+              {/* Compact Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-lg rounded-xl p-4 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 transform hover:scale-105 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-blue-300 text-sm font-medium">إجمالي الخدمات</p>
-                      <p className="text-3xl font-bold text-white mt-1">{services.length}</p>
-                      <p className="text-blue-400 text-xs mt-1">+2 هذا الأسبوع</p>
+                      <p className="text-blue-300 text-xs font-medium">الخدمات</p>
+                      <p className="text-2xl font-bold text-white mt-1">{services.length}</p>
                     </div>
-                    <div className="p-3 bg-blue-500/30 rounded-xl">
-                      <Package className="w-8 h-8 text-blue-300" />
+                    <div className="p-2 bg-blue-500/30 rounded-lg">
+                      <Package className="w-5 h-5 text-blue-300" />
+                    </div>
                   </div>
                 </div>
-                    </div>
                 
-                <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 backdrop-blur-lg rounded-2xl p-6 border border-green-500/30 hover:border-green-400/50 transition-all duration-300 transform hover:scale-105 shadow-xl">
+                <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 backdrop-blur-lg rounded-xl p-4 border border-green-500/30 hover:border-green-400/50 transition-all duration-300 transform hover:scale-105 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-green-300 text-sm font-medium">إجمالي الفئات</p>
-                      <p className="text-3xl font-bold text-white mt-1">{categories.length}</p>
-                      <p className="text-green-400 text-xs mt-1">مستقر</p>
+                      <p className="text-green-300 text-xs font-medium">الفئات</p>
+                      <p className="text-2xl font-bold text-white mt-1">{categories.length}</p>
                     </div>
-                    <div className="p-3 bg-green-500/30 rounded-xl">
-                      <Tag className="w-8 h-8 text-green-300" />
+                    <div className="p-2 bg-green-500/30 rounded-lg">
+                      <Tag className="w-5 h-5 text-green-300" />
+                    </div>
                   </div>
                 </div>
-                </div>
                 
-                <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 transform hover:scale-105 shadow-xl">
+                <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 backdrop-blur-lg rounded-xl p-4 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 transform hover:scale-105 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-purple-300 text-sm font-medium">إجمالي الحجوزات</p>
-                      <p className="text-3xl font-bold text-white mt-1">{bookings.length}</p>
-                      <p className="text-purple-400 text-xs mt-1">+{newBookingsCount} جديد</p>
+                      <p className="text-purple-300 text-xs font-medium">الحجوزات</p>
+                      <p className="text-2xl font-bold text-white mt-1">{bookings.length}</p>
                     </div>
-                    <div className="p-3 bg-purple-500/30 rounded-xl relative">
-                      <Calendar className="w-8 h-8 text-purple-300" />
+                    <div className="p-2 bg-purple-500/30 rounded-lg relative">
+                      <Calendar className="w-5 h-5 text-purple-300" />
                       {newBookingsCount > 0 && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
                           <span className="text-xs text-white font-bold">{newBookingsCount}</span>
                         </div>
                       )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-                <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 backdrop-blur-lg rounded-2xl p-6 border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 transform hover:scale-105 shadow-xl">
+                <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 backdrop-blur-lg rounded-xl p-4 border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 transform hover:scale-105 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-orange-300 text-sm font-medium">الحجوزات المعلقة</p>
-                      <p className="text-3xl font-bold text-white mt-1">
+                      <p className="text-orange-300 text-xs font-medium">معلق</p>
+                      <p className="text-2xl font-bold text-white mt-1">
                         {bookings.filter(b => b.status === 'pending').length}
                       </p>
-                      <p className="text-orange-400 text-xs mt-1">يحتاج مراجعة</p>
-                      </div>
-                    <div className="p-3 bg-orange-500/30 rounded-xl">
-                      <Users className="w-8 h-8 text-orange-300" />
                     </div>
-                      </div>
+                    <div className="p-2 bg-orange-500/30 rounded-lg">
+                      <Users className="w-5 h-5 text-orange-300" />
                     </div>
-                </div>
-
-              {/* Recent Activity */}
-              <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-400" />
-                    النشاط الأخير
-                </h3>
-                <div className="space-y-3">
-                  {bookings.slice(0, 5).map((booking, index) => (
-                    <div key={booking.id} className="flex items-center gap-4 p-3 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-colors">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                        <div className="flex-1">
-                        <p className="text-white text-sm font-medium">حجز جديد: {booking.serviceName}</p>
-                        <p className="text-gray-400 text-xs">العميل: {booking.fullName}</p>
-                        </div>
-                      <div className="text-xs text-gray-400">
-                        {formatTimeAgo(new Date(booking.createdAt || ''))}
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
+
+              {/* Live Bookings Section */}
+              <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl border border-gray-700/50 shadow-xl">
+                <div className="p-6 border-b border-gray-700/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">الحجوزات الحديثة</h3>
+                        <p className="text-gray-400 text-sm">تحديث مباشر كل 5 ثوانِ</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm border border-green-500/30">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span>مباشر</span>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('bookings')}
+                        className="text-blue-400 hover:text-blue-300 text-sm font-medium hover:underline transition-colors"
+                      >
+                        عرض الكل ←
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  {/* Status Summary */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="text-center p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                      <div className="text-yellow-400 font-bold text-lg">{bookings.filter(b => b.status === 'pending').length}</div>
+                      <div className="text-yellow-300 text-xs">معلق</div>
+                    </div>
+                    <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                      <div className="text-blue-400 font-bold text-lg">{bookings.filter(b => b.status === 'confirmed').length}</div>
+                      <div className="text-blue-300 text-xs">مؤكد</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                      <div className="text-green-400 font-bold text-lg">{bookings.filter(b => b.status === 'completed').length}</div>
+                      <div className="text-green-300 text-xs">مكتمل</div>
+                    </div>
+                    <div className="text-center p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <div className="text-red-400 font-bold text-lg">{bookings.filter(b => b.status === 'cancelled').length}</div>
+                      <div className="text-red-300 text-xs">ملغي</div>
+                    </div>
+                  </div>
+
+                  {/* Bookings List */}
+                  {bookings.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-20 h-20 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Calendar className="w-8 h-8 text-gray-500" />
+                      </div>
+                      <p className="text-gray-400 text-lg font-medium">لا توجد حجوزات حالياً</p>
+                      <p className="text-gray-500 text-sm mt-2">ستظهر الحجوزات الجديدة هنا تلقائياً</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+                      {bookings.slice(0, 8).map((booking, index) => (
+                        <div key={booking.id} className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 hover:border-gray-500/50 transition-all duration-300 hover:bg-gray-700/40">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                  {index + 1}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-bold text-white text-base">{booking.serviceName}</h4>
+                                  <p className="text-gray-400 text-sm">{booking.fullName}</p>
+                                </div>
+                                <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
+                                  {getStatusIcon(booking.status)}
+                                  {booking.status === 'pending' && 'معلق'}
+                                  {booking.status === 'confirmed' && 'مؤكد'}
+                                  {booking.status === 'completed' && 'مكتمل'}
+                                  {booking.status === 'cancelled' && 'ملغي'}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                <div className="flex items-center gap-2 text-gray-300">
+                                  <Phone className="w-3 h-3 text-green-400" />
+                                  <span className="text-xs">{booking.phoneNumber}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-300">
+                                  <MapPin className="w-3 h-3 text-red-400" />
+                                  <span className="text-xs truncate">{booking.address}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-300">
+                                  <Clock className="w-3 h-3 text-purple-400" />
+                                  <span className="text-xs">{formatTimeAgo(new Date(booking.createdAt || ''))}</span>
+                                </div>
+                              </div>
+
+                              {booking.serviceDetails && (
+                                <div className="bg-gray-600/30 rounded-lg p-2 mb-3">
+                                  <p className="text-gray-300 text-xs line-clamp-2">
+                                    <strong>التفاصيل:</strong> {booking.serviceDetails}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* عرض مختصر للأسئلة المخصصة */}
+                              {booking.customAnswers && Object.keys(booking.customAnswers).length > 0 && (
+                                <div className="bg-purple-500/10 rounded-lg p-2 border border-purple-500/20">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <FileText className="w-3 h-3 text-purple-400" />
+                                    <span className="text-purple-300 text-xs font-medium">إجابات إضافية</span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    {Object.keys(booking.customAnswers).length} إجابة مخصصة
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col gap-1 ml-4">
+                              <button
+                                onClick={() => openProviderModal(booking)}
+                                className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-xs transition-colors"
+                              >
+                                إرسال
+                              </button>
+                              {booking.status === 'pending' && (
+                                <>
+                                  <button
+                                    onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
+                                    className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs transition-colors"
+                                  >
+                                    تأكيد
+                                  </button>
+                                  <button
+                                    onClick={() => handleBookingStatusUpdate(booking.id, 'cancelled')}
+                                    className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md text-xs transition-colors"
+                                  >
+                                    إلغاء
+                                  </button>
+                                </>
+                              )}
+                              {booking.status === 'confirmed' && (
+                                <button
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
+                                  className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md text-xs transition-colors"
+                                >
+                                  إكمال
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {bookings.length > 8 && (
+                        <div className="text-center pt-4 border-t border-gray-700/50">
+                          <button
+                            onClick={() => setActiveTab('bookings')}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg text-sm transition-all duration-200 transform hover:scale-105 flex items-center gap-2 mx-auto"
+                          >
+                            <Calendar className="w-4 h-4" />
+                            عرض جميع الحجوزات ({bookings.length})
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => setActiveTab('services')}
+                  className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 backdrop-blur-lg rounded-xl p-4 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 transform hover:scale-105 text-right"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/30 rounded-lg">
+                      <Package className="w-5 h-5 text-blue-300" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm">إدارة الخدمات</h4>
+                      <p className="text-blue-300 text-xs">إضافة وتعديل الخدمات</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('categories')}
+                  className="bg-gradient-to-r from-green-500/20 to-green-600/20 backdrop-blur-lg rounded-xl p-4 border border-green-500/30 hover:border-green-400/50 transition-all duration-300 transform hover:scale-105 text-right"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-500/30 rounded-lg">
+                      <Tag className="w-5 h-5 text-green-300" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm">إدارة الفئات</h4>
+                      <p className="text-green-300 text-xs">تنظيم وإدارة الفئات</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('providers')}
+                  className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 backdrop-blur-lg rounded-xl p-4 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 transform hover:scale-105 text-right"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-500/30 rounded-lg">
+                      <Users className="w-5 h-5 text-purple-300" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm">إدارة المورّدين</h4>
+                      <p className="text-purple-300 text-xs">إضافة وإدارة المورّدين</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
           )}
 
           {activeTab === 'categories' && (
@@ -778,28 +996,28 @@ function Dashboard() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-xl">
                           {category.icon || '📦'}
-                      </div>
+                        </div>
                         <div>
                           <h4 className="font-bold text-white text-lg">{category.name}</h4>
                           <p className="text-gray-400 text-sm">
                             {services.filter(s => s.category === category.id).length} خدمة
                           </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleCategoryEdit(category)}
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleCategoryEdit(category)}
                           className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"
-                      >
+                        >
                           <Edit className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleCategoryDelete(category.id)}
+                        </button>
+                        <button 
+                          onClick={() => handleCategoryDelete(category.id)}
                           className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <p className="text-gray-300 text-sm leading-relaxed">{category.description}</p>
                   </div>
@@ -922,7 +1140,7 @@ function Dashboard() {
                       </div>
                   </div>
                   <button
-                  onClick={loadData}
+                  onClick={() => loadData()}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-lg transition-colors"
                   >
                   <RefreshCw className="w-4 h-4" />

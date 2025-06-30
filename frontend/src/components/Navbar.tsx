@@ -59,9 +59,7 @@ const Navbar: React.FC = () => {
               alt="شعار لبيه"
               className="w-16 h-16 rounded-2xl shadow-lg transform transition-transform duration-300 group-hover:scale-105 group-hover:shadow-xl object-contain"
             />
-            <div className="flex flex-col">
-              <span className="text-3xl lg:text-4xl font-bold bg-gradient-to-l from-cyan-600 to-blue-700 bg-clip-text text-transparent">لبيه</span>
-            </div>
+           
             {servicesCount > 0 && (
               <div className="hidden sm:flex items-center gap-2 bg-white/70 backdrop-blur-sm text-cyan-700 text-sm px-4 py-2 rounded-full shadow-sm border border-cyan-100">
                 <Package className="w-4 h-4" />
