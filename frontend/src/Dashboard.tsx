@@ -489,9 +489,9 @@ function Dashboard() {
 
   const buildWhatsAppMessage = (booking: any) => {
     let msg = `🔔 *حجز جديد لخدمة ${booking.serviceName}*\n\n`;
-    msg += `👤 *العميل:* ${booking.customerName}\n`;
-    msg += `📞 *الهاتف:* ${booking.customerPhone}\n`;
-    msg += `🏠 *العنوان:* ${booking.address}\n`;
+    msg += `👤 *العميل:* ${booking.fullName || booking.customerName || 'غير محدد'}\n`;
+    msg += `📞 *الهاتف:* ${booking.phoneNumber || booking.customerPhone || 'غير محدد'}\n`;
+    msg += `🏠 *العنوان:* ${booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}\n`;
     msg += `🆔 *رقم الحجز:* ${booking.id}\n`;
     msg += `📅 *تاريخ الحجز:* ${new Date(booking.createdAt).toLocaleString('ar-SA')}\n\n`;
     
@@ -520,7 +520,7 @@ function Dashboard() {
     if (booking.destination) {
       msg += `📍 *الوجهة:* ${booking.destination}\n`;
     }
-    if (booking.startLocation) {
+    if (booking.startLocation && booking.startLocation !== booking.address) {
       msg += `🚩 *نقطة البداية:* ${booking.startLocation}\n`;
     }
     if (booking.preferredTime) {
@@ -528,6 +528,9 @@ function Dashboard() {
     }
     if (booking.urgentDelivery) {
       msg += `🚨 *توصيل عاجل* ⚡\n`;
+    }
+    if (booking.issueDescription) {
+      msg += `🔧 *وصف المشكلة:* ${booking.issueDescription}\n`;
     }
     
     msg += '\n⚡ *يرجى التواصل مع العميل في أقرب وقت ممكن*\n';
@@ -1057,18 +1060,25 @@ function Dashboard() {
                                 <div className="flex items-center gap-1 text-blue-600">
                                   <User className="w-3 h-3 flex-shrink-0" />
                                   <span className="font-medium">الاسم:</span>
-                                  <span className="text-blue-800 break-words">{booking.customerName || 'غير محدد'}</span>
+                                  <span className="text-blue-800 break-words">{booking.fullName || booking.customerName || 'غير محدد'}</span>
                                 </div>
                                 <div className="flex items-center gap-1 text-blue-600">
                                   <Phone className="w-3 h-3 flex-shrink-0" />
                                   <span className="font-medium">الهاتف:</span>
-                                  <span className="text-blue-800 break-words">{booking.customerPhone || 'غير محدد'}</span>
+                                  <span className="text-blue-800 break-words">{booking.phoneNumber || booking.customerPhone || 'غير محدد'}</span>
                                 </div>
+                                {(booking.customerEmail || booking.email) && (
+                                  <div className="flex items-center gap-1 text-blue-600 sm:col-span-2">
+                                    <Mail className="w-3 h-3 flex-shrink-0" />
+                                    <span className="font-medium">البريد:</span>
+                                    <span className="text-blue-800 break-words">{booking.customerEmail || booking.email}</span>
+                                  </div>
+                                )}
                                 <div className="flex items-center gap-1 text-blue-600 sm:col-span-2">
                                   <MapPin className="w-3 h-3 flex-shrink-0" />
                                   <span className="font-medium">العنوان:</span>
                                   <span className="text-blue-800 break-words">
-                                    {booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}
+                                    {booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-1 text-blue-600">
@@ -1496,25 +1506,25 @@ function Dashboard() {
                                 <div className="flex items-center gap-2 text-blue-600">
                                   <User className="w-4 h-4 flex-shrink-0" />
                                   <span className="text-sm font-medium">الاسم:</span>
-                                  <span className="text-sm text-blue-800 break-words">{booking.customerName || 'غير محدد'}</span>
+                                  <span className="text-sm text-blue-800 break-words">{booking.fullName || booking.customerName || 'غير محدد'}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-blue-600">
                                   <Phone className="w-4 h-4 flex-shrink-0" />
                                   <span className="text-sm font-medium">الهاتف:</span>
-                                  <span className="text-sm text-blue-800 break-words">{booking.customerPhone || 'غير محدد'}</span>
+                                  <span className="text-sm text-blue-800 break-words">{booking.phoneNumber || booking.customerPhone || 'غير محدد'}</span>
                                 </div>
-                                {booking.customerEmail && (
+                                {(booking.customerEmail || booking.email) && (
                                   <div className="flex items-center gap-2 text-blue-600 sm:col-span-2">
                                     <Mail className="w-4 h-4 flex-shrink-0" />
                                     <span className="text-sm font-medium">البريد:</span>
-                                    <span className="text-sm text-blue-800 break-words">{booking.customerEmail}</span>
+                                    <span className="text-sm text-blue-800 break-words">{booking.customerEmail || booking.email}</span>
                                   </div>
                                 )}
                                 <div className="flex items-center gap-2 text-blue-600 sm:col-span-2">
                                   <MapPin className="w-4 h-4 flex-shrink-0" />
                                   <span className="text-sm font-medium">العنوان:</span>
                                   <span className="text-sm text-blue-800 break-words">
-                                    {booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}
+                                    {booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2 text-blue-600">
@@ -1728,8 +1738,9 @@ function Dashboard() {
             <div className="bg-gray-700/50 rounded-lg p-3 mb-4">
               <p className="text-sm text-gray-300 mb-2">تفاصيل الحجز:</p>
               <p className="text-white font-semibold">{selectedBookingForSend.serviceName}</p>
-              <p className="text-gray-400 text-xs">العميل: {selectedBookingForSend.customerName}</p>
+              <p className="text-gray-400 text-xs">العميل: {selectedBookingForSend.fullName || selectedBookingForSend.customerName}</p>
               <p className="text-gray-400 text-xs">الفئة: {selectedBookingForSend.serviceCategory}</p>
+              <p className="text-gray-400 text-xs">الموردين المتاحين للفئة: {providers.filter(p => p.category === selectedBookingForSend.serviceCategory).length}</p>
             </div>
             <p className="text-sm text-gray-400 mb-4">اختر المورد لإرسال تفاصيل الحجز عبر واتساب:</p>
             <div className="space-y-3 max-h-60 overflow-y-auto">

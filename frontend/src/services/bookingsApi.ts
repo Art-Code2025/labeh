@@ -10,11 +10,16 @@ export interface Booking {
   serviceId: string;
   serviceName: string;
   serviceCategory: string;
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
+  // Customer info - supporting both old and new field names
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  fullName?: string;
+  phoneNumber?: string;
+  email?: string;
+  address?: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'in_progress';
-  bookingDate: string;
+  bookingDate?: string;
   createdAt: string;
   updatedAt: string;
   notes?: string;
@@ -30,6 +35,7 @@ export interface Booking {
   preferredTime?: string;
   deliveryLocation?: string;
   urgentDelivery?: boolean;
+  serviceDetails?: string;
 }
 
 export interface BookingStats {
