@@ -264,9 +264,15 @@ const Categories: React.FC = () => {
                     <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-cyan-600">
                       {category.name}
                     </h3>
-                    <p className="text-sm text-slate-500 mb-2">
-                      {services.filter(s => s.category === category.id).length} خدمة متاحة
-                    </p>
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        selectedCategory === category.id
+                          ? 'bg-cyan-500 text-white'
+                          : 'bg-cyan-100 text-cyan-600'
+                      } transition-colors duration-300`}>
+                        {services.filter(s => s.category === category.id).length} خدمة متاحة
+                      </div>
+                    </div>
                     <p className="text-xs text-slate-400 line-clamp-2">
                       {category.description}
                     </p>

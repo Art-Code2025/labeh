@@ -29,10 +29,8 @@ const ContactFooter: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // جلب البيانات من Firebase مباشرة
         const { collection, getDocs } = await import('firebase/firestore');
         
-        // جلب الفئات والخدمات
         const [servicesSnapshot, categoriesSnapshot] = await Promise.all([
           getDocs(collection(db, 'services')),
           getDocs(collection(db, 'categories'))
@@ -78,6 +76,10 @@ const ContactFooter: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    scrollToTop();
+  };
+
   const quickLinks = [
     { name: 'الرئيسية', href: '/' },
     { name: 'خدماتنا', href: '/categories' },
@@ -94,30 +96,30 @@ const ContactFooter: React.FC = () => {
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-slate-900 to-slate-950 text-white" dir="rtl">
+    <footer className="bg-white" dir="rtl">
       {/* Quick Stats Bar */}
-      <div className="bg-cyan-600">
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600">
         <div className="container mx-auto px-4 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 text-white">
               <Package className="w-5 h-5" />
               <span className="font-semibold">{stats.services} خدمة</span>
             </div>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 text-white">
               <Users className="w-5 h-5" />
               <span className="font-semibold">{stats.customers} عميل</span>
             </div>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 text-white">
               <Star className="w-5 h-5" />
               <span className="font-semibold">{stats.rating} تقييم</span>
             </div>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 text-white">
               <CheckCircle className="w-5 h-5" />
               <span className="font-semibold">24/7 دعم</span>
             </div>
           </div>
         </div>
-              </div>
+      </div>
               
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
@@ -125,25 +127,28 @@ const ContactFooter: React.FC = () => {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-xl">ل</span>
               </div>
-              <h3 className="text-2xl font-bold">لبيه</h3>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">لبيه</h3>
+                <p className="text-blue-600">خدمات متكاملة</p>
+              </div>
             </div>
-            <p className="text-slate-300 leading-relaxed mb-6">
+            <p className="text-gray-600 leading-relaxed mb-6">
               عالم جديد في خدمة توصيل الطلبات ومشاويرك الخاصة لأهالي الخارجة وما حولها. نحن نجعل حياتك أسهل وأكثر راحة.
             </p>
             <div className="flex space-x-4 space-x-reverse">
-              <a href="#" className="social-icon bg-blue-600 hover:bg-blue-700">
+              <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="social-icon bg-green-600 hover:bg-green-700">
+              <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
                 <MessageCircle className="w-5 h-5" />
               </a>
-              <a href="#" className="social-icon bg-pink-600 hover:bg-pink-700">
+              <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="social-icon bg-sky-600 hover:bg-sky-700">
+              <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
                 <Twitter className="w-5 h-5" />
               </a>
             </div>
@@ -151,33 +156,34 @@ const ContactFooter: React.FC = () => {
           
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-cyan-400">روابط سريعة</h4>
+            <h4 className="text-lg font-bold text-gray-900 mb-6">روابط سريعة</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
                   <Link 
                     to={link.href} 
-                    className="text-slate-300 hover:text-cyan-400 transition-colors duration-300 flex items-center gap-2"
+                    onClick={handleLinkClick}
+                    className="text-gray-600 hover:text-blue-600 transition-colors duration-300 flex items-center gap-2"
                   >
-                    <span className="w-1 h-1 bg-cyan-400 rounded-full"></span>
+                    <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
                     {link.name}
                   </Link>
                 </li>
               ))}
             </ul>
-              </div>
+          </div>
               
           {/* Services */}
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-cyan-400">خدماتنا</h4>
+            <h4 className="text-lg font-bold text-gray-900 mb-6">خدماتنا</h4>
             <ul className="space-y-3">
               {serviceCategories.map((service) => (
                 <li key={service.name}>
                   <Link 
                     to={service.href} 
-                    className="text-slate-300 hover:text-cyan-400 transition-colors duration-300 flex items-center gap-2"
+                    className="text-gray-600 hover:text-blue-600 transition-colors duration-300 flex items-center gap-2"
                   >
-                    <span className="w-1 h-1 bg-cyan-400 rounded-full"></span>
+                    <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
                     {service.name}
                   </Link>
                 </li>
@@ -187,39 +193,39 @@ const ContactFooter: React.FC = () => {
           
           {/* Contact Info */}
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-cyan-400">تواصل معنا</h4>
+            <h4 className="text-lg font-bold text-gray-900 mb-6">تواصل معنا</h4>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-slate-300">الخارجة، الوادي الجديد</p>
-                  <p className="text-slate-400 text-sm">جمهورية مصر العربية</p>
+                  <p className="text-gray-900">الخارجة، الوادي الجديد</p>
+                  <p className="text-gray-600 text-sm">جمهورية مصر العربية</p>
                 </div>
               </div>
               
               <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                <Phone className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 <div>
-                  <a href="tel:+201234567890" className="text-slate-300 hover:text-cyan-400 transition-colors">
+                  <a href="tel:+201234567890" className="text-gray-600 hover:text-blue-600 transition-colors">
                     +20 123 456 7890
                   </a>
-                    </div>
-                  </div>
+                </div>
+              </div>
                   
               <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                <Mail className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 <div>
-                  <a href="mailto:info@labeeh.com" className="text-slate-300 hover:text-cyan-400 transition-colors">
+                  <a href="mailto:info@labeeh.com" className="text-gray-600 hover:text-blue-600 transition-colors">
                     info@labeeh.com
-                      </a>
-                    </div>
-                  </div>
+                  </a>
+                </div>
+              </div>
               
               <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 <div>
-                  <p className="text-slate-300">متاح 24/7</p>
-                  <p className="text-slate-400 text-sm">خدمة على مدار الساعة</p>
+                  <p className="text-gray-900">متاح 24/7</p>
+                  <p className="text-gray-600 text-sm">خدمة على مدار الساعة</p>
                 </div>
               </div>
             </div>
@@ -228,20 +234,20 @@ const ContactFooter: React.FC = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-slate-800">
+      <div className="border-t border-gray-200">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-slate-400 text-sm text-center md:text-right">
-              © 2024 لبيه. جميع الحقوق محفوظة. | تطوير فريق لبيه التقني
+            <div className="text-gray-600 text-sm text-center md:text-right">
+              © {new Date().getFullYear()} لبيه. جميع الحقوق محفوظة. | تطوير فريق لبيه التقني
             </div>
             <div className="flex items-center gap-6 text-sm">
-              <Link to="/terms" className="text-slate-400 hover:text-cyan-400 transition-colors">
+              <Link to="/terms" className="text-gray-600 hover:text-blue-600 transition-colors">
                 الشروط والأحكام
               </Link>
-              <Link to="/privacy" className="text-slate-400 hover:text-cyan-400 transition-colors">
+              <Link to="/privacy" className="text-gray-600 hover:text-blue-600 transition-colors">
                 سياسة الخصوصية
               </Link>
-              <Link to="/support" className="text-slate-400 hover:text-cyan-400 transition-colors">
+              <Link to="/support" className="text-gray-600 hover:text-blue-600 transition-colors">
                 الدعم الفني
               </Link>
             </div>
@@ -253,13 +259,13 @@ const ContactFooter: React.FC = () => {
       {showBackToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 left-8 w-12 h-12 bg-cyan-600 hover:bg-cyan-700 text-white rounded-full shadow-lg transition-all duration-300 z-40 flex items-center justify-center"
+          className="fixed bottom-8 left-8 w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full shadow-lg transition-all duration-300 z-40 flex items-center justify-center"
           aria-label="العودة للأعلى"
         >
           <ArrowUp className="w-5 h-5" />
         </button>
       )}
-      </footer>
+    </footer>
   );
 };
 

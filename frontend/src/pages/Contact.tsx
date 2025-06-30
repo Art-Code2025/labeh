@@ -35,30 +35,23 @@ const Contact: React.FC = () => {
   const contactInfo = [
     {
       icon: Phone,
-      title: 'Call Us',
-      details: '+1 (234) 567-890',
-      description: 'Mon-Fri from 8am to 5pm',
-      action: 'tel:+1234567890'
+      title: 'اتصل بنا',
+      details: '+966 56 980 6839',
+      description: 'متاح 24/7',
+      action: 'tel:+966 56 980 6839'
     },
     {
       icon: Mail,
-      title: 'Email Us',
-      details: 'info@hocare.com',
-      description: 'Online support',
-      action: 'mailto:info@hocare.com'
-    },
-    {
-      icon: MapPin,
-      title: 'Visit Us',
-      details: '123 Main Street',
-      description: 'City, State 12345',
-      action: '#'
+      title: 'راسلنا',
+      details: 'elsadig6839@gmail.com',
+      description: 'الدعم الفني',
+      action: 'mailto:elsadig6839@gmail.com'
     },
     {
       icon: Clock,
-      title: 'Working Hours',
-      details: 'Mon - Fri: 8AM - 5PM',
-      description: 'Weekend: 9AM - 3PM',
+      title: 'ساعات العمل',
+      details: '24 ساعة',
+      description: 'طوال أيام الأسبوع',
       action: '#'
     }
   ];
@@ -72,10 +65,9 @@ const Contact: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success('Message sent successfully! We\'ll get back to you soon.');
+      toast.success('تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.');
       setFormData({
         name: '',
         email: '',
@@ -84,24 +76,24 @@ const Contact: React.FC = () => {
         message: ''
       });
     } catch (error) {
-      toast.error('Failed to send message. Please try again.');
+      toast.error('فشل إرسال الرسالة. يرجى المحاولة مرة أخرى.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gray-50 pt-20" dir="rtl">
       {/* Hero Section */}
       <section className="hero-gradient py-20">
         <div className="container-custom">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="heading-primary mb-6 animate-fade-in-up">
-              Contact <span className="text-gradient">Us</span>
+              تواصل <span className="text-gradient">معنا</span>
             </h1>
             <p className="text-body mb-8 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-              Get in touch with our team for any questions, support, or to schedule a service. 
-              We're here to help you with all your home service needs.
+              تواصل مع فريقنا لأي استفسارات أو دعم أو لجدولة خدمة.
+              نحن هنا لمساعدتك في جميع احتياجات خدماتك المنزلية.
             </p>
           </div>
         </div>
@@ -130,7 +122,7 @@ const Contact: React.FC = () => {
                       href={info.action}
                       className="inline-block mt-4 text-cyan-600 hover:text-cyan-700 font-semibold"
                     >
-                      Contact Now
+                      تواصل الآن
                     </a>
                   )}
                 </div>
@@ -147,13 +139,13 @@ const Contact: React.FC = () => {
             {/* Contact Form */}
             <div className="animate-fade-in-left">
               <div className="card p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
+                <h2 className="text-2xl font-bold text-slate-900 mb-6">أرسل لنا رسالة</h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Full Name *
+                        الاسم الكامل *
                       </label>
                       <input
                         type="text"
@@ -162,12 +154,12 @@ const Contact: React.FC = () => {
                         onChange={handleInputChange}
                         required
                         className="form-input"
-                        placeholder="Your full name"
+                        placeholder="اكتب اسمك الكامل"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Email Address *
+                        البريد الإلكتروني *
                       </label>
                       <input
                         type="email"
@@ -176,7 +168,7 @@ const Contact: React.FC = () => {
                         onChange={handleInputChange}
                         required
                         className="form-input"
-                        placeholder="your@email.com"
+                        placeholder="بريدك@مثال.com"
                       />
                     </div>
                   </div>
@@ -184,7 +176,7 @@ const Contact: React.FC = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Phone Number
+                        رقم الهاتف
                       </label>
                       <input
                         type="tel"
@@ -192,12 +184,12 @@ const Contact: React.FC = () => {
                         value={formData.phone}
                         onChange={handleInputChange}
                         className="form-input"
-                        placeholder="+1 (234) 567-890"
+                        placeholder="+966 5X XXX XXXX"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Subject *
+                        الموضوع *
                       </label>
                       <select
                         name="subject"
@@ -206,18 +198,18 @@ const Contact: React.FC = () => {
                         required
                         className="form-select"
                       >
-                        <option value="">Select a subject</option>
-                        <option value="general">General Inquiry</option>
-                        <option value="service">Service Request</option>
-                        <option value="support">Support</option>
-                        <option value="quote">Request Quote</option>
+                        <option value="">اختر الموضوع</option>
+                        <option value="general">استفسار عام</option>
+                        <option value="service">طلب خدمة</option>
+                        <option value="support">الدعم الفني</option>
+                        <option value="quote">طلب عرض سعر</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Message *
+                      الرسالة *
                     </label>
                     <textarea
                       name="message"
@@ -226,7 +218,7 @@ const Contact: React.FC = () => {
                       required
                       rows={6}
                       className="form-textarea"
-                      placeholder="Tell us about your needs..."
+                      placeholder="اخبرنا عن احتياجاتك..."
                     />
                   </div>
 
@@ -237,13 +229,13 @@ const Contact: React.FC = () => {
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="loading-spinner mr-2"></div>
-                        Sending...
+                        <div className="loading-spinner ml-2"></div>
+                        جاري الإرسال...
                       </>
                     ) : (
                       <>
-                        Send Message
-                        <Send className="w-5 h-5 ml-2" />
+                        إرسال الرسالة
+                        <Send className="w-5 h-5 mr-2" />
                       </>
                     )}
                   </button>
@@ -255,52 +247,12 @@ const Contact: React.FC = () => {
             <div className="animate-fade-in-right">
               {/* Map Placeholder */}
               <div className="card p-8 mb-8">
-                <h3 className="text-xl font-bold text-slate-900 mb-4">Our Location</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-4">موقعنا</h3>
                 <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">Interactive Map</p>
-                    <p className="text-sm text-gray-400">123 Main Street, City, State 12345</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Contact */}
-              <div className="card p-8">
-                <h3 className="text-xl font-bold text-slate-900 mb-4">Quick Contact</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center">
-                      <Phone className="w-5 h-5 text-cyan-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Emergency Service</p>
-                      <a href="tel:+1234567890" className="text-cyan-600 hover:text-cyan-700">
-                        +1 (234) 567-890
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center">
-                      <MessageCircle className="w-5 h-5 text-cyan-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Live Chat</p>
-                      <button className="text-cyan-600 hover:text-cyan-700">
-                        Start a conversation
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center">
-                      <Building className="w-5 h-5 text-cyan-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Office Hours</p>
-                      <p className="text-slate-600">Mon-Fri: 8AM-5PM</p>
-                    </div>
+                    <p className="text-gray-500">الخريطة التفاعلية</p>
+                    <p className="text-sm text-gray-400">الخارجة، الوادي الجديد</p>
                   </div>
                 </div>
               </div>
@@ -313,34 +265,34 @@ const Contact: React.FC = () => {
       <section className="py-20 bg-white">
         <div className="container-custom">
           <div className="text-center mb-16">
-            <h2 className="heading-secondary mb-4">Frequently Asked Questions</h2>
+            <h2 className="heading-secondary mb-4">الأسئلة الشائعة</h2>
             <p className="text-body max-w-2xl mx-auto">
-              Find answers to common questions about our services and processes.
+              اعثر على إجابات للأسئلة الشائعة حول خدماتنا وعملياتنا
             </p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="space-y-6">
               <div className="card p-6">
-                <h3 className="font-bold text-slate-900 mb-3">How quickly can you respond to service calls?</h3>
-                <p className="text-slate-600">We typically respond within 2-4 hours for standard requests and within 1 hour for emergency services.</p>
+                <h3 className="font-bold text-slate-900 mb-3">ما هي خدماتكم الأساسية؟</h3>
+                <p className="text-slate-600">نقدم خدمات متنوعة تشمل المشاوير الداخلية، المشاوير الخارجية، وخدمات الصيانة المنزلية الشاملة. نعمل على مدار الساعة لتلبية احتياجاتكم.</p>
               </div>
               
               <div className="card p-6">
-                <h3 className="font-bold text-slate-900 mb-3">Are your technicians licensed and insured?</h3>
-                <p className="text-slate-600">Yes, all our technicians are fully licensed, bonded, and insured for your peace of mind.</p>
+                <h3 className="font-bold text-slate-900 mb-3">ما هي قيم الشركة الأساسية؟</h3>
+                <p className="text-slate-600">نعمل وفق قيم أساسية تشمل الأمانة، الاحترافية، الابتكار، وخدمة العميل المتميزة. نسعى دائماً لتقديم أفضل تجربة من خلال منصاتنا الإلكترونية.</p>
               </div>
             </div>
             
             <div className="space-y-6">
               <div className="card p-6">
-                <h3 className="font-bold text-slate-900 mb-3">Do you offer warranties on your work?</h3>
-                <p className="text-slate-600">We provide a comprehensive warranty on all our services, with specific terms varying by service type.</p>
+                <h3 className="font-bold text-slate-900 mb-3">كيف يمكنني طلب خدمة؟</h3>
+                <p className="text-slate-600">يمكنك طلب الخدمة من خلال موقعنا الإلكتروني أو الاتصال بنا مباشرة. نحن متاحون 24/7 لتلبية طلباتكم وتقديم الدعم اللازم.</p>
               </div>
               
               <div className="card p-6">
-                <h3 className="font-bold text-slate-900 mb-3">What payment methods do you accept?</h3>
-                <p className="text-slate-600">We accept cash, checks, and all major credit cards for your convenience.</p>
+                <h3 className="font-bold text-slate-900 mb-3">هل تقدمون ضمانات على خدماتكم؟</h3>
+                <p className="text-slate-600">نعم، نقدم ضمانات شاملة على جميع خدماتنا، مع شروط محددة تختلف حسب نوع الخدمة. هدفنا هو ضمان رضاكم التام عن خدماتنا.</p>
               </div>
             </div>
           </div>
@@ -351,19 +303,19 @@ const Contact: React.FC = () => {
       <section className="py-16 bg-cyan-600">
         <div className="container-custom text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Get Started?
+            هل أنت مستعد للبدء؟
           </h2>
           <p className="text-xl text-cyan-100 mb-8 max-w-2xl mx-auto">
-            Contact us today for a free consultation and let us help you with your home service needs.
+            تواصل معنا اليوم للحصول على استشارة مجانية ودعنا نساعدك في تلبية احتياجاتك.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="tel:+1234567890" className="bg-white text-cyan-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center">
-              <Phone className="w-5 h-5 mr-2" />
-              Call Now
+            <a href="tel:+966569806839" className="bg-white text-cyan-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center">
+              <Phone className="w-5 h-5 ml-2" />
+              اتصل الآن
             </a>
-            <a href="mailto:info@hocare.com" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-cyan-600 px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center">
-              <Mail className="w-5 h-5 mr-2" />
-              Email Us
+            <a href="mailto:elsadig6839@gmail.com" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-cyan-600 px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center">
+              <Mail className="w-5 h-5 ml-2" />
+              راسلنا
             </a>
           </div>
         </div>

@@ -27,7 +27,10 @@ import {
   AlertCircle,
   Send,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  Facebook,
+  Twitter,
+  Instagram
 } from 'lucide-react';
 import { db } from '../firebase.config';
 import { collection, getDocs, DocumentSnapshot } from 'firebase/firestore';
@@ -1055,125 +1058,97 @@ const Home: React.FC = () => {
 
 
       {/* Premium Footer */}
-      <footer className="relative bg-gradient-to-b from-slate-800 to-slate-900 overflow-hidden">
+      <footer className="relative bg-white overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500"></div>
-          <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500"></div>
+          <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
         </div>
         
         <div className="container-custom relative z-10 px-4 sm:px-6 lg:px-8 pt-20 pb-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 scroll-animate opacity-0 translate-y-8">
             {/* Company Info */}
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <span className="text-white font-bold text-xl">ل</span>
-                  </div>
-                  <div>
-                    <h3 className="text-2xl md:text-3xl font-bold text-white">لبيه</h3>
-                    <p className="text-cyan-400 text-sm md:text-base font-medium">خدمات استثنائية</p>
-                  </div>
+            <div>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <span className="text-white text-2xl font-bold">ل</span>
                 </div>
-                <p className="text-slate-300 text-sm md:text-base leading-relaxed max-w-md">
-                  منصة رائدة في تقديم خدمات التوصيل والصيانة المنزلية بأعلى معايير الجودة والاحترافية لأهالي الخارجة والمناطق المحيطة.
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">لبيه</h3>
+                  <p className="text-blue-600">خدمات متكاملة</p>
+                </div>
+              </div>
+              <p className="text-gray-600 leading-relaxed mb-8 max-w-lg">
+                نحن نقدم خدمات متكاملة وحلول مبتكرة لتلبية احتياجاتكم. نسعى دائماً لتقديم أفضل تجربة ممكنة لعملائنا الكرام.
               </p>
-              </div>
-
-              {/* Social Media */}
-              <div>
-                <h4 className="text-white font-semibold text-base md:text-lg mb-4">تابعنا على</h4>
-                <div className="flex gap-3">
-                  <a href="#" className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
-                    </svg>
-                  </a>
-                  <a href="#" className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.486 2 2 6.486 2 12c0 1.825.494 3.535 1.352 5.004L2 22l5.035-1.316A9.945 9.945 0 0012 22c5.514 0 10-4.486 10-10S17.514 2 12 2zm0 18c-1.41 0-2.725-.362-3.882-.986l-2.681.7.72-2.629A7.946 7.946 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/>
-                      <path d="M9.5 7.5h5v1h-5zm0 2.5h5v1h-5zm0 2.5h3v1h-3z"/>
-                    </svg>
-                  </a>
-                  <a href="#" className="w-10 h-10 bg-gradient-to-br from-pink-600 to-rose-700 rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/>
-                      <path d="M13 7h-2v6h6v-2h-4z"/>
-                    </svg>
-                  </a>
-                </div>
+              <div className="flex items-center gap-4">
+                <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
+                  <Facebook className="w-5 h-5" />
+                </a>
+                <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
+                  <Twitter className="w-5 h-5" />
+                </a>
+                <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
+                  <Instagram className="w-5 h-5" />
+                </a>
               </div>
             </div>
 
-            {/* Links & Contact */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {/* Quick Links */}
+            <div className="grid grid-cols-2 gap-8">
               <div>
-                <h4 className="text-white font-bold text-lg mb-4">روابط سريعة</h4>
-                <ul className="space-y-3 text-sm md:text-base">
-                  <li><Link to="/" className="text-slate-300 hover:text-cyan-400 transition-colors duration-300 flex items-center gap-2 group">
-                    <HomeIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                    الرئيسية
-                  </Link></li>
-                  <li><Link to="/categories" className="text-slate-300 hover:text-cyan-400 transition-colors duration-300 flex items-center gap-2 group">
-                    <Package className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                    خدماتنا
-                  </Link></li>
-                  <li><Link to="/about" className="text-slate-300 hover:text-cyan-400 transition-colors duration-300 flex items-center gap-2 group">
-                    <Users className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                    من نحن
-                  </Link></li>
-                  <li><Link to="/contact" className="text-slate-300 hover:text-cyan-400 transition-colors duration-300 flex items-center gap-2 group">
-                    <Phone className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                    اتصل بنا
-                  </Link></li>
-              </ul>
-            </div>
-
-            {/* Contact Info */}
+                <h4 className="text-lg font-bold text-gray-900 mb-4">روابط سريعة</h4>
+                <ul className="space-y-3">
+                  <li>
+                    <a href="/" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">الرئيسية</a>
+                  </li>
+                  <li>
+                    <a href="/about" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">من نحن</a>
+                  </li>
+                  <li>
+                    <a href="/services" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">خدماتنا</a>
+                  </li>
+                  <li>
+                    <a href="/contact" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">اتصل بنا</a>
+                  </li>
+                </ul>
+              </div>
               <div>
-                <h4 className="text-white font-bold text-lg mb-4">تواصل معنا</h4>
-                <ul className="space-y-3 text-sm md:text-base">
-                 
-                  <li className="flex items-start gap-3 text-slate-300">
-                    <Phone className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-white">هاتف</p>
-                      <a href="tel:+20123456789" className="hover:text-cyan-400 transition-colors duration-300">0123-456-789</a>
-                    </div>
-                </li>
-                  <li className="flex items-start gap-3 text-slate-300">
-                    <Mail className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-white">البريد الإلكتروني</p>
-                      <a href="mailto:info@labeeh.com" className="hover:text-cyan-400 transition-colors duration-300">info@labeeh.com</a>
-                    </div>
-                </li>
-                  <li className="flex items-start gap-3 text-slate-300">
-                    <Clock className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-white">ساعات العمل</p>
-                      <p>24/7 - طوال أيام الأسبوع</p>
-                    </div>
-                </li>
-              </ul>
+                <h4 className="text-lg font-bold text-gray-900 mb-4">معلومات التواصل</h4>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2 text-gray-600">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                    <span>الخارجة، الوادي الجديد</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-600">
+                    <Phone className="w-5 h-5 text-blue-600" />
+                    <span>+20 123 456 7890</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-600">
+                    <Mail className="w-5 h-5 text-blue-600" />
+                    <span>info@labeeh.com</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-600">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    <span>24/7 متاح</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
 
           {/* Bottom Bar */}
-          <div className="border-t border-slate-700 pt-6 scroll-animate opacity-0 translate-y-8 text-sm">
+          <div className="pt-8 mt-8 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="text-slate-400 text-center sm:text-left">
-                <p>&copy; {new Date().getFullYear()} <span className="text-cyan-400 font-semibold">لبيه</span> - جميع الحقوق محفوظة</p>
-                <p className="mt-1"> © 2025 لبيه -  LBEH | تم التطوير بواسطة <a href="https://www.instagram.com/artc.ode39?igsh=aW4zZTM4Z2I1a29l" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-500 transition-colors duration-300">ArtCode</a>  </p>
+              <div className="text-gray-600 text-center sm:text-right">
+                <p>© {new Date().getFullYear()} <span className="text-blue-600 font-semibold">لبيه</span> - جميع الحقوق محفوظة</p>
+                <p className="mt-1">تم التطوير بواسطة <a href="https://www.instagram.com/artc.ode39?igsh=aW4zZTM4Z2I1a29l" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition-colors duration-300">ArtCode</a></p>
               </div>
-              <div className="flex items-center gap-4 text-slate-400">
-                <a href="#" className="hover:text-cyan-400 transition-colors duration-300">سياسة الخصوصية</a>
-                <a href="#" className="hover:text-cyan-400 transition-colors duration-300">الشروط والأحكام</a>
-                <a href="#" className="hover:text-cyan-400 transition-colors duration-300">اتفاقية الاستخدام</a>
+              <div className="flex items-center gap-6 text-gray-600">
+                <a href="#" className="hover:text-blue-600 transition-colors duration-300">سياسة الخصوصية</a>
+                <a href="#" className="hover:text-blue-600 transition-colors duration-300">الشروط والأحكام</a>
+                <a href="#" className="hover:text-blue-600 transition-colors duration-300">اتفاقية الاستخدام</a>
               </div>
             </div>
           </div>
@@ -1182,7 +1157,7 @@ const Home: React.FC = () => {
         {/* Back to Top Button */}
         <button 
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-full shadow-2xl hover:shadow-cyan-500/25 flex items-center justify-center transition-all duration-300 transform hover:scale-110 z-50"
+          className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full shadow-2xl hover:shadow-blue-500/25 flex items-center justify-center transition-all duration-300 transform hover:scale-110 z-50"
         >
           <ArrowRight className="w-6 h-6 transform rotate-90" />
         </button>
