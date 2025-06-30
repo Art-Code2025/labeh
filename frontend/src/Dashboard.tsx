@@ -43,7 +43,7 @@ import ServiceModal from './components/ServiceModal';
 import CategoryModal from './components/CategoryModal';
 import ProviderModal from './components/ProviderModal';
 
-// Add custom scrollbar styles
+// Add custom scrollbar styles and animations
 const customScrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -58,6 +58,39 @@ const customScrollbarStyles = `
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(59, 130, 246, 0.8);
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { 
+      opacity: 0; 
+      transform: translateY(20px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.8s ease-out both;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
   }
 `;
 
@@ -351,14 +384,26 @@ function Dashboard() {
   };
 
   // Booking handlers
-  const handleBookingStatusUpdate = async (bookingId: string, newStatus: 'pending' | 'confirmed' | 'completed' | 'cancelled') => {
+  const handleBookingStatusUpdate = async (bookingId: string, status: 'pending' | 'confirmed' | 'completed' | 'cancelled') => {
     try {
-      await updateBooking(bookingId, { status: newStatus });
-      toast.success('✅ تم تحديث حالة الحجز');
-      await loadData();
+      const success = await updateBooking(bookingId, status);
+      if (success) {
+        // Update local state
+        setBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking.id === bookingId 
+              ? { ...booking, status, updatedAt: new Date().toISOString() }
+              : booking
+          )
+        );
+        
+        toast.success(`تم ${status === 'confirmed' ? 'تأكيد' : status === 'completed' ? 'إكمال' : 'إلغاء'} الحجز بنجاح`);
+      } else {
+        toast.error('فشل في تحديث حالة الحجز');
+      }
     } catch (error) {
       console.error('Error updating booking status:', error);
-      toast.error('❌ فشل في تحديث حالة الحجز');
+      toast.error('حدث خطأ أثناء تحديث حالة الحجز');
     }
   };
 
@@ -401,7 +446,8 @@ function Dashboard() {
     }
   };
 
-  const formatTimeAgo = (date: Date) => {
+  const formatTimeAgo = (dateInput: Date | string) => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -536,38 +582,38 @@ function Dashboard() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-100 text-gray-900">
+    <div dir="rtl" className="min-h-screen bg-gray-50">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Enhanced Sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-80 bg-white border-l border-gray-200 transform transition-transform duration-300 ease-in-out z-50 shadow-xl ${
+      <div className={`fixed top-0 right-0 h-full w-80 bg-white border-l border-gray-100 transform transition-all duration-300 ease-in-out z-50 shadow-xl ${
         isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
       }`}>
         <div className="flex flex-col h-full">
           {/* Enhanced Header */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="relative group">
+                  <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center shadow-lg transform transition-all duration-300 group-hover:scale-105">
                     <Zap className="w-6 h-6 text-white" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">لبيه</h1>
-                  <p className="text-xs text-gray-500">لوحة التحكم المتطورة</p>
+                  <p className="text-xs text-gray-500">لوحة التحكم الذكية</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-105"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -577,12 +623,12 @@ function Dashboard() {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2">
             {[
-              { id: 'overview', label: 'نظرة عامة', icon: BarChart3 },
-              { id: 'categories', label: 'إدارة الفئات', icon: Tag },
-              { id: 'services', label: 'إدارة الخدمات', icon: Package },
-              { id: 'providers', label: 'إدارة المورّدين', icon: Users },
-              { id: 'bookings', label: 'إدارة الحجوزات', icon: Calendar }
-            ].map(({ id, label, icon: Icon }) => (
+              { id: 'overview', label: 'نظرة عامة', icon: BarChart3, color: 'from-blue-500 to-blue-600' },
+              { id: 'categories', label: 'إدارة الفئات', icon: Tag, color: 'from-purple-500 to-purple-600' },
+              { id: 'services', label: 'إدارة الخدمات', icon: Package, color: 'from-green-500 to-green-600' },
+              { id: 'providers', label: 'إدارة المورّدين', icon: Users, color: 'from-orange-500 to-orange-600' },
+              { id: 'bookings', label: 'إدارة الحجوزات', icon: Calendar, color: 'from-red-500 to-red-600' }
+            ].map(({ id, label, icon: Icon, color }) => (
               <button
                 key={id}
                 onClick={() => {
@@ -590,32 +636,42 @@ function Dashboard() {
                   setIsSidebarOpen(false);
                   if (id === 'bookings') setNewBookingsCount(0);
                 }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-200 group ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                   activeTab === id
-                    ? 'bg-gray-900 text-white shadow-lg'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                    ? `bg-gradient-to-r ${color} text-white shadow-lg transform scale-105`
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 hover:shadow-md'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon className="w-5 h-5" />
+                <div className="flex items-center gap-3 relative z-10">
+                  <Icon className={`w-5 h-5 transition-all duration-300 ${
+                    activeTab === id ? 'animate-pulse' : 'group-hover:scale-110'
+                  }`} />
                   <span>{label}</span>
                 </div>
+                {id === 'bookings' && newBookingsCount > 0 && (
+                  <div className="flex items-center justify-center w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full animate-bounce">
+                    {newBookingsCount}
+                  </div>
+                )}
+                {activeTab !== id && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                )}
               </button>
             ))}
           </nav>
 
           {/* Enhanced Footer */}
-          <div className="p-4 border-t border-gray-200 space-y-2">
+          <div className="p-4 border-t border-gray-100 space-y-2 bg-gradient-to-r from-gray-50 to-white">
             <button
               onClick={handleTestCloudinary}
-              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl font-medium transition-colors group"
+              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl font-medium transition-all duration-300 group transform hover:scale-105"
             >
-              <Zap className="w-5 h-5 group-hover:text-yellow-500 transition-colors" />
+              <Zap className="w-5 h-5 group-hover:text-yellow-500 transition-colors group-hover:animate-pulse" />
               <span>اختبار Cloudinary</span>
             </button>
             <button
               onClick={() => loadData()}
-              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl font-medium transition-colors group"
+              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl font-medium transition-all duration-300 group transform hover:scale-105"
             >
               <RefreshCw className="w-5 h-5 group-hover:animate-spin transition-all" />
               <span>تحديث البيانات</span>
@@ -627,38 +683,40 @@ function Dashboard() {
       {/* Enhanced Main Content */}
       <div className="lg:mr-80">
         {/* Enhanced Top Bar */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+        <div className="bg-white border-b border-gray-100 px-6 py-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-105"
               >
                 <Menu className="w-6 h-6" />
               </button>
               <Link
-                to="/overview"
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                to="/dashboard"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-md"
               >
                 <Home className="w-5 h-5" />
                 <span>الصفحة الرئيسية</span>
               </Link>
-              <h2 className="text-xl font-bold text-gray-900">
-                {activeTab === 'overview' && '📊 نظرة عامة'}
-                {activeTab === 'categories' && '🏷️ إدارة الفئات'}
-                {activeTab === 'services' && '📦 إدارة الخدمات'}
-                {activeTab === 'providers' && '👥 إدارة المورّدين'}
-                {activeTab === 'bookings' && '📅 إدارة الحجوزات'}
-              </h2>
-              {activeTab === 'bookings' && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>مباشر</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {activeTab === 'overview' && '📊 نظرة عامة'}
+                  {activeTab === 'categories' && '🏷️ إدارة الفئات'}
+                  {activeTab === 'services' && '📦 إدارة الخدمات'}
+                  {activeTab === 'providers' && '👥 إدارة المورّدين'}
+                  {activeTab === 'bookings' && '📅 إدارة الحجوزات'}
+                </h2>
+                {activeTab === 'bookings' && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm animate-pulse">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                    <span>مباشر</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 animate-fade-in">
                 آخر تحديث: {new Date().toLocaleTimeString('ar-SA')}
               </div>
             </div>
@@ -667,399 +725,174 @@ function Dashboard() {
 
         {/* Content Area */}
         <div className="p-6">
-          {/* Overview Tab */}
+          {/* Overview Tab - Enhanced */}
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 transform hover:scale-105 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-xs font-medium">الخدمات</p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">{services.length}</p>
-                    </div>
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Package className="w-5 h-5 text-gray-600" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 transform hover:scale-105 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-xs font-medium">الفئات</p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">{categories.length}</p>
-                    </div>
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Tag className="w-5 h-5 text-gray-600" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 transform hover:scale-105 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-xs font-medium">الحجوزات</p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">{bookings.length}</p>
-                    </div>
-                    <div className="p-2 bg-gray-100 rounded-lg relative">
-                      <Calendar className="w-5 h-5 text-gray-600" />
-                      {newBookingsCount > 0 && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 transform hover:scale-105 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-xs font-medium">معلق</p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">
-                        {bookings.filter(b => b.status === 'pending').length}
-                      </p>
-                    </div>
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Users className="w-5 h-5 text-gray-600" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Bookings */}
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">آخر الحجوزات</h3>
-                  <div className="space-y-4">
-                    {bookings.slice(0, 5).map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <Calendar className="w-6 h-6 text-gray-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900">{booking.serviceName}</h4>
-                            <p className="text-sm text-gray-500">{booking.customerName}</p>
-                          </div>
-                        </div>
-                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                          booking.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
-                          booking.status === 'completed' ? 'bg-green-100 text-green-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {booking.status === 'pending' ? 'معلق' :
-                           booking.status === 'confirmed' ? 'مؤكد' :
-                           booking.status === 'completed' ? 'مكتمل' :
-                           'ملغي'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Rest of the content remains the same but with updated colors */}
-          {activeTab === 'categories' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">الفئات</h3>
-                <button
-                  onClick={() => setShowCategoryModal(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl transition-all duration-200 shadow-lg transform hover:scale-105"
-                >
-                  <Plus className="w-4 h-4" />
-                  إضافة فئة
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {categories.map(category => (
-                  <div key={category.id} className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 transform hover:scale-105 shadow-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-xl">
-                          {category.icon || '📦'}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-white text-lg">{category.name}</h4>
-                          <p className="text-gray-400 text-sm">
-                            {services.filter(s => s.category === category.id).length} خدمة
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleCategoryEdit(category)}
-                          className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleCategoryDelete(category.id)}
-                          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-gray-300 text-sm leading-relaxed">{category.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'services' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">الخدمات</h3>
-                <button
-                  onClick={() => setShowServiceModal(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl transition-all duration-200 shadow-lg transform hover:scale-105"
-                >
-                  <Plus className="w-4 h-4" />
-                  إضافة خدمة
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {services.map(service => (
-                  <div key={service.id} className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 transform hover:scale-105 shadow-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-bold text-white text-lg">{service.name}</h4>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleServiceEdit(service)}
-                          className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleServiceDelete(service.id)}
-                          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">{service.homeShortDescription}</p>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-medium text-blue-400 bg-blue-500/20 px-3 py-1 rounded-full border border-blue-500/30">
-                        {service.categoryName}
-                      </span>
-                      {service.price && (
-                        <span className="text-yellow-400 font-bold">
-                          {service.price}
-                        </span>
-                      )}
-                    </div>
-                    {service.mainImage && (
-                      <img 
-                        src={service.mainImage} 
-                        alt={service.name}
-                        className="w-full h-32 object-cover rounded-xl mt-3 border border-gray-600/50"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-              {hasMore && (
-                    <div className="text-center mt-8">
-                        <button
-                            onClick={loadMore}
-                            disabled={loadingMore}
-                            className="bg-cyan-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-cyan-700 transition-colors disabled:bg-gray-400"
-                        >
-                            {loadingMore ? 'جاري التحميل...' : 'تحميل المزيد'}
-                        </button>
-                    </div>
-                )}
-            </div>
-          )}
-
-          {activeTab === 'providers' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">المورّدون</h3>
-                <button
-                  onClick={() => setShowProviderModalForm(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl transition-all duration-200 shadow-lg transform hover:scale-105"
-                >
-                  <Plus className="w-4 h-4" />
-                  إضافة مورّد
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {providers.map(provider => (
-                  <div key={provider.id} className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 transform hover:scale-105 shadow-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h4 className="font-bold text-white text-lg">{provider.name}</h4>
-                        <p className="text-gray-400 text-sm">{provider.phone}</p>
-                      </div>
-                      <span className="text-sm px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                        {categories.find(c => c.id === provider.category)?.name || provider.category}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => handleProviderEdit(provider)} className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"><Edit className="w-4 h-4"/></button>
-                      <button onClick={() => handleProviderDelete(provider.id)} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'bookings' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-4">
-                  <h3 className="text-2xl font-bold text-gray-900">الحجوزات</h3>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span>تحديث مباشر</span>
-                      </div>
-                  </div>
-                  <button
-                  onClick={() => loadData()}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-lg transition-colors"
+            <div className="space-y-8 animate-fade-in">
+              {/* Enhanced Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { label: 'الخدمات', count: services.length, icon: Package, color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50' },
+                  { label: 'الفئات', count: categories.length, icon: Tag, color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-50' },
+                  { label: 'الحجوزات', count: bookings.length, icon: Calendar, color: 'from-green-500 to-green-600', bgColor: 'bg-green-50' },
+                  { label: 'معلق', count: bookings.filter(b => b.status === 'pending').length, icon: Clock, color: 'from-orange-500 to-orange-600', bgColor: 'bg-orange-50' }
+                ].map((stat, index) => (
+                  <div 
+                    key={index}
+                    className={`${stat.bgColor} rounded-2xl p-6 border border-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 animate-slide-up`}
+                    style={{animationDelay: `${index * 0.1}s`}}
                   >
-                  <RefreshCw className="w-4 h-4" />
-                  تحديث
-                  </button>
-                </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-600 text-sm font-medium mb-1">{stat.label}</p>
+                        <p className="text-3xl font-bold text-gray-900">{stat.count}</p>
+                      </div>
+                      <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg transform transition-all duration-300 hover:scale-110`}>
+                        <stat.icon className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-              <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl border border-gray-700/50 overflow-hidden shadow-xl">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-gray-300">إجمالي الحجوزات: <span className="text-white font-bold">{bookings.length}</span></p>
+              {/* Enhanced Recent Bookings */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-up" style={{animationDelay: '0.4s'}}>
+                <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
+                        <Calendar className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900">آخر الحجوزات</h3>
+                    </div>
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                        <span className="text-gray-400">معلق ({bookings.filter(b => b.status === 'pending').length})</span>
+                        <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600">معلق ({bookings.filter(b => b.status === 'pending').length})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600">مؤكد ({bookings.filter(b => b.status === 'confirmed').length})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600">مكتمل ({bookings.filter(b => b.status === 'completed').length})</span>
+                      </div>
                     </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                        <span className="text-gray-400">مؤكد ({bookings.filter(b => b.status === 'confirmed').length})</span>
-                  </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                        <span className="text-gray-400">مكتمل ({bookings.filter(b => b.status === 'completed').length})</span>
                   </div>
                 </div>
-              </div>
 
-                  {bookings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-400 text-lg">لا توجد حجوزات حالياً</p>
-                      <p className="text-gray-500 text-sm mt-2">ستظهر الحجوزات الجديدة هنا تلقائياً</p>
+                {bookings.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">لا توجد حجوزات حالياً</p>
                   </div>
                 ) : (
-                    <div className="space-y-4">
-                      {bookings.map((booking) => (
-                        <div key={booking.id} className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 hover:border-gray-500/50 transition-all duration-300">
+                  <div className="divide-y divide-gray-100">
+                    {bookings.slice(0, 5).map((booking, index) => (
+                      <div 
+                        key={booking.id} 
+                        className="p-6 hover:bg-gray-50 transition-all duration-300 animate-slide-up"
+                        style={{animationDelay: `${0.5 + index * 0.1}s`}}
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h4 className="font-bold text-white text-lg">{booking.serviceName}</h4>
-                                <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="flex items-center gap-2">
+                                <User className="w-5 h-5 text-gray-400" />
+                                <span className="font-semibold text-gray-900">{booking.customerName}</span>
+                              </div>
+                              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
                                 {getStatusIcon(booking.status)}
-                                  {booking.status === 'pending' && 'معلق'}
-                                  {booking.status === 'confirmed' && 'مؤكد'}
-                                  {booking.status === 'completed' && 'مكتمل'}
-                                  {booking.status === 'cancelled' && 'ملغي'}
+                                {booking.status === 'pending' && 'معلق'}
+                                {booking.status === 'confirmed' && 'مؤكد'}
+                                {booking.status === 'completed' && 'مكتمل'}
+                                {booking.status === 'cancelled' && 'ملغي'}
                               </span>
                             </div>
                             
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div className="flex items-center gap-2 text-gray-300">
-                                  <User className="w-4 h-4 text-blue-400" />
-                                  <span className="text-sm">{booking.fullName}</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Phone className="w-4 h-4" />
+                                  <span>{booking.customerPhone}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-gray-300">
-                                  <Phone className="w-4 h-4 text-green-400" />
-                                  <span className="text-sm">{booking.phoneNumber}</span>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Package className="w-4 h-4" />
+                                  <span className="font-medium">{booking.serviceName}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-gray-300">
-                                  <MapPin className="w-4 h-4 text-red-400" />
-                                  <span className="text-sm">{booking.address}</span>
                               </div>
-                                <div className="flex items-center gap-2 text-gray-300">
-                                  <Clock className="w-4 h-4 text-purple-400" />
-                                  <span className="text-sm">{formatTimeAgo(new Date(booking.createdAt || ''))}</span>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{booking.startLocation || booking.deliveryLocation || 'غير محدد'}</span>
                                 </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Clock className="w-4 h-4" />
+                                  <span>{formatTimeAgo(booking.createdAt)}</span>
                                 </div>
-                              
-                                {booking.serviceDetails && (
-                                <div className="bg-gray-600/30 rounded-lg p-3 mb-4">
-                                  <p className="text-gray-300 text-sm"><strong>تفاصيل الخدمة:</strong> {booking.serviceDetails}</p>
-                                  </div>
-                                )}
+                              </div>
+                            </div>
 
-                                {/* عرض إجابات الأسئلة المخصصة */}
-                                {booking.customAnswers && Object.keys(booking.customAnswers).length > 0 && (
-                                  <div className="bg-purple-500/10 rounded-lg p-3 mb-4 border border-purple-500/30">
-                                    <h5 className="text-purple-300 font-semibold text-sm mb-3 flex items-center gap-2">
-                                      <FileText className="w-4 h-4" />
-                                      إجابات الأسئلة المخصصة
-                                    </h5>
-                                    <div className="space-y-2">
-                                      {(() => {
-                                        // البحث عن الخدمة المرتبطة للحصول على أسماء الأسئلة
-                                        const relatedService = services.find(s => s.id === booking.serviceId);
-                                        return Object.entries(booking.customAnswers).map(([questionId, answer]) => {
-                                          // البحث عن السؤال المطابق
-                                          const question = relatedService?.customQuestions?.find(q => q.id === questionId);
-                                          const questionText = question?.question || `السؤال ${questionId}`;
-                                          
-                                          // تنسيق الإجابة حسب نوعها
-                                          let formattedAnswer = '';
-                                          if (Array.isArray(answer)) {
-                                            formattedAnswer = answer.join(', ');
-                                          } else if (typeof answer === 'string' && answer.trim() !== '') {
-                                            formattedAnswer = answer;
-                                          } else if (answer !== null && answer !== undefined) {
-                                            formattedAnswer = String(answer);
-                                          }
-                                          
-                                          return formattedAnswer ? (
-                                            <div key={questionId} className="text-gray-300 text-sm">
-                                              <span className="text-purple-200 font-medium">{questionText}:</span>
-                                              <span className="mr-2">{formattedAnswer}</span>
-                                            </div>
-                                          ) : null;
-                                        });
-                                      })()}
+                            {/* Enhanced Booking Details */}
+                            {booking.customAnswers && Object.keys(booking.customAnswers).length > 0 && (
+                              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                  <FileText className="w-4 h-4" />
+                                  تفاصيل إضافية:
+                                </h4>
+                                <div className="space-y-2">
+                                  {Object.entries(booking.customAnswers).map(([key, value]) => (
+                                    <div key={key} className="flex items-start gap-2 text-sm">
+                                      <span className="text-gray-600 font-medium min-w-0 flex-shrink-0">{key}:</span>
+                                      <span className="text-gray-800 break-words">{Array.isArray(value) ? value.join(', ') : String(value)}</span>
                                     </div>
-                                  </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Service Details */}
+                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <Package className="w-4 h-4" />
+                                تفاصيل الخدمة:
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                {booking.destination && (
+                                  <div><span className="text-gray-600 font-medium">الوجهة:</span> <span className="text-gray-800">{booking.destination}</span></div>
                                 )}
+                                {booking.issueDescription && (
+                                  <div><span className="text-gray-600 font-medium">وصف المشكلة:</span> <span className="text-gray-800">{booking.issueDescription}</span></div>
+                                )}
+                                {booking.preferredTime && (
+                                  <div><span className="text-gray-600 font-medium">الوقت المفضل:</span> <span className="text-gray-800">{booking.preferredTime}</span></div>
+                                )}
+                                {booking.urgentDelivery && (
+                                  <div className="text-red-600 font-medium">🚨 توصيل عاجل</div>
+                                )}
+                              </div>
+                            </div>
+
+                            {booking.notes && (
+                              <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                                <h4 className="text-sm font-semibold text-blue-700 mb-1">ملاحظات:</h4>
+                                <p className="text-sm text-blue-600">{booking.notes}</p>
+                              </div>
+                            )}
                           </div>
-                          
-                            <div className="flex flex-col gap-2 ml-4">
-                            {/* زر إرسال إلى المورّد */}
-                            <button
-                              onClick={() => openProviderModal(booking)}
-                              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors"
-                            >
-                              إرسال للمورد
-                            </button>
+
+                          <div className="flex flex-col gap-2 ml-4">
                             {booking.status === 'pending' && (
                               <>
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
-                                    className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
+                                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                                 >
                                   تأكيد
                                 </button>
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'cancelled')}
-                                    className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+                                  className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                                 >
                                   إلغاء
                                 </button>
@@ -1068,7 +901,7 @@ function Dashboard() {
                             {booking.status === 'confirmed' && (
                               <button
                                 onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
-                                  className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
+                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-md"
                               >
                                 إكمال
                               </button>
@@ -1079,12 +912,359 @@ function Dashboard() {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Categories Tab */}
+          {activeTab === 'categories' && (
+            <div className="animate-fade-in">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">الفئات</h3>
+                <button
+                  onClick={() => setShowCategoryModal(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105"
+                >
+                  <Plus className="w-4 h-4" />
+                  إضافة فئة
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categories.map((category, index) => (
+                  <div 
+                    key={category.id} 
+                    className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-purple-200 transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg animate-slide-up"
+                    style={{animationDelay: `${index * 0.1}s`}}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-xl shadow-lg">
+                          {category.icon || '📦'}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-lg">{category.name}</h4>
+                          <p className="text-gray-500 text-sm">
+                            {services.filter(s => s.category === category.id).length} خدمة
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleCategoryEdit(category)}
+                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleCategoryDelete(category.id)}
+                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
+                    <p className="text-gray-600 text-sm leading-relaxed">{category.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Services Tab */}
+          {activeTab === 'services' && (
+            <div className="animate-fade-in">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">الخدمات</h3>
+                <button
+                  onClick={() => setShowServiceModal(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105"
+                >
+                  <Plus className="w-4 h-4" />
+                  إضافة خدمة
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {services.map((service, index) => (
+                  <div 
+                    key={service.id} 
+                    className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-green-200 transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg animate-slide-up"
+                    style={{animationDelay: `${index * 0.1}s`}}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-bold text-gray-900 text-lg">{service.name}</h4>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleServiceEdit(service)}
+                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleServiceDelete(service.id)}
+                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
+                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">{service.homeShortDescription}</p>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-medium text-green-700 bg-green-100 px-3 py-1 rounded-full">
+                        {service.categoryName}
+                      </span>
+                      {service.price && (
+                        <span className="text-amber-600 font-bold">
+                          {service.price}
+                        </span>
+                      )}
+                    </div>
+                    {service.mainImage && (
+                      <img 
+                        src={service.mainImage} 
+                        alt={service.name}
+                        className="w-full h-32 object-cover rounded-xl mt-3 border border-gray-100"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              {hasMore && (
+                <div className="text-center mt-8">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 disabled:bg-gray-400"
+                  >
+                    {loadingMore ? 'جاري التحميل...' : 'تحميل المزيد'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Enhanced Providers Tab */}
+          {activeTab === 'providers' && (
+            <div className="animate-fade-in">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">المورّدون</h3>
+                <button
+                  onClick={() => setShowProviderModalForm(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105"
+                >
+                  <Plus className="w-4 h-4" />
+                  إضافة مورّد
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {providers.map((provider, index) => (
+                  <div 
+                    key={provider.id} 
+                    className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-orange-200 transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg animate-slide-up"
+                    style={{animationDelay: `${index * 0.1}s`}}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-lg">{provider.name}</h4>
+                        <p className="text-gray-500 text-sm">{provider.phone}</p>
+                      </div>
+                      <span className="text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                        {categories.find(c => c.id === provider.category)?.name || provider.category}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleProviderEdit(provider)} 
+                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                      >
+                        <Edit className="w-4 h-4"/>
+                      </button>
+                      <button 
+                        onClick={() => handleProviderDelete(provider.id)} 
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                      >
+                        <Trash2 className="w-4 h-4"/>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Bookings Tab */}
+          {activeTab === 'bookings' && (
+            <div className="animate-fade-in">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-2xl font-bold text-gray-900">الحجوزات</h3>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm animate-pulse">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                    <span>تحديث مباشر</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => loadData()}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  تحديث
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-gray-700">إجمالي الحجوزات: <span className="text-gray-900 font-bold">{bookings.length}</span></p>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600">معلق ({bookings.filter(b => b.status === 'pending').length})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600">مؤكد ({bookings.filter(b => b.status === 'confirmed').length})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600">مكتمل ({bookings.filter(b => b.status === 'completed').length})</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {bookings.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">لا توجد حجوزات حالياً</p>
+                    <p className="text-gray-400 text-sm mt-2">ستظهر الحجوزات الجديدة هنا تلقائياً</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {bookings.map((booking, index) => (
+                      <div 
+                        key={booking.id} 
+                        className="p-6 hover:bg-gray-50 transition-all duration-300 animate-slide-up"
+                        style={{animationDelay: `${index * 0.1}s`}}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="font-bold text-gray-900 text-lg">{booking.serviceName}</h4>
+                              <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
+                                {getStatusIcon(booking.status)}
+                                {booking.status === 'pending' && 'معلق'}
+                                {booking.status === 'confirmed' && 'مؤكد'}
+                                {booking.status === 'completed' && 'مكتمل'}
+                                {booking.status === 'cancelled' && 'ملغي'}
+                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <User className="w-4 h-4 text-blue-500" />
+                                <span className="text-sm">{booking.customerName}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <Phone className="w-4 h-4 text-green-500" />
+                                <span className="text-sm">{booking.customerPhone}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <MapPin className="w-4 h-4 text-red-500" />
+                                <span className="text-sm">{booking.startLocation || booking.deliveryLocation || 'غير محدد'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <Clock className="w-4 h-4 text-purple-500" />
+                                <span className="text-sm">{formatTimeAgo(booking.createdAt)}</span>
+                              </div>
+                            </div>
+
+                            {/* Service Details */}
+                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <Package className="w-4 h-4" />
+                                تفاصيل الخدمة:
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                {booking.destination && (
+                                  <div><span className="text-gray-600 font-medium">الوجهة:</span> <span className="text-gray-800">{booking.destination}</span></div>
+                                )}
+                                {booking.issueDescription && (
+                                  <div><span className="text-gray-600 font-medium">وصف المشكلة:</span> <span className="text-gray-800">{booking.issueDescription}</span></div>
+                                )}
+                                {booking.preferredTime && (
+                                  <div><span className="text-gray-600 font-medium">الوقت المفضل:</span> <span className="text-gray-800">{booking.preferredTime}</span></div>
+                                )}
+                                {booking.urgentDelivery && (
+                                  <div className="text-red-600 font-medium">🚨 توصيل عاجل</div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Custom Answers */}
+                            {booking.customAnswers && Object.keys(booking.customAnswers).length > 0 && (
+                              <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                                <h4 className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-2">
+                                  <FileText className="w-4 h-4" />
+                                  إجابات مخصصة:
+                                </h4>
+                                <div className="space-y-2">
+                                  {Object.entries(booking.customAnswers).map(([key, value]) => (
+                                    <div key={key} className="flex items-start gap-2 text-sm">
+                                      <span className="text-blue-600 font-medium min-w-0 flex-shrink-0">{key}:</span>
+                                      <span className="text-blue-800 break-words">{Array.isArray(value) ? value.join(', ') : String(value)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {booking.notes && (
+                              <div className="bg-yellow-50 rounded-lg p-3 mb-4">
+                                <h4 className="text-sm font-semibold text-yellow-700 mb-1">ملاحظات:</h4>
+                                <p className="text-sm text-yellow-600">{booking.notes}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col gap-2 ml-4">
+                            {booking.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
+                                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                                >
+                                  تأكيد
+                                </button>
+                                <button
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'cancelled')}
+                                  className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                                >
+                                  إلغاء
+                                </button>
+                              </>
+                            )}
+                            {booking.status === 'confirmed' && (
+                              <button
+                                onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
+                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+                              >
+                                إكمال
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Modals */}
       <ServiceModal

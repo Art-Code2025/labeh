@@ -1055,93 +1055,207 @@ const Home: React.FC = () => {
       </section>
 
 
-      {/* Premium Footer */}
-      <footer className="relative bg-white overflow-hidden">
-        {/* Animated Background */}
+      {/* Premium Footer - Enhanced */}
+      <footer className="relative bg-gradient-to-br from-white via-blue-50 to-cyan-50 overflow-hidden">
+        {/* Enhanced Background Patterns */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500"></div>
-          <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600"></div>
+          <div className="absolute top-10 left-1/4 w-32 h-32 md:w-48 md:h-48 bg-gradient-to-br from-blue-100/40 to-cyan-100/40 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-1/4 w-40 h-40 md:w-56 md:h-56 bg-gradient-to-br from-cyan-100/30 to-blue-100/30 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-blue-200/20 to-cyan-200/20 rounded-full blur-xl animate-float" style={{animationDelay: '4s'}}></div>
         </div>
         
-        <div className="container-custom relative z-10 px-4 sm:px-6 lg:px-8 pt-20 pb-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 scroll-animate opacity-0 translate-y-8">
-            {/* Company Info */}
-            <div>
+        <div className="container-custom relative z-10 px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+          {/* Main Footer Content */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12 scroll-animate opacity-0 translate-y-8">
+            
+            {/* Company Info - Enhanced */}
+            <div className="lg:col-span-2">
               <div className="flex items-center gap-4 mb-6">
-                
+                <div className="relative">
+                  <img
+                    src="/logo.png"
+                    alt="شعار لبيه"
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-2xl shadow-lg object-contain transform transition-transform duration-300 hover:scale-105"
+                  />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                </div>
                 <div>
-                  <p className="text-blue-600">خدمات متكاملة</p>
+                  <h3 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">لبيه</h3>
+                  <p className="text-sm md:text-base text-blue-600 font-semibold">خدمات متكاملة لحياة أسهل</p>
                 </div>
               </div>
-              <p className="text-gray-600 leading-relaxed mb-8 max-w-lg">
-                نحن نقدم خدمات متكاملة وحلول مبتكرة لتلبية احتياجاتكم. نسعى دائماً لتقديم أفضل تجربة ممكنة لعملائنا الكرام.
+              
+              <p className="text-slate-600 leading-relaxed mb-6 max-w-md text-sm md:text-base">
+                نحن نقدم خدمات متكاملة وحلول مبتكرة لتلبية احتياجاتكم اليومية. نسعى دائماً لتقديم أفضل تجربة ممكنة لعملائنا الكرام بأعلى معايير الجودة والاحترافية.
               </p>
               
+              {/* Enhanced Stats */}
+              <div className="grid grid-cols-3 gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-blue-100/50 shadow-sm">
+                <div className="text-center">
+                  <div className="text-xl md:text-2xl font-bold text-blue-600 mb-1">+1500</div>
+                  <div className="text-xs md:text-sm text-slate-600">عميل سعيد</div>
+                </div>
+                <div className="text-center border-x border-blue-100">
+                  <div className="text-xl md:text-2xl font-bold text-cyan-600 mb-1">24/7</div>
+                  <div className="text-xs md:text-sm text-slate-600">خدمة مستمرة</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl md:text-2xl font-bold text-blue-600 mb-1">4.9★</div>
+                  <div className="text-xs md:text-sm text-slate-600">تقييم ممتاز</div>
+                </div>
+              </div>
             </div>
 
-            {/* Quick Links */}
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-4">روابط سريعة</h4>
-                <ul className="space-y-3">
-                  <li>
-                    <a href="/" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">الرئيسية</a>
+            {/* Quick Links - Enhanced */}
+            <div>
+              <h4 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full"></div>
+                روابط سريعة
+              </h4>
+              <ul className="space-y-3">
+                {[
+                  { name: 'الرئيسية', href: '/', icon: '🏠' },
+                  { name: 'خدماتنا', href: '/categories', icon: '📦' },
+                  { name: 'من نحن', href: '/about', icon: '👥' },
+                  { name: 'اتصل بنا', href: '/contact', icon: '📞' }
+                ].map((link, index) => (
+                  <li key={index}>
+                    <a 
+                      href={link.href} 
+                      className="flex items-center gap-3 text-slate-600 hover:text-blue-600 transition-all duration-300 group py-2 px-3 rounded-lg hover:bg-white/40 hover:backdrop-blur-sm"
+                    >
+                      <span className="text-lg group-hover:scale-110 transition-transform duration-300">{link.icon}</span>
+                      <span className="font-medium">{link.name}</span>
+                      <ArrowRight className="w-4 h-4 transform -rotate-180 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                    </a>
                   </li>
-                  <li>
-                    <a href="/about" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">من نحن</a>
-                  </li>
-                  <li>
-                    <a href="/services" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">خدماتنا</a>
-                  </li>
-                  <li>
-                    <a href="/contact" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">اتصل بنا</a>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-4">معلومات التواصل</h4>
-                <ul className="space-y-3">
-                 
-                  <li className="flex items-center gap-2 text-gray-600">
-                    <Phone className="w-5 h-5 text-blue-600" />
-                    <span>+966 56 980 6839</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-600">
-                    <Mail className="w-5 h-5 text-blue-600" />
-                    <span>elsadig6839@gmail.com</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-600">
-                    <Clock className="w-5 h-5 text-blue-600" />
-                    <span>24/7 متاح</span>
-                  </li>
-                </ul>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact Info - Enhanced */}
+            <div>
+              <h4 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="w-1 h-6 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></div>
+                تواصل معنا
+              </h4>
+              <ul className="space-y-4">
+                <li className="flex items-center gap-3 text-slate-600 group">
+                  <div className="p-2 bg-blue-100 group-hover:bg-blue-200 text-blue-600 rounded-lg transition-colors duration-300">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800">+966 56 980 6839</p>
+                    <p className="text-xs text-slate-500">متاح 24/7</p>
+                  </div>
+                </li>
+                <li className="flex items-center gap-3 text-slate-600 group">
+                  <div className="p-2 bg-cyan-100 group-hover:bg-cyan-200 text-cyan-600 rounded-lg transition-colors duration-300">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800">elsadig6839@gmail.com</p>
+                    <p className="text-xs text-slate-500">رد سريع</p>
+                  </div>
+                </li>
+                <li className="flex items-center gap-3 text-slate-600 group">
+                  <div className="p-2 bg-blue-100 group-hover:bg-blue-200 text-blue-600 rounded-lg transition-colors duration-300">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800">خدمة مستمرة</p>
+                    <p className="text-xs text-slate-500">طوال أيام الأسبوع</p>
+                  </div>
+                </li>
+              </ul>
+
+              {/* Social Links - New */}
+              <div className="mt-6 pt-6 border-t border-blue-100">
+                <p className="text-sm font-semibold text-slate-700 mb-3">تابعنا</p>
+                <div className="flex items-center gap-3">
+                  <a href="#" className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-all duration-300 transform hover:scale-110">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                    </svg>
+                  </a>
+                  <a href="#" className="p-2 bg-cyan-100 hover:bg-cyan-200 text-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-110">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.74.099.12.112.225.083.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.162-1.499-.69-2.436-2.878-2.436-4.624 0-3.784 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001.012.001z.017 0z"/>
+                    </svg>
+                  </a>
+                  <a href="#" className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-all duration-300 transform hover:scale-110">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Bar */}
-          <div className="pt-8 mt-8 border-t border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="text-gray-600 text-center sm:text-right">
-                <p>© {new Date().getFullYear()} <span className="text-blue-600 font-semibold">لبيه</span> - جميع الحقوق محفوظة</p>
-                <p className="mt-1">تم التطوير بواسطة <a href="https://www.instagram.com/artc.ode39?igsh=aW4zZTM4Z2I1a29l" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition-colors duration-300">ArtCode</a></p>
+          {/* Enhanced Newsletter Section */}
+          <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl p-6 md:p-8 mb-8 text-white scroll-animate opacity-0 translate-y-8">
+            <div className="text-center max-w-2xl mx-auto">
+              <h4 className="text-xl md:text-2xl font-bold mb-3">ابق على اطلاع بآخر العروض</h4>
+              <p className="text-blue-100 mb-6 text-sm md:text-base">اشترك في نشرتنا الإخبارية لتصلك أحدث الخدمات والعروض الحصرية</p>
+              <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <input
+                  type="email"
+                  placeholder="أدخل بريدك الإلكتروني"
+                  className="flex-1 px-4 py-3 rounded-xl text-slate-800 placeholder-slate-500 border-0 focus:ring-2 focus:ring-white/50 transition-all duration-300"
+                />
+                <button className="px-6 py-3 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105">
+                  <Send className="w-4 h-4" />
+                  <span>اشتراك</span>
+                </button>
               </div>
-              <div className="flex items-center gap-6 text-gray-600">
-                <a href="#" className="hover:text-blue-600 transition-colors duration-300">سياسة الخصوصية</a>
-                <a href="#" className="hover:text-blue-600 transition-colors duration-300">الشروط والأحكام</a>
-                <a href="#" className="hover:text-blue-600 transition-colors duration-300">اتفاقية الاستخدام</a>
+            </div>
+          </div>
+
+          {/* Bottom Bar - Enhanced */}
+          <div className="pt-6 border-t border-blue-200/50">
+            <div className="flex flex-col lg:flex-row justify-between items-center gap-4 text-sm">
+              <div className="text-slate-600 text-center lg:text-right order-2 lg:order-1">
+                <p className="mb-1">© {new Date().getFullYear()} <span className="text-blue-600 font-bold">لبيه</span> - جميع الحقوق محفوظة</p>
+                <p className="flex items-center justify-center lg:justify-start gap-1">
+                  تم التطوير بواسطة 
+                  <a 
+                    href="https://www.instagram.com/artc.ode39?igsh=aW4zZTM4Z2I1a29l" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-300 flex items-center gap-1 hover:underline"
+                  >
+                    ArtCode
+                    <ArrowUpRight className="w-3 h-3" />
+                  </a>
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 text-slate-600 order-1 lg:order-2">
+                <a href="#" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
+                  <FileText className="w-4 h-4" />
+                  سياسة الخصوصية
+                </a>
+                <a href="#" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
+                  <FileText className="w-4 h-4" />
+                  الشروط والأحكام  
+                </a>
+                <a href="#" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
+                  <FileText className="w-4 h-4" />
+                  اتفاقية الاستخدام
+                </a>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Back to Top Button */}
+        {/* Back to Top Button - Enhanced */}
         <button 
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full shadow-2xl hover:shadow-blue-500/25 flex items-center justify-center transition-all duration-300 transform hover:scale-110 z-50"
+          className="fixed bottom-6 right-6 w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-full shadow-2xl hover:shadow-blue-500/25 flex items-center justify-center transition-all duration-300 transform hover:scale-110 z-50 group"
         >
-          <ArrowRight className="w-6 h-6 transform rotate-90" />
+          <ArrowRight className="w-5 h-5 md:w-6 md:h-6 transform rotate-90 group-hover:-translate-y-1 transition-transform duration-300" />
         </button>
       </footer>
 
