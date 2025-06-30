@@ -461,116 +461,27 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
               )}
 
               {/* الأسئلة المخصصة */}
-              {service && service.customQuestions && service.customQuestions.length > 0 && (
+              {service && service.customQuestions && service.customQuestions.length > 0 ? (
                 <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/30">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <FileText className="w-5 h-5 text-purple-400" />
-                    أسئلة إضافية خاصة بالخدمة
+                    أسئلة إضافية خاصة بالخدمة ({service.customQuestions.length})
                   </h3>
                   
                   <div className="space-y-4">
-                    {service.customQuestions.map((question: CustomQuestion, index: number) => (
-                      <div key={question.id} className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-300">
-                          {question.question}
-                          {question.required && <span className="text-red-400 ml-1">*</span>}
-                        </label>
-                        
-                        {/* حقل النص */}
-                        {question.type === 'text' && (
-                          <input
-                            type="text"
-                            value={formData.customAnswers[question.id] || ''}
-                            onChange={(e) => setFormData(prev => ({
-                              ...prev,
-                              customAnswers: {
-                                ...prev.customAnswers,
-                                [question.id]: e.target.value
-                              }
-                            }))}
-                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                            placeholder={question.placeholder || ''}
-                            required={question.required}
-                          />
-                        )}
-                        
-                        {/* حقل الرقم */}
-                        {question.type === 'number' && (
-                          <input
-                            type="number"
-                            value={formData.customAnswers[question.id] || ''}
-                            onChange={(e) => setFormData(prev => ({
-                              ...prev,
-                              customAnswers: {
-                                ...prev.customAnswers,
-                                [question.id]: e.target.value
-                              }
-                            }))}
-                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                            placeholder={question.placeholder || ''}
-                            required={question.required}
-                          />
-                        )}
-                        
-                        {/* اختيار واحد */}
-                        {question.type === 'select_single' && question.options && (
-                          <select
-                            value={formData.customAnswers[question.id] || ''}
-                            onChange={(e) => setFormData(prev => ({
-                              ...prev,
-                              customAnswers: {
-                                ...prev.customAnswers,
-                                [question.id]: e.target.value
-                              }
-                            }))}
-                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                            required={question.required}
-                          >
-                            <option value="">اختر خياراً</option>
-                            {question.options.map((option, optionIndex) => (
-                              <option key={optionIndex} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                        
-                        {/* اختيار متعدد */}
-                        {question.type === 'select_multiple' && question.options && (
-                          <div className="space-y-2">
-                            {question.options.map((option, optionIndex) => (
-                              <label key={optionIndex} className="flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={(formData.customAnswers[question.id] || []).includes(option)}
-                                  onChange={(e) => {
-                                    const currentAnswers = formData.customAnswers[question.id] || [];
-                                    const newAnswers = e.target.checked
-                                      ? [...currentAnswers, option]
-                                      : currentAnswers.filter((item: string) => item !== option);
-                                    
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      customAnswers: {
-                                        ...prev.customAnswers,
-                                        [question.id]: newAnswers
-                                      }
-                                    }));
-                                  }}
-                                  className="mr-2 w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
-                                />
-                                <span className="text-gray-300">{option}</span>
-                              </label>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* حقل التاريخ */}
-                        {question.type === 'date' && (
-                          <div className="relative">
-                            <Calendar className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
+                    {service.customQuestions.map((question: CustomQuestion, index: number) => {
+                      console.log(`[BookingModal] 📝 عرض السؤال ${index + 1}:`, question);
+                      return (
+                        <div key={question.id} className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-300">
+                            {question.question}
+                            {question.required && <span className="text-red-400 ml-1">*</span>}
+                          </label>
+                          
+                          {/* حقل النص */}
+                          {question.type === 'text' && (
                             <input
-                              type="date"
+                              type="text"
                               value={formData.customAnswers[question.id] || ''}
                               onChange={(e) => setFormData(prev => ({
                                 ...prev,
@@ -579,38 +490,142 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                                   [question.id]: e.target.value
                                 }
                               }))}
-                              className="w-full pl-4 pr-10 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              placeholder={question.placeholder || ''}
                               required={question.required}
                             />
-                          </div>
-                        )}
-                        
-                        {/* حقل الملف */}
-                        {question.type === 'file' && (
-                          <div className="relative">
+                          )}
+                          
+                          {/* حقل الرقم */}
+                          {question.type === 'number' && (
                             <input
-                              type="file"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    customAnswers: {
-                                      ...prev.customAnswers,
-                                      [question.id]: file.name
-                                    }
-                                  }));
+                              type="number"
+                              value={formData.customAnswers[question.id] || ''}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev,
+                                customAnswers: {
+                                  ...prev.customAnswers,
+                                  [question.id]: e.target.value
                                 }
-                              }}
-                              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700"
+                              }))}
+                              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              placeholder={question.placeholder || ''}
                               required={question.required}
                             />
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                          )}
+                          
+                          {/* اختيار واحد */}
+                          {question.type === 'select_single' && question.options && (
+                            <select
+                              value={formData.customAnswers[question.id] || ''}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev,
+                                customAnswers: {
+                                  ...prev.customAnswers,
+                                  [question.id]: e.target.value
+                                }
+                              }))}
+                              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              required={question.required}
+                            >
+                              <option value="">اختر خياراً</option>
+                              {question.options.map((option, optionIndex) => (
+                                <option key={optionIndex} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          
+                          {/* اختيار متعدد */}
+                          {question.type === 'select_multiple' && question.options && (
+                            <div className="space-y-2">
+                              {question.options.map((option, optionIndex) => (
+                                <label key={optionIndex} className="flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={(formData.customAnswers[question.id] || []).includes(option)}
+                                    onChange={(e) => {
+                                      const currentAnswers = formData.customAnswers[question.id] || [];
+                                      const newAnswers = e.target.checked
+                                        ? [...currentAnswers, option]
+                                        : currentAnswers.filter((item: string) => item !== option);
+                                      
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        customAnswers: {
+                                          ...prev.customAnswers,
+                                          [question.id]: newAnswers
+                                        }
+                                      }));
+                                    }}
+                                    className="mr-2 w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                  />
+                                  <span className="text-gray-300">{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* حقل التاريخ */}
+                          {question.type === 'date' && (
+                            <div className="relative">
+                              <Calendar className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
+                              <input
+                                type="date"
+                                value={formData.customAnswers[question.id] || ''}
+                                onChange={(e) => setFormData(prev => ({
+                                  ...prev,
+                                  customAnswers: {
+                                    ...prev.customAnswers,
+                                    [question.id]: e.target.value
+                                  }
+                                }))}
+                                className="w-full pl-4 pr-10 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                required={question.required}
+                              />
+                            </div>
+                          )}
+                          
+                          {/* حقل الملف */}
+                          {question.type === 'file' && (
+                            <div className="relative">
+                              <input
+                                type="file"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      customAnswers: {
+                                        ...prev.customAnswers,
+                                        [question.id]: file.name
+                                      }
+                                    }));
+                                  }
+                                }}
+                                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700"
+                                required={question.required}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
+              ) : (
+                service && (
+                  <div className="bg-gray-500/10 rounded-xl p-4 border border-gray-500/30">
+                    <h3 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      أسئلة إضافية
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      لا توجد أسئلة إضافية لهذه الخدمة. يمكنك إضافة تفاصيل أخرى في حقل الملاحظات أدناه.
+                    </p>
+                  </div>
+                )
               )}
 
               {/* الوقت المفضل */}

@@ -132,135 +132,6 @@ const Contact: React.FC = () => {
         </div>
       </section>
 
-      {/* Contact Form & Map Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-16">
-            {/* Contact Form */}
-            <div className="animate-fade-in-left">
-              <div className="card p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">أرسل لنا رسالة</h2>
-                
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        الاسم الكامل *
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        required
-                        className="form-input"
-                        placeholder="اكتب اسمك الكامل"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        البريد الإلكتروني *
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                        className="form-input"
-                        placeholder="بريدك@مثال.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        رقم الهاتف
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="form-input"
-                        placeholder="+966 5X XXX XXXX"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        الموضوع *
-                      </label>
-                      <select
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleInputChange}
-                        required
-                        className="form-select"
-                      >
-                        <option value="">اختر الموضوع</option>
-                        <option value="general">استفسار عام</option>
-                        <option value="service">طلب خدمة</option>
-                        <option value="support">الدعم الفني</option>
-                        <option value="quote">طلب عرض سعر</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      الرسالة *
-                    </label>
-                    <textarea
-                      name="message"
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      required
-                      rows={6}
-                      className="form-textarea"
-                      placeholder="اخبرنا عن احتياجاتك..."
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-primary w-full"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="loading-spinner ml-2"></div>
-                        جاري الإرسال...
-                      </>
-                    ) : (
-                      <>
-                        إرسال الرسالة
-                        <Send className="w-5 h-5 mr-2" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {/* Map & Additional Info */}
-            <div className="animate-fade-in-right">
-              {/* Map Placeholder */}
-              <div className="card p-8 mb-8">
-                <h3 className="text-xl font-bold text-slate-900 mb-4">موقعنا</h3>
-                <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">الخريطة التفاعلية</p>
-                    <p className="text-sm text-gray-400">الخارجة، الوادي الجديد</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ Section */}
       <section className="py-20 bg-white">
         <div className="container-custom">
@@ -317,6 +188,25 @@ const Contact: React.FC = () => {
               <Mail className="w-5 h-5 ml-2" />
               راسلنا
             </a>
+          </div>
+          
+          {/* Social Media Links */}
+          <div className="mt-12 text-center">
+            <h3 className="text-xl font-semibold text-white mb-6">تابعنا على وسائل التواصل</h3>
+            <div className="flex items-center justify-center gap-4">
+              <a href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-black hover:bg-gray-800 rounded-lg flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110" title="تيك توك">
+                <span className="text-sm font-bold">TT</span>
+              </a>
+              <a href="https://snapchat.com/t/GOre0s0V" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-yellow-400 hover:bg-yellow-500 rounded-lg flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110" title="سناب شات">
+                <span className="text-sm font-bold">SC</span>
+              </a>
+              <a href="#" className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110" title="واتساب">
+                <MessageCircle className="w-6 h-6" />
+              </a>
+              <a href="#" className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110" title="تويتر">
+                <span className="text-sm font-bold">TW</span>
+              </a>
+            </div>
           </div>
         </div>
       </section>

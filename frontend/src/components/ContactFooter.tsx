@@ -139,6 +139,12 @@ const ContactFooter: React.FC = () => {
               عالم جديد في خدمة توصيل الطلبات ومشاويرك الخاصة لأهالي الخارجة وما حولها. نحن نجعل حياتك أسهل وأكثر راحة.
             </p>
             <div className="flex space-x-4 space-x-reverse">
+              <a href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-black hover:bg-gray-800 rounded-lg flex items-center justify-center text-white transition-colors duration-300" title="تيك توك">
+                <span className="text-xs font-bold">TT</span>
+              </a>
+              <a href="https://snapchat.com/t/GOre0s0V" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-yellow-400 hover:bg-yellow-500 rounded-lg flex items-center justify-center text-white transition-colors duration-300" title="سناب شات">
+                <span className="text-xs font-bold">SC</span>
+              </a>
               <a href="#" className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 transition-colors duration-300">
                 <Facebook className="w-5 h-5" />
               </a>

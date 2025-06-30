@@ -683,24 +683,24 @@ function Dashboard() {
       {/* Enhanced Main Content */}
       <div className="lg:mr-80">
         {/* Enhanced Top Bar */}
-        <div className="bg-white border-b border-gray-100 px-6 py-4 shadow-sm">
+        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-105"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5" />
               </button>
               <Link
                 to="/dashboard"
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-md text-sm"
               >
-                <Home className="w-5 h-5" />
-                <span>الصفحة الرئيسية</span>
+                <Home className="w-4 h-4" />
+                <span className="hidden sm:inline">الصفحة الرئيسية</span>
               </Link>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                   {activeTab === 'overview' && '📊 نظرة عامة'}
                   {activeTab === 'categories' && '🏷️ إدارة الفئات'}
                   {activeTab === 'services' && '📦 إدارة الخدمات'}
@@ -708,15 +708,15 @@ function Dashboard() {
                   {activeTab === 'bookings' && '📅 إدارة الحجوزات'}
                 </h2>
                 {activeTab === 'bookings' && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm animate-pulse">
+                  <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs animate-pulse">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
-                    <span>مباشر</span>
+                    <span className="hidden sm:inline">مباشر</span>
                   </div>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-sm text-gray-500 animate-fade-in">
+              <div className="text-xs sm:text-sm text-gray-500 animate-fade-in hidden md:block">
                 آخر تحديث: {new Date().toLocaleTimeString('ar-SA')}
               </div>
             </div>
@@ -1102,7 +1102,7 @@ function Dashboard() {
                   <h3 className="text-2xl font-bold text-gray-900">الحجوزات</h3>
                   <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm animate-pulse">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
-                    <span>تحديث مباشر</span>
+                    <span className="hidden sm:inline">تحديث مباشر</span>
                   </div>
                 </div>
                 <button
