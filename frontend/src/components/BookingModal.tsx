@@ -124,40 +124,40 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
         estimatedPrice = 'على حسب المطلوب';
       }
       
-      // تحضير بيانات الحجز
+      // إعداد بيانات الحجز مع معلومات الأسئلة المخصصة
+      const customAnswersWithQuestions: Record<string, { question: string; answer: any; type: string }> = {};
+      
+      if (service && service.customQuestions) {
+        service.customQuestions.forEach((q: CustomQuestion) => {
+          const answer = formData.customAnswers[q.id];
+          if (answer !== undefined && answer !== '') {
+            customAnswersWithQuestions[q.id] = {
+              question: q.question,
+              answer: answer,
+              type: q.type
+            };
+          }
+        });
+      }
+
       const bookingData = {
-        serviceId: service?.id || 'quick-booking',
-        serviceName: service?.name || getServiceName(currentCategory),
+        serviceId: service ? service.id : 'unknown',
+        serviceName: service ? service.name : 'خدمة غير محددة',
         serviceCategory: currentCategory,
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         address: formData.address,
         serviceDetails: formData.serviceDetails,
-        status: 'pending' as const,
-        estimatedPrice: estimatedPrice,
-        
-        // تفاصيل إضافية حسب نوع الخدمة
-        ...(currentCategory === 'external_trips' && {
-          startLocation: formData.startLocation,
-          destination: formData.endLocation,
-          selectedDestination: formData.selectedDestination,
-          appointmentTime: formData.appointmentTime,
-          tripDuration: '9 ساعات كحد أقصى'
-        }),
-        
-        ...(currentCategory === 'home_maintenance' && {
-          issueDescription: formData.serviceDetails,
-          urgencyLevel: formData.urgencyLevel,
-          preferredTime: formData.appointmentTime
-        }),
-        
-        ...(currentCategory === 'internal_delivery' && {
-          deliveryLocation: formData.address,
-          urgentDelivery: formData.urgencyLevel === 'high'
-        }),
-
+        selectedDestination: formData.selectedDestination,
+        startLocation: formData.startLocation,
+        endLocation: formData.endLocation,
+        appointmentTime: formData.appointmentTime,
+        urgencyLevel: formData.urgencyLevel,
         notes: formData.notes,
-        customAnswers: formData.customAnswers
+        customAnswers: formData.customAnswers, // الإجابات القديمة للتوافق
+        customAnswersWithQuestions: customAnswersWithQuestions, // الإجابات مع معلومات الأسئلة
+        status: 'pending',
+        createdAt: new Date().toISOString()
       };
 
       await createBooking(bookingData);

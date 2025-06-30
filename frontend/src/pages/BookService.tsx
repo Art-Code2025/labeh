@@ -242,6 +242,22 @@ const BookService: React.FC = () => {
     try {
       setSubmitting(true);
       
+      // إعداد بيانات الحجز مع معلومات الأسئلة المخصصة
+      const customAnswersWithQuestions: Record<string, { question: string; answer: any; type: string }> = {};
+      
+      if (service && service.customQuestions) {
+        service.customQuestions.forEach((q) => {
+          const answer = formData.customAnswers?.[q.id];
+          if (answer !== undefined && answer !== '') {
+            customAnswersWithQuestions[q.id] = {
+              question: q.question,
+              answer: answer,
+              type: q.type
+            };
+          }
+        });
+      }
+      
       // استخدام bookingsApi الجديد
       const { createBooking } = await import('../services/bookingsApi');
       
@@ -271,8 +287,9 @@ const BookService: React.FC = () => {
           urgencyLevel: formData.urgencyLevel,
           preferredTime: formData.preferredTime
         }),
-        // إجابات الأسئلة المخصَّصة (لجميع الفئات إن وُجدت)
-        customAnswers: formData.customAnswers
+        // إجابات الأسئلة المخصَّصة (لجميع الفئات إن وُجدت)
+        customAnswers: formData.customAnswers, // الإجابات القديمة للتوافق
+        customAnswersWithQuestions: customAnswersWithQuestions // الإجابات مع معلومات الأسئلة
       };
 
       const result = await createBooking(bookingData);

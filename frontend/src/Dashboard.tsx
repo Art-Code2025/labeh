@@ -833,8 +833,25 @@ function Dashboard() {
                               </div>
                             </div>
 
-                            {/* Enhanced Booking Details */}
-                            {booking.customAnswers && Object.keys(booking.customAnswers).length > 0 && (
+                            {/* Custom Answers - محسن */}
+                            {(booking.customAnswersWithQuestions && Object.keys(booking.customAnswersWithQuestions).length > 0) ? (
+                              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                  <FileText className="w-4 h-4" />
+                                  أسئلة مخصصة:
+                                </h4>
+                                <div className="space-y-2">
+                                  {Object.entries(booking.customAnswersWithQuestions).map(([key, data]: [string, { question: string; answer: any; type: string }]) => (
+                                    <div key={key} className="flex items-start gap-2 text-sm">
+                                      <span className="text-gray-600 font-medium min-w-0 flex-shrink-0">{data.question}:</span>
+                                      <span className="text-gray-800 break-words">
+                                        {Array.isArray(data.answer) ? data.answer.join(', ') : String(data.answer)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (booking.customAnswers && Object.keys(booking.customAnswers).length > 0) ? (
                               <div className="bg-gray-50 rounded-lg p-4 mb-4">
                                 <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                                   <FileText className="w-4 h-4" />
@@ -849,7 +866,7 @@ function Dashboard() {
                                   ))}
                                 </div>
                               </div>
-                            )}
+                            ) : null}
 
                             {/* Service Details */}
                             <div className="bg-gray-50 rounded-lg p-4 mb-4">
@@ -874,9 +891,9 @@ function Dashboard() {
                             </div>
 
                             {booking.notes && (
-                              <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                                <h4 className="text-sm font-semibold text-blue-700 mb-1">ملاحظات:</h4>
-                                <p className="text-sm text-blue-600">{booking.notes}</p>
+                              <div className="bg-yellow-50 rounded-lg p-3 mb-4">
+                                <h4 className="text-sm font-semibold text-yellow-700 mb-1">ملاحظات:</h4>
+                                <p className="text-sm text-yellow-600">{booking.notes}</p>
                               </div>
                             )}
                           </div>
@@ -1181,6 +1198,41 @@ function Dashboard() {
                               </div>
                             </div>
 
+                            {/* Custom Answers - محسن */}
+                            {(booking.customAnswersWithQuestions && Object.keys(booking.customAnswersWithQuestions).length > 0) ? (
+                              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                  <FileText className="w-4 h-4" />
+                                  أسئلة مخصصة:
+                                </h4>
+                                <div className="space-y-2">
+                                  {Object.entries(booking.customAnswersWithQuestions).map(([key, data]: [string, { question: string; answer: any; type: string }]) => (
+                                    <div key={key} className="flex items-start gap-2 text-sm">
+                                      <span className="text-gray-600 font-medium min-w-0 flex-shrink-0">{data.question}:</span>
+                                      <span className="text-gray-800 break-words">
+                                        {Array.isArray(data.answer) ? data.answer.join(', ') : String(data.answer)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (booking.customAnswers && Object.keys(booking.customAnswers).length > 0) ? (
+                              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                  <FileText className="w-4 h-4" />
+                                  تفاصيل إضافية:
+                                </h4>
+                                <div className="space-y-2">
+                                  {Object.entries(booking.customAnswers).map(([key, value]) => (
+                                    <div key={key} className="flex items-start gap-2 text-sm">
+                                      <span className="text-gray-600 font-medium min-w-0 flex-shrink-0">{key}:</span>
+                                      <span className="text-gray-800 break-words">{Array.isArray(value) ? value.join(', ') : String(value)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+
                             {/* Service Details */}
                             <div className="bg-gray-50 rounded-lg p-4 mb-4">
                               <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -1202,24 +1254,6 @@ function Dashboard() {
                                 )}
                               </div>
                             </div>
-
-                            {/* Custom Answers */}
-                            {booking.customAnswers && Object.keys(booking.customAnswers).length > 0 && (
-                              <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                                <h4 className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-2">
-                                  <FileText className="w-4 h-4" />
-                                  إجابات مخصصة:
-                                </h4>
-                                <div className="space-y-2">
-                                  {Object.entries(booking.customAnswers).map(([key, value]) => (
-                                    <div key={key} className="flex items-start gap-2 text-sm">
-                                      <span className="text-blue-600 font-medium min-w-0 flex-shrink-0">{key}:</span>
-                                      <span className="text-blue-800 break-words">{Array.isArray(value) ? value.join(', ') : String(value)}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
 
                             {booking.notes && (
                               <div className="bg-yellow-50 rounded-lg p-3 mb-4">

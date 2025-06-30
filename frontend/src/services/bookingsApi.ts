@@ -19,6 +19,7 @@ export interface Booking {
   updatedAt: string;
   notes?: string;
   customAnswers?: Record<string, any>;
+  customAnswersWithQuestions?: Record<string, { question: string; answer: any; type: string }>;
   
   // Additional fields for different service types
   startLocation?: string;

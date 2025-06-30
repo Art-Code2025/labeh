@@ -95,7 +95,7 @@ const Home: React.FC = () => {
     features: service.features || [],
     detailedImages: service.detailedImages || [],
     availability: service.availability || '24/7',
-    customQuestions: service.customQuestions || []
+    customQuestions: service.customQuestions || [] // إضافة الأسئلة المخصصة
   });
 
   // Fetch services from Firebase/API  
@@ -253,13 +253,15 @@ const Home: React.FC = () => {
         console.log('[Home] 📦 تفاصيل الخدمة المجلبة:', fullService);
         
         if (fullService) {
-          // تحويل البيانات للنوع المطلوب
+          // تحويل البيانات للنوع المطلوب مع ضمان وجود الأسئلة المخصصة
           const formattedService: Service = {
-            ...fullService,
+            ...service, // نبدأ بالبيانات الموجودة
+            ...fullService, // نضيف البيانات الكاملة
+            id: service.id, // نحافظ على الـ ID الأصلي
             category: fullService.category || service.category || '',
             categoryName: fullService.categoryName || service.categoryName || '',
             homeShortDescription: fullService.homeShortDescription || service.homeShortDescription || '',
-            customQuestions: fullService.customQuestions || []
+            customQuestions: fullService.customQuestions || service.customQuestions || [] // ضمان وجود الأسئلة
           };
           
           console.log('[Home] ✅ الخدمة المنسقة:', formattedService);
@@ -273,6 +275,7 @@ const Home: React.FC = () => {
       } catch (error) {
         console.error('[Home] ❌ خطأ في جلب تفاصيل الخدمة:', error);
         toast.error('حدث خطأ في جلب تفاصيل الخدمة');
+        // في حالة الخطأ، نستخدم البيانات الموجودة
         setSelectedService(service);
       }
     } else {
@@ -282,17 +285,25 @@ const Home: React.FC = () => {
     setShowBookingModal(true);
   };
 
-  // Handle quick booking with default service data
+  // Handle quick booking with default service data - محسن للأسئلة المخصصة
   const handleQuickBookingByCategory = async (category: string) => {
-    // البحث عن أول خدمة في هذه الفئة لجلب الأسئلة المخصصة
     try {
+      console.log('[Home] 🔍 البحث عن خدمات الفئة:', category);
       const categoryServices = services.filter(s => s.category === category);
       let serviceWithQuestions = null;
       
       if (categoryServices.length > 0) {
-        // جلب بيانات الخدمة الأولى الكاملة
-        const fullService = await servicesApi.getById(categoryServices[0].id);
-        serviceWithQuestions = fullService;
+        console.log('[Home] 📋 خدمات الفئة الموجودة:', categoryServices.length);
+        // جلب بيانات الخدمة الأولى الكاملة مع الأسئلة المخصصة
+        try {
+          const fullService = await servicesApi.getById(categoryServices[0].id);
+          if (fullService && fullService.customQuestions) {
+            serviceWithQuestions = fullService;
+            console.log('[Home] ✅ تم جلب خدمة مع أسئلة مخصصة:', fullService.customQuestions.length);
+          }
+        } catch (error) {
+          console.warn('[Home] ⚠️ فشل في جلب تفاصيل الخدمة:', error);
+        }
       }
       
       const defaultService: Service = {
@@ -310,14 +321,15 @@ const Home: React.FC = () => {
         price: category === 'internal_delivery' ? '20 ريال' : 
                category === 'external_trips' ? 'من 250 ريال' : 
                'حسب المطلوب',
-        customQuestions: serviceWithQuestions?.customQuestions || []
+        customQuestions: serviceWithQuestions?.customQuestions || [] // ضمان وجود الأسئلة المخصصة
       };
       
+      console.log('[Home] 🎯 الخدمة الافتراضية مع الأسئلة:', defaultService.customQuestions?.length || 0);
       setSelectedService(defaultService);
       setShowBookingModal(true);
     } catch (error) {
-      console.error('Error fetching category service:', error);
-      // استخدام البيانات الافتراضية في حالة الخطأ
+      console.error('[Home] ❌ خطأ في handleQuickBookingByCategory:', error);
+      // خدمة افتراضية بدون أسئلة مخصصة في حالة الخطأ
       const defaultService: Service = {
         id: `quick-${category}`,
         name: category === 'internal_delivery' ? 'توصيل أغراض داخلي' : 

@@ -17,6 +17,14 @@ interface Service {
   availability: string;
   price: string;
   homeShortDescription: string;
+  customQuestions?: Array<{
+    id: string;
+    question: string;
+    type: 'text' | 'number' | 'select_single' | 'select_multiple' | 'date' | 'file';
+    required: boolean;
+    options?: string[];
+    placeholder?: string;
+  }>; // إضافة الأسئلة المخصصة
 }
 
 // خيارات مخصصة لكل فئة
@@ -61,7 +69,8 @@ export default function ServiceDetail() {
     returnTrip: false,
     passengers: 1,
     urgencyLevel: 'medium',
-    preferredTime: 'morning'
+    preferredTime: 'morning',
+    customAnswers: {} as Record<string, any> // إضافة إجابات الأسئلة المخصصة
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -95,7 +104,8 @@ export default function ServiceDetail() {
               duration: serviceData.duration || getDefaultDuration(serviceData.categoryId || serviceData.category || ''),
               availability: serviceData.availability || "متاح 24/7",
               price: serviceData.price || serviceData.pricing || getDefaultPrice(serviceData.categoryId || serviceData.category || ''),
-              homeShortDescription: serviceData.homeShortDescription || ''
+              homeShortDescription: serviceData.homeShortDescription || '',
+              customQuestions: serviceData.customQuestions || [] // إضافة الأسئلة المخصصة
             };
           }
         });
@@ -181,8 +191,37 @@ export default function ServiceDetail() {
       return;
     }
 
+    // التحقق من الأسئلة المخصصة الإجبارية
+    if (service.customQuestions) {
+      for (const question of service.customQuestions) {
+        if (question.required) {
+          const answer = formData.customAnswers[question.id];
+          if (!answer || (Array.isArray(answer) && answer.length === 0) || (typeof answer === 'string' && answer.trim() === '')) {
+            toast.error(`يرجى الإجابة على السؤال: ${question.question}`);
+            return;
+          }
+        }
+      }
+    }
+
     try {
       setSubmitting(true);
+      
+      // إعداد بيانات الحجز مع معلومات الأسئلة المخصصة
+      const customAnswersWithQuestions: Record<string, { question: string; answer: any; type: string }> = {};
+      
+      if (service && service.customQuestions) {
+        service.customQuestions.forEach((q) => {
+          const answer = formData.customAnswers[q.id];
+          if (answer !== undefined && answer !== '') {
+            customAnswersWithQuestions[q.id] = {
+              question: q.question,
+              answer: answer,
+              type: q.type
+            };
+          }
+        });
+      }
       
       // إعداد بيانات الحجز
       const bookingData = {
@@ -195,6 +234,8 @@ export default function ServiceDetail() {
         serviceDetails: formData.serviceDetails,
         status: 'pending',
         createdAt: new Date().toISOString(),
+        customAnswers: formData.customAnswers, // الإجابات القديمة للتوافق
+        customAnswersWithQuestions: customAnswersWithQuestions, // الإجابات مع معلومات الأسئلة
         // بيانات مخصصة حسب الفئة
         ...(service.category === 'internal_delivery' && {
           selectedOption: formData.selectedOption,
@@ -212,7 +253,7 @@ export default function ServiceDetail() {
           selectedOption: formData.selectedOption,
           urgencyLevel: formData.urgencyLevel,
           preferredTime: formData.preferredTime
-        })
+        }),
       };
 
       // إرسال البيانات إلى Firebase
@@ -237,7 +278,8 @@ export default function ServiceDetail() {
         returnTrip: false,
         passengers: 1,
         urgencyLevel: 'medium',
-        preferredTime: 'morning'
+        preferredTime: 'morning',
+        customAnswers: {}
       });
       
     } catch (error) {
@@ -547,6 +589,210 @@ export default function ServiceDetail() {
             </div>
           </div>
         </div>
+
+        {/* الأسئلة المخصصة */}
+        {service && service.customQuestions && service.customQuestions.length > 0 && (
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                <MessageSquare className="w-5 h-5 text-white" />
+              </div>
+              أسئلة خاصة بالخدمة ({service.customQuestions.length})
+            </h3>
+            
+            <div className="space-y-6">
+              {service.customQuestions.map((question, index) => (
+                <div key={question.id} className="space-y-3">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    {question.question}
+                    {question.required && <span className="text-red-500 mr-1">*</span>}
+                  </label>
+                  
+                  {/* حقل النص */}
+                  {question.type === 'text' && (
+                    <input
+                      type="text"
+                      value={formData.customAnswers[question.id] || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        customAnswers: {
+                          ...prev.customAnswers,
+                          [question.id]: e.target.value
+                        }
+                      }))}
+                      className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                      placeholder={question.placeholder || ''}
+                      required={question.required}
+                    />
+                  )}
+                  
+                  {/* حقل الرقم */}
+                  {question.type === 'number' && (
+                    <input
+                      type="number"
+                      value={formData.customAnswers[question.id] || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        customAnswers: {
+                          ...prev.customAnswers,
+                          [question.id]: e.target.value
+                        }
+                      }))}
+                      className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                      placeholder={question.placeholder || ''}
+                      required={question.required}
+                    />
+                  )}
+                  
+                  {/* اختيار واحد */}
+                  {question.type === 'select_single' && question.options && (
+                    <select
+                      value={formData.customAnswers[question.id] || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        customAnswers: {
+                          ...prev.customAnswers,
+                          [question.id]: e.target.value
+                        }
+                      }))}
+                      className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-800 shadow-sm transition-all duration-300"
+                      required={question.required}
+                    >
+                      <option value="">اختر خياراً</option>
+                      {question.options.map((option, optionIndex) => (
+                        <option key={optionIndex} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  
+                  {/* اختيار متعدد */}
+                  {question.type === 'select_multiple' && question.options && (
+                    <div className="space-y-3">
+                      {question.options.map((option, optionIndex) => (
+                        <label key={optionIndex} className="flex items-center cursor-pointer bg-white p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={(formData.customAnswers[question.id] || []).includes(option)}
+                            onChange={(e) => {
+                              const currentAnswers = formData.customAnswers[question.id] || [];
+                              const newAnswers = e.target.checked
+                                ? [...currentAnswers, option]
+                                : currentAnswers.filter((item: string) => item !== option);
+                              
+                              setFormData(prev => ({
+                                ...prev,
+                                customAnswers: {
+                                  ...prev.customAnswers,
+                                  [question.id]: newAnswers
+                                }
+                              }));
+                            }}
+                            className="mr-3 w-4 h-4 text-purple-600 bg-white border-slate-300 rounded focus:ring-purple-500"
+                          />
+                          <span className="text-slate-700">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* حقل التاريخ */}
+                  {question.type === 'date' && (
+                    <div className="relative">
+                      <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <input
+                        type="date"
+                        value={formData.customAnswers[question.id] || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          customAnswers: {
+                            ...prev.customAnswers,
+                            [question.id]: e.target.value
+                          }
+                        }))}
+                        className="w-full pr-12 pl-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-800 shadow-sm transition-all duration-300"
+                        required={question.required}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* حقل الملف */}
+                  {question.type === 'file' && (
+                    <div className="relative">
+                      <input
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setFormData(prev => ({
+                              ...prev,
+                              customAnswers: {
+                                ...prev.customAnswers,
+                                [question.id]: file.name
+                              }
+                            }));
+                          }
+                        }}
+                        className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl text-slate-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 shadow-sm transition-all duration-300"
+                        required={question.required}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* تفاصيل إضافية */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+              <MessageSquare className="w-5 h-5 text-white" />
+            </div>
+            تفاصيل إضافية
+          </h3>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              ملاحظات خاصة (اختياري)
+            </label>
+            <textarea
+              name="serviceDetails"
+              value={formData.serviceDetails}
+              onChange={handleInputChange}
+              rows={4}
+              className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 placeholder-slate-400 resize-none shadow-sm transition-all duration-300"
+              placeholder="أي تفاصيل إضافية تود إضافتها..."
+            />
+          </div>
+        </div>
+
+        {/* أزرار التحكم */}
+        <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-200">
+          <button
+            type="button"
+            onClick={() => setShowBookingForm(false)}
+            className="flex-1 px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-all duration-300"
+          >
+            إلغاء
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex-1 px-6 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            {submitting ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                جاري الإرسال...
+              </div>
+            ) : (
+              'تأكيد الحجز'
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Enhanced Booking Form Modal */}
@@ -669,6 +915,161 @@ export default function ServiceDetail() {
                       </div>
 
                       {/* إضافة الخيارات المخصصة هنا بنفس التحسينات */}
+                    </div>
+                  </div>
+                )}
+
+                {/* الأسئلة المخصصة */}
+                {service && service.customQuestions && service.customQuestions.length > 0 && (
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
+                    <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                        <MessageSquare className="w-5 h-5 text-white" />
+                      </div>
+                      أسئلة خاصة بالخدمة ({service.customQuestions.length})
+                    </h3>
+                    
+                    <div className="space-y-6">
+                      {service.customQuestions.map((question, index) => (
+                        <div key={question.id} className="space-y-3">
+                          <label className="block text-sm font-semibold text-slate-700">
+                            {question.question}
+                            {question.required && <span className="text-red-500 mr-1">*</span>}
+                          </label>
+                          
+                          {/* حقل النص */}
+                          {question.type === 'text' && (
+                            <input
+                              type="text"
+                              value={formData.customAnswers[question.id] || ''}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev,
+                                customAnswers: {
+                                  ...prev.customAnswers,
+                                  [question.id]: e.target.value
+                                }
+                              }))}
+                              className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                              placeholder={question.placeholder || ''}
+                              required={question.required}
+                            />
+                          )}
+                          
+                          {/* حقل الرقم */}
+                          {question.type === 'number' && (
+                            <input
+                              type="number"
+                              value={formData.customAnswers[question.id] || ''}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev,
+                                customAnswers: {
+                                  ...prev.customAnswers,
+                                  [question.id]: e.target.value
+                                }
+                              }))}
+                              className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                              placeholder={question.placeholder || ''}
+                              required={question.required}
+                            />
+                          )}
+                          
+                          {/* اختيار واحد */}
+                          {question.type === 'select_single' && question.options && (
+                            <select
+                              value={formData.customAnswers[question.id] || ''}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev,
+                                customAnswers: {
+                                  ...prev.customAnswers,
+                                  [question.id]: e.target.value
+                                }
+                              }))}
+                              className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-800 shadow-sm transition-all duration-300"
+                              required={question.required}
+                            >
+                              <option value="">اختر خياراً</option>
+                              {question.options.map((option, optionIndex) => (
+                                <option key={optionIndex} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          
+                          {/* اختيار متعدد */}
+                          {question.type === 'select_multiple' && question.options && (
+                            <div className="space-y-3">
+                              {question.options.map((option, optionIndex) => (
+                                <label key={optionIndex} className="flex items-center cursor-pointer bg-white p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={(formData.customAnswers[question.id] || []).includes(option)}
+                                    onChange={(e) => {
+                                      const currentAnswers = formData.customAnswers[question.id] || [];
+                                      const newAnswers = e.target.checked
+                                        ? [...currentAnswers, option]
+                                        : currentAnswers.filter((item: string) => item !== option);
+                                      
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        customAnswers: {
+                                          ...prev.customAnswers,
+                                          [question.id]: newAnswers
+                                        }
+                                      }));
+                                    }}
+                                    className="mr-3 w-4 h-4 text-purple-600 bg-white border-slate-300 rounded focus:ring-purple-500"
+                                  />
+                                  <span className="text-slate-700">{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* حقل التاريخ */}
+                          {question.type === 'date' && (
+                            <div className="relative">
+                              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                              <input
+                                type="date"
+                                value={formData.customAnswers[question.id] || ''}
+                                onChange={(e) => setFormData(prev => ({
+                                  ...prev,
+                                  customAnswers: {
+                                    ...prev.customAnswers,
+                                    [question.id]: e.target.value
+                                  }
+                                }))}
+                                className="w-full pr-12 pl-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-800 shadow-sm transition-all duration-300"
+                                required={question.required}
+                              />
+                            </div>
+                          )}
+                          
+                          {/* حقل الملف */}
+                          {question.type === 'file' && (
+                            <div className="relative">
+                              <input
+                                type="file"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      customAnswers: {
+                                        ...prev.customAnswers,
+                                        [question.id]: file.name
+                                      }
+                                    }));
+                                  }
+                                }}
+                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl text-slate-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 shadow-sm transition-all duration-300"
+                                required={question.required}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
