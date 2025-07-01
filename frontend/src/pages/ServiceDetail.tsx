@@ -66,6 +66,7 @@ export default function ServiceDetail() {
     selectedOption: '',
     selectedDestination: '',
     startLocation: '',
+    endLocation: '',
     appointmentTime: '',
     urgentDelivery: false,
     returnTrip: false,
@@ -107,7 +108,7 @@ export default function ServiceDetail() {
             mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
             detailedImages: serviceData.detailedImages || [],
             features: serviceData.features || getDefaultFeatures(serviceData.categoryId || serviceData.category || ''),
-            duration: serviceData.duration ? serviceData.duration : getDefaultDuration(serviceData.categoryId || serviceData.category || ''),
+            duration: serviceData.duration || getDefaultDuration(serviceData.categoryId || serviceData.category || ''),
             availability: serviceData.availability || "متاح 24/7",
             price: serviceData.price || serviceData.pricing || getDefaultPrice(serviceData.categoryId || serviceData.category || ''),
             homeShortDescription: serviceData.homeShortDescription || '',
@@ -267,6 +268,7 @@ export default function ServiceDetail() {
           selectedOption: formData.selectedOption,
           selectedDestination: formData.selectedDestination,
           startLocation: formData.startLocation,
+          endLocation: formData.endLocation,
           appointmentTime: formData.appointmentTime,
           returnTrip: formData.returnTrip,
           passengers: formData.passengers
@@ -295,6 +297,7 @@ export default function ServiceDetail() {
         selectedOption: '',
         selectedDestination: '',
         startLocation: '',
+        endLocation: '',
         appointmentTime: '',
         urgentDelivery: false,
         returnTrip: false,
@@ -963,6 +966,82 @@ export default function ServiceDetail() {
                               <option key={index} value={option}>{option}</option>
                             ))}
                           </select>
+                        </div>
+                      )}
+
+                      {/* خيارات المشاوير الخارجية الديناميكية */}
+                      {service.category === 'external_trips' && (
+                        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                          <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                            <MapPin className="w-5 h-5 text-green-600" />
+                            تفاصيل المشوار الخارجي
+                          </h4>
+                          
+                          {/* اختيار الوجهة إذا كان هناك خيارات أسعار متعددة */}
+                          {priceOptions.length > 0 && (
+                            <div className="mb-4">
+                              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                                اختر الوجهة *
+                              </label>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {priceOptions.map((option, index) => (
+                                  <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedPrice(`${option.name} ${option.price}`);
+                                      setFormData(prev => ({...prev, selectedDestination: option.name }));
+                                    }}
+                                    className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                                      formData.selectedDestination === option.name
+                                        ? 'border-green-500 bg-green-500/20 text-green-700'
+                                        : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div>
+                                        <div className="font-semibold text-lg">{option.name}</div>
+                                        <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
+                                      </div>
+                                      <div className="text-amber-600 font-bold text-xl">{option.price}</div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* موقع الانطلاق ونقطة الوصول */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                                موقع الانطلاق *
+                              </label>
+                              <input
+                                type="text"
+                                name="startLocation"
+                                value={formData.startLocation}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                                placeholder="مثال: الخارجة - حي السلام"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                                نقطة الوصول *
+                              </label>
+                              <input
+                                type="text"
+                                name="endLocation"
+                                value={formData.endLocation}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
+                                placeholder="مثال: خميس مشيط - المستشفى العام"
+                                required
+                              />
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
