@@ -307,92 +307,133 @@ const Home: React.FC = () => {
       // جلب جميع خدمات الفئة
       const allServicesData = await servicesApi.getAll();
       console.log('[Home] 📦 جميع الخدمات المجلبة:', allServicesData.services?.length || 0);
-      console.log('[Home] 📋 جميع الخدمات:', allServicesData.services?.map(s => ({ 
-        id: s.id, 
-        name: s.name, 
-        category: s.category, 
-        categoryId: s.categoryId 
-      })));
+      
+      // إضافة logging تفصيلي للخدمات
+      if (allServicesData.services && allServicesData.services.length > 0) {
+        console.log('[Home] 📋 تفاصيل جميع الخدمات:');
+        allServicesData.services.forEach((service: any, index: number) => {
+          console.log(`   ${index + 1}. الخدمة:`, {
+            id: service.id,
+            name: service.name,
+            category: service.category,
+            categoryId: service.categoryId,
+            categoryName: service.categoryName
+          });
+        });
+        
+        console.log(`[Home] 🎯 البحث عن فئة: "${category}"`);
+        
+        // فلترة الخدمات مع logging مفصل
+        const categoryServices = allServicesData.services
+          .filter((service: any) => {
+            // تحسين منطق المطابقة
+            const matches = 
+              service.category === category || 
+              service.categoryId === category ||
+              service.category?.toLowerCase() === category.toLowerCase() ||
+              service.categoryId?.toLowerCase() === category.toLowerCase() ||
+              (service.categoryName && getCategorySlug(service.categoryName) === category) ||
+              // إضافة مطابقات إضافية محتملة
+              (category === 'internal_delivery' && (
+                service.category?.includes('internal') || 
+                service.category?.includes('delivery') ||
+                service.categoryName?.includes('التوصيل') ||
+                service.categoryName?.includes('الداخلية')
+              )) ||
+              (category === 'external_trips' && (
+                service.category?.includes('external') || 
+                service.category?.includes('trips') ||
+                service.categoryName?.includes('المشاوير') ||
+                service.categoryName?.includes('الخارجية')
+              )) ||
+              (category === 'home_maintenance' && (
+                service.category?.includes('home') || 
+                service.category?.includes('maintenance') ||
+                service.categoryName?.includes('الصيانة') ||
+                service.categoryName?.includes('المنزلية')
+              ));
+            
+            if (matches) {
+              console.log('[Home] ✅ خدمة متطابقة:', {
+                name: service.name,
+                id: service.id,
+                category: service.category,
+                categoryId: service.categoryId,
+                categoryName: service.categoryName,
+                searchCategory: category
+              });
+            } else {
+              console.log('[Home] ❌ خدمة غير متطابقة:', {
+                name: service.name,
+                category: service.category,
+                categoryId: service.categoryId,
+                categoryName: service.categoryName,
+                searchCategory: category
+              });
+            }
+            
+            return matches;
+          })
+          .map(transformApiService);
+        
+        console.log('[Home] 📋 خدمات الفئة الموجودة:', categoryServices.length);
+        console.log('[Home] 📋 قائمة الخدمات النهائية:', categoryServices.map(s => ({ 
+          id: s.id, 
+          name: s.name, 
+          category: s.category 
+        })));
+        
+        if (categoryServices.length > 0) {
+          setQuickCategoryServices(categoryServices);
+          setShowQuickBookingServices(true);
+          toast.success(`تم تحميل ${categoryServices.length} خدمة من فئة ${getCategoryName(category)}`);
+          return;
+        } else {
+          console.log('[Home] ⚠️ لم يتم العثور على خدمات متطابقة للفئة:', category);
+          console.log('[Home] 💡 جاري إنشاء خدمات تجريبية...');
+        }
+      }
       
       if (!allServicesData.services || allServicesData.services.length === 0) {
         console.log('[Home] ⚠️ لا توجد خدمات في قاعدة البيانات');
-        
-        // إنشاء خدمات تجريبية للاختبار
-        const demoServices: Service[] = [
-          {
-            id: `demo_${category}_1`,
-            name: `خدمة ${getCategoryName(category)} التجريبية 1`,
-            category: category,
-            categoryName: getCategoryName(category),
-            homeShortDescription: `وصف تجريبي لخدمة ${getCategoryName(category)} الأولى`,
-            price: category === 'internal_delivery' ? '20 ريال' : 
-                   category === 'external_trips' ? 'خميس مشيط 250 ريال | أبها 300 ريال' : 
-                   'حسب الطلب',
-            duration: category === 'internal_delivery' ? '30-60 دقيقة' :
-                     category === 'external_trips' ? '2-8 ساعات' :
-                     '1-4 ساعات',
-            customQuestions: []
-          },
-          {
-            id: `demo_${category}_2`,
-            name: `خدمة ${getCategoryName(category)} التجريبية 2`,
-            category: category,
-            categoryName: getCategoryName(category),
-            homeShortDescription: `وصف تجريبي لخدمة ${getCategoryName(category)} الثانية`,
-            price: category === 'internal_delivery' ? '25 ريال' : 
-                   category === 'external_trips' ? 'خميس مشيط 280 ريال | أبها 330 ريال' : 
-                   'حسب الطلب',
-            duration: category === 'internal_delivery' ? '45-90 دقيقة' :
-                     category === 'external_trips' ? '3-9 ساعات' :
-                     '2-5 ساعات',
-            customQuestions: []
-          }
-        ];
-        
-        console.log('[Home] 🔧 تم إنشاء خدمات تجريبية:', demoServices.length);
-        setQuickCategoryServices(demoServices);
-        setShowQuickBookingServices(true);
-        return;
       }
       
-      const categoryServices = allServicesData.services
-        .filter((service: ApiService) => {
-          // البحث في جميع الحقول المحتملة
-          const matches = service.category === category || 
-                         service.categoryId === category ||
-                         service.category?.toLowerCase() === category.toLowerCase() ||
-                         service.categoryId?.toLowerCase() === category.toLowerCase() ||
-                         (service.categoryName && getCategorySlug(service.categoryName) === category);
-          
-          if (matches) {
-            console.log('[Home] ✅ خدمة متطابقة:', {
-              name: service.name,
-              id: service.id,
-              category: service.category,
-              categoryId: service.categoryId,
-              searchCategory: category
-            });
-          }
-          return matches;
-        })
-        .map(transformApiService);
+      // إنشاء خدمات تجريبية للاختبار
+      const demoServices: Service[] = [
+        {
+          id: `demo_${category}_1`,
+          name: `خدمة ${getCategoryName(category)} التجريبية 1`,
+          category: category,
+          categoryName: getCategoryName(category),
+          homeShortDescription: `وصف تجريبي لخدمة ${getCategoryName(category)} الأولى`,
+          price: category === 'internal_delivery' ? '20 ريال' : 
+                 category === 'external_trips' ? 'خميس مشيط 250 ريال | أبها 300 ريال' : 
+                 'حسب الطلب',
+          duration: category === 'internal_delivery' ? '30-60 دقيقة' :
+                   category === 'external_trips' ? '2-8 ساعات' :
+                   '1-4 ساعات',
+          customQuestions: []
+        },
+        {
+          id: `demo_${category}_2`,
+          name: `خدمة ${getCategoryName(category)} التجريبية 2`,
+          category: category,
+          categoryName: getCategoryName(category),
+          homeShortDescription: `وصف تجريبي لخدمة ${getCategoryName(category)} الثانية`,
+          price: category === 'internal_delivery' ? '25 ريال' : 
+                 category === 'external_trips' ? 'خميس مشيط 280 ريال | أبها 330 ريال' : 
+                 'حسب الطلب',
+          duration: category === 'internal_delivery' ? '45-90 دقيقة' :
+                   category === 'external_trips' ? '3-9 ساعات' :
+                   '2-5 ساعات',
+          customQuestions: []
+        }
+      ];
       
-      console.log('[Home] 📋 خدمات الفئة الموجودة:', categoryServices.length);
-      console.log('[Home] 📋 قائمة الخدمات النهائية:', categoryServices.map(s => ({ 
-        id: s.id, 
-        name: s.name, 
-        category: s.category 
-      })));
-      
-      setQuickCategoryServices(categoryServices);
+      console.log('[Home] 🔧 تم إنشاء خدمات تجريبية:', demoServices.length);
+      setQuickCategoryServices(demoServices);
       setShowQuickBookingServices(true);
-      
-      // عرض رسالة نجاح للمستخدم
-      if (categoryServices.length > 0) {
-        toast.success(`تم تحميل ${categoryServices.length} خدمة من فئة ${getCategoryName(category)}`);
-      } else {
-        toast.success(`تم عرض الخدمات التجريبية لفئة ${getCategoryName(category)}`);
-      }
+      toast.success(`تم عرض الخدمات التجريبية لفئة ${getCategoryName(category)}`);
       
     } catch (error) {
       console.error('[Home] ❌ خطأ في handleQuickBookingByCategory:', error);

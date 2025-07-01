@@ -132,9 +132,19 @@ export default function ServiceDetail() {
             customQuestions: serviceData.customQuestions || []
           };
           
+          // إضافة logging تفصيلي
+          console.log('[ServiceDetail] 🎯 تم تحميل الخدمة:', {
+            id: foundService.id,
+            name: foundService.name,
+            category: foundService.category,
+            categoryName: foundService.categoryName,
+            isExternalTrip: foundService.category === 'external_trips'
+          });
+          
           setService(foundService);
 
           const isComplexPrice = foundService.price && typeof foundService.price === 'string' && foundService.price.includes('|');
+          console.log('[ServiceDetail] 💰 نوع السعر:', isComplexPrice ? 'أسعار متعددة' : 'سعر واحد', foundService.price);
 
           if (isComplexPrice) {
             const options = (foundService.price as string).split('|').map((item: string) => {
@@ -144,6 +154,7 @@ export default function ServiceDetail() {
               return { name, price: price.replace('ريال', '').trim() + ' ريال' };
             });
             setPriceOptions(options);
+            console.log('[ServiceDetail] 📋 خيارات الأسعار:', options);
             if (options.length > 0) {
               setSelectedPrice(`${options[0].name} ${options[0].price}`);
               setFormData(prev => ({...prev, selectedDestination: options[0].name }));
@@ -215,22 +226,50 @@ export default function ServiceDetail() {
     
     if (!service) return;
     
+    console.log('[ServiceDetail] 🚀 بدء عملية الحجز:', {
+      serviceName: service.name,
+      serviceCategory: service.category,
+      formData: {
+        selectedDestination: formData.selectedDestination,
+        startLocation: formData.startLocation,
+        endLocation: formData.endLocation
+      }
+    });
+    
     // التحقق من البيانات المطلوبة
     if (!formData.fullName || !formData.phoneNumber || !formData.address) {
-      toast.error('يرجى ملء جميع البيانات المطلوبة');
+      toast.error('يرجى ملء جميع البيانات المطلوبة (الاسم، الهاتف، العنوان)');
       return;
     }
 
     // التحقق من اختيار الوجهة للمشاوير الخارجية
     if (service.category === 'external_trips') {
+      console.log('[ServiceDetail] ✅ التحقق من بيانات المشوار الخارجي...');
+      
       if (!formData.selectedDestination) {
-        toast.error('يرجى اختيار الوجهة (خميس مشيط أو أبها)');
+        console.log('[ServiceDetail] ❌ لم يتم اختيار الوجهة');
+        toast.error('🎯 يرجى اختيار الوجهة أولاً (خميس مشيط أو أبها)');
+        
+        // التمرير إلى قسم اختيار الوجهة
+        const destinationSection = document.querySelector('[data-section="destination-selection"]');
+        if (destinationSection) {
+          destinationSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         return;
       }
+      
       if (!formData.startLocation || !formData.endLocation) {
-        toast.error('يرجى تحديد موقع الانطلاق ونقطة الوصول للمشوار الخارجي');
+        console.log('[ServiceDetail] ❌ لم يتم تحديد مواقع الرحلة');
+        toast.error('📍 يرجى تحديد موقع الانطلاق ونقطة الوصول للمشوار الخارجي');
         return;
       }
+      
+      console.log('[ServiceDetail] ✅ جميع بيانات المشوار الخارجي مكتملة:', {
+        destination: formData.selectedDestination,
+        startLocation: formData.startLocation,
+        endLocation: formData.endLocation,
+        price: selectedPrice
+      });
     }
 
     // التحقق من الأسئلة المخصصة الإجبارية
@@ -239,7 +278,7 @@ export default function ServiceDetail() {
         if (question.required) {
           const answer = formData.customAnswers[question.id];
           if (!answer || (Array.isArray(answer) && answer.length === 0) || (typeof answer === 'string' && answer.trim() === '')) {
-            toast.error(`يرجى الإجابة على السؤال: ${question.question}`);
+            toast.error(`📝 يرجى الإجابة على السؤال: ${question.question}`);
             return;
           }
         }
@@ -248,6 +287,7 @@ export default function ServiceDetail() {
 
     try {
       setSubmitting(true);
+      console.log('[ServiceDetail] 📤 جاري إرسال البيانات...');
       
       // إعداد بيانات الحجز مع معلومات الأسئلة المخصصة
       const customAnswersWithQuestions: Record<string, { question: string; answer: any; type: string }> = {};
@@ -307,12 +347,15 @@ export default function ServiceDetail() {
         }),
       };
 
+      console.log('[ServiceDetail] 📊 بيانات الحجز النهائية:', bookingData);
+
       // إرسال البيانات إلى Firebase
       const { collection, addDoc } = await import('firebase/firestore');
       
       await addDoc(collection(db, 'bookings'), bookingData);
       
-      toast.success('تم إرسال طلب الحجز بنجاح! سنتواصل معك قريباً');
+      console.log('[ServiceDetail] ✅ تم إرسال الحجز بنجاح');
+      toast.success('🎉 تم إرسال طلب الحجز بنجاح! سنتواصل معك قريباً');
       setShowBookingForm(false);
       
       // إعادة تعيين النموذج
@@ -342,8 +385,8 @@ export default function ServiceDetail() {
       });
       
     } catch (error) {
-      console.error('Error submitting booking:', error);
-      toast.error('فشل في إرسال طلب الحجز. حاول مرة أخرى');
+      console.error('[ServiceDetail] ❌ خطأ في إرسال الحجز:', error);
+      toast.error('❌ فشل في إرسال طلب الحجز. حاول مرة أخرى');
     } finally {
       setSubmitting(false);
     }
@@ -1161,22 +1204,45 @@ export default function ServiceDetail() {
 
                       {/* تفاصيل المشوار الخارجي - لكل خدمة من هذه الفئة */}
                       {service.category === 'external_trips' && (
-                        <div className="bg-[#1B3337] text-white rounded-2xl p-6 mb-6">
+                        <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl p-6 mb-6 border-2 border-amber-300 shadow-xl">
                           <div className="flex items-center gap-2 mb-6">
                             <MapPin className="w-6 h-6" />
                             <h3 className="text-xl font-bold">تفاصيل المشوار الخارجي</h3>
                           </div>
 
+                          {/* تنبيه مهم */}
+                          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-6 border border-white/30">
+                            <div className="flex items-center gap-2 mb-2">
+                              <AlertCircle className="w-5 h-5 text-amber-200" />
+                              <span className="font-bold text-amber-100">مطلوب: اختيار الوجهة</span>
+                            </div>
+                            <p className="text-sm text-amber-100">
+                              يرجى اختيار وجهة المشوار من الخيارات أدناه لإتمام عملية الحجز
+                            </p>
+                          </div>
+
                           {/* اختيار الوجهة */}
-                          <div className="mb-4">
-                            <label className="block text-sm mb-2">
-                              اختر الوجهة *
+                          <div className="mb-6" data-section="destination-selection">
+                            <label className="block text-lg font-bold mb-4 flex items-center gap-2">
+                              <span className="text-red-300">*</span>
+                              اختر الوجهة المطلوبة
                             </label>
+                            
+                            {!formData.selectedDestination && (
+                              <div className="bg-red-500/20 border border-red-300 rounded-lg p-3 mb-4">
+                                <div className="flex items-center gap-2">
+                                  <AlertCircle className="w-5 h-5 text-red-200" />
+                                  <span className="text-red-200 font-medium">لم يتم اختيار الوجهة بعد</span>
+                                </div>
+                              </div>
+                            )}
+                            
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* خميس مشيط */}
                               <button
                                 type="button"
                                 onClick={() => {
+                                  console.log('[ServiceDetail] 🎯 تم اختيار: خميس مشيط');
                                   setSelectedPrice('250 ريال');
                                   setFormData(prev => ({
                                     ...prev,
@@ -1189,18 +1255,27 @@ export default function ServiceDetail() {
                                     }
                                   }));
                                 }}
-                                className={`w-full p-4 rounded-xl text-right transition-all duration-300 ${
+                                className={`w-full p-6 rounded-xl text-right transition-all duration-300 transform hover:scale-105 ${
                                   formData.selectedDestination === 'خميس مشيط'
-                                  ? 'bg-[#2A4A51] border-2 border-[#FFA500]'
-                                  : 'bg-[#243B41] border-2 border-transparent hover:border-[#FFA500]'
+                                  ? 'bg-green-600 border-2 border-green-300 scale-105 shadow-2xl'
+                                  : 'bg-white/10 border-2 border-white/30 hover:border-green-300 hover:bg-white/20'
                                 }`}
                               >
                                 <div className="flex justify-between items-center">
                                   <div>
-                                    <h4 className="text-lg font-bold mb-1">خميس مشيط</h4>
-                                    <p className="text-sm text-gray-400">9 ساعات كحد أقصى</p>
+                                    <h4 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                      {formData.selectedDestination === 'خميس مشيط' && (
+                                        <CheckCircle className="w-5 h-5 text-green-200" />
+                                      )}
+                                      خميس مشيط
+                                    </h4>
+                                    <p className="text-sm text-gray-200">9 ساعات كحد أقصى</p>
+                                    <p className="text-xs text-gray-300 mt-1">المسافة: ~150 كم</p>
                                   </div>
-                                  <div className="text-[#FFA500] text-xl font-bold">250 ريال</div>
+                                  <div className="text-right">
+                                    <div className="text-2xl font-bold text-yellow-300">250 ريال</div>
+                                    <div className="text-xs text-gray-300">شامل الوقود</div>
+                                  </div>
                                 </div>
                               </button>
 
@@ -1208,6 +1283,7 @@ export default function ServiceDetail() {
                               <button
                                 type="button"
                                 onClick={() => {
+                                  console.log('[ServiceDetail] 🎯 تم اختيار: أبها');
                                   setSelectedPrice('300 ريال');
                                   setFormData(prev => ({
                                     ...prev,
@@ -1220,28 +1296,50 @@ export default function ServiceDetail() {
                                     }
                                   }));
                                 }}
-                                className={`w-full p-4 rounded-xl text-right transition-all duration-300 ${
+                                className={`w-full p-6 rounded-xl text-right transition-all duration-300 transform hover:scale-105 ${
                                   formData.selectedDestination === 'أبها'
-                                  ? 'bg-[#2A4A51] border-2 border-[#FFA500]'
-                                  : 'bg-[#243B41] border-2 border-transparent hover:border-[#FFA500]'
+                                  ? 'bg-green-600 border-2 border-green-300 scale-105 shadow-2xl'
+                                  : 'bg-white/10 border-2 border-white/30 hover:border-green-300 hover:bg-white/20'
                                 }`}
                               >
                                 <div className="flex justify-between items-center">
                                   <div>
-                                    <h4 className="text-lg font-bold mb-1">أبها</h4>
-                                    <p className="text-sm text-gray-400">9 ساعات كحد أقصى</p>
+                                    <h4 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                      {formData.selectedDestination === 'أبها' && (
+                                        <CheckCircle className="w-5 h-5 text-green-200" />
+                                      )}
+                                      أبها
+                                    </h4>
+                                    <p className="text-sm text-gray-200">9 ساعات كحد أقصى</p>
+                                    <p className="text-xs text-gray-300 mt-1">المسافة: ~200 كم</p>
                                   </div>
-                                  <div className="text-[#FFA500] text-xl font-bold">300 ريال</div>
+                                  <div className="text-right">
+                                    <div className="text-2xl font-bold text-yellow-300">300 ريال</div>
+                                    <div className="text-xs text-gray-300">شامل الوقود</div>
+                                  </div>
                                 </div>
                               </button>
                             </div>
+                            
+                            {/* رسالة تأكيد الاختيار */}
+                            {formData.selectedDestination && (
+                              <div className="mt-4 bg-green-500/20 border border-green-300 rounded-lg p-3">
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle className="w-5 h-5 text-green-200" />
+                                  <span className="text-green-200 font-medium">
+                                    تم اختيار: {formData.selectedDestination} - {selectedPrice}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* موقع الانطلاق ونقطة الوصول */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-sm mb-2">
-                                موقع الانطلاق *
+                              <label className="block text-sm font-bold mb-2 flex items-center gap-1">
+                                <span className="text-red-300">*</span>
+                                موقع الانطلاق
                               </label>
                               <input
                                 type="text"
@@ -1249,21 +1347,22 @@ export default function ServiceDetail() {
                                 value={formData.startLocation}
                                 onChange={handleInputChange}
                                 placeholder="مثال: الخارجة - حي السلام"
-                                className="w-full p-3 rounded-xl bg-[#243B41] border-2 border-transparent focus:border-[#FFA500] text-white placeholder-gray-400"
+                                className="w-full p-4 rounded-xl bg-white/10 border-2 border-white/30 focus:border-yellow-300 text-white placeholder-gray-300 shadow-lg transition-all duration-300"
                                 required
                               />
                             </div>
                             <div>
-                              <label className="block text-sm mb-2">
-                                نقطة الوصول *
+                              <label className="block text-sm font-bold mb-2 flex items-center gap-1">
+                                <span className="text-red-300">*</span>
+                                نقطة الوصول
                               </label>
                               <input
                                 type="text"
                                 name="endLocation"
                                 value={formData.endLocation}
                                 onChange={handleInputChange}
-                                placeholder="مثال: خميس مشيط - المستشفى العام"
-                                className="w-full p-3 rounded-xl bg-[#243B41] border-2 border-transparent focus:border-[#FFA500] text-white placeholder-gray-400"
+                                placeholder={`مثال: ${formData.selectedDestination || '[الوجهة]'} - المستشفى العام`}
+                                className="w-full p-4 rounded-xl bg-white/10 border-2 border-white/30 focus:border-yellow-300 text-white placeholder-gray-300 shadow-lg transition-all duration-300"
                                 required
                               />
                             </div>
