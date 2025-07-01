@@ -78,14 +78,14 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
         try {
           setLoadingServices(true);
           const servicesRef = collection(db, 'services');
-          const q = fbQuery(servicesRef, where('categoryId', '==', selectedCategory));
+          const q = fbQuery(servicesRef, where('category', '==', selectedCategory));
           const snapshot = await getDocs(q);
           const list: any[] = [];
           snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
 
-          // إذا لم نجد نتائج بالـ categoryId نجرب الحقل category
+          // إذا لم نجد نتائج بالـ category نجرب الحقل categoryId
           if (list.length === 0) {
-            const q2 = fbQuery(servicesRef, where('category', '==', selectedCategory));
+            const q2 = fbQuery(servicesRef, where('categoryId', '==', selectedCategory));
             const snap2 = await getDocs(q2);
             snap2.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
           }
