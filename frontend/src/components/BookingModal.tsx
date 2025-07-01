@@ -43,6 +43,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 
   // الخدمة النشطة (إما من الـ props أو المختارة من القائمة)
   const activeService = service || chosenService;
+  const currentCategory = activeService ? activeService.category : selectedCategory;
 
   // تحديد فئة الخدمة عند فتح المودال
   useEffect(() => {
@@ -81,6 +82,14 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
           const snapshot = await getDocs(q);
           const list: any[] = [];
           snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+
+          // إذا لم نجد نتائج بالـ categoryId نجرب الحقل category
+          if (list.length === 0) {
+            const q2 = fbQuery(servicesRef, where('category', '==', selectedCategory));
+            const snap2 = await getDocs(q2);
+            snap2.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+          }
+
           setCategoryServices(list);
         } catch (err) {
           console.error('[BookingModal] Error loading category services:', err);
@@ -151,9 +160,9 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
       if (currentCategory === 'internal_delivery') {
         estimatedPrice = '20 ريال';
       } else if (currentCategory === 'external_trips') {
-        if (formData.selectedDestination === 'khamis_mushait') {
+        if (formData.selectedDestination === 'خميس مشيط') {
           estimatedPrice = '250 ريال';
-        } else if (formData.selectedDestination === 'abha') {
+        } else if (formData.selectedDestination === 'أبها') {
           estimatedPrice = '300 ريال';
         }
       } else if (currentCategory === 'home_maintenance') {
@@ -366,7 +375,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
               </div>
 
               {/* حقول خاصة بالمشاوير الخارجية */}
-              {(selectedCategory === 'external_trips' || (service && service.category === 'external_trips')) && (
+              {(currentCategory === 'external_trips') && (
                 <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-green-400" />
@@ -418,9 +427,9 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <button
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, selectedDestination: 'khamis_mushait' }))}
+                          onClick={() => setFormData(prev => ({ ...prev, selectedDestination: 'خميس مشيط' }))}
                           className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                            formData.selectedDestination === 'khamis_mushait'
+                            formData.selectedDestination === 'خميس مشيط'
                               ? 'border-green-500 bg-green-500/20 text-green-300'
                               : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
                           }`}
@@ -436,9 +445,9 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                         
                         <button
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, selectedDestination: 'abha' }))}
+                          onClick={() => setFormData(prev => ({ ...prev, selectedDestination: 'أبها' }))}
                           className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                            formData.selectedDestination === 'abha'
+                            formData.selectedDestination === 'أبها'
                               ? 'border-green-500 bg-green-500/20 text-green-300'
                               : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
                           }`}
@@ -459,7 +468,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                   {formData.selectedDestination && (
                     <div className="mt-4 p-3 bg-green-500/20 rounded-lg border border-green-500/30">
                       <p className="text-yellow-400 font-bold text-lg">
-                        السعر: {formData.selectedDestination === 'khamis_mushait' ? '250 ريال' : formData.selectedDestination === 'abha' ? '300 ريال' : ''}
+                        السعر: {formData.selectedDestination === 'خميس مشيط' ? '250 ريال' : formData.selectedDestination === 'أبها' ? '300 ريال' : ''}
                       </p>
                     </div>
                   )}
