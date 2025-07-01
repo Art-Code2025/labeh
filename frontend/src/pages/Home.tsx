@@ -300,11 +300,21 @@ const Home: React.FC = () => {
       
       // جلب جميع خدمات الفئة
       const allServicesData = await servicesApi.getAll();
+      console.log('[Home] 📦 جميع الخدمات المجلبة:', allServicesData.services?.length || 0);
+      
       const categoryServices = allServicesData.services
-        .filter((service: ApiService) => service.category === category)
+        .filter((service: ApiService) => {
+          // البحث في كلا الحقلين category و categoryId
+          const matches = service.category === category || service.categoryId === category;
+          if (matches) {
+            console.log('[Home] ✅ خدمة متطابقة:', service.name, 'category:', service.category, 'categoryId:', service.categoryId);
+          }
+          return matches;
+        })
         .map(transformApiService);
       
       console.log('[Home] 📋 خدمات الفئة الموجودة:', categoryServices.length);
+      console.log('[Home] 📋 قائمة الخدمات:', categoryServices.map(s => ({ id: s.id, name: s.name, category: s.category })));
       
       setQuickCategoryServices(categoryServices);
       setShowQuickBookingServices(true);

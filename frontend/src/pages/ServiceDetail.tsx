@@ -108,7 +108,7 @@ export default function ServiceDetail() {
             mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
             detailedImages: serviceData.detailedImages || [],
             features: serviceData.features || getDefaultFeatures(serviceData.categoryId || serviceData.category || ''),
-            duration: serviceData.duration || "غير محدد",
+            duration: serviceData.duration || serviceData.expectedDuration || "غير محدد",
             availability: serviceData.availability || "متاح 24/7",
             price: serviceData.price || serviceData.pricing || getDefaultPrice(serviceData.categoryId || serviceData.category || ''),
             homeShortDescription: serviceData.homeShortDescription || '',
@@ -349,10 +349,17 @@ export default function ServiceDetail() {
       const servicesRef = collection(db, 'services');
       const servicesSnapshot = await getDocs(servicesRef);
       
+      console.log('[ServiceDetail] 📦 جميع الخدمات المجلبة:', servicesSnapshot.docs.length);
+      
       const categoryServices: Service[] = [];
       servicesSnapshot.docs.forEach(doc => {
         const serviceData = doc.data();
-        if (serviceData.category === category || serviceData.categoryId === category) {
+        // البحث في كلا الحقلين category و categoryId
+        const matches = serviceData.category === category || serviceData.categoryId === category;
+        
+        if (matches) {
+          console.log('[ServiceDetail] ✅ خدمة متطابقة:', serviceData.name, 'category:', serviceData.category, 'categoryId:', serviceData.categoryId);
+          
           const transformedService: Service = {
             id: doc.id,
             name: serviceData.name || '',
@@ -362,7 +369,7 @@ export default function ServiceDetail() {
             mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
             detailedImages: serviceData.detailedImages || [],
             features: serviceData.features || [],
-            duration: serviceData.duration || "غير محدد",
+            duration: serviceData.duration || serviceData.expectedDuration || "غير محدد",
             availability: serviceData.availability || "متاح 24/7",
             price: serviceData.price || serviceData.pricing || '',
             homeShortDescription: serviceData.homeShortDescription || '',
@@ -373,6 +380,7 @@ export default function ServiceDetail() {
       });
       
       console.log('[ServiceDetail] 📋 خدمات الفئة الموجودة:', categoryServices.length);
+      console.log('[ServiceDetail] 📋 قائمة الخدمات:', categoryServices.map(s => ({ id: s.id, name: s.name, category: s.category })));
       
       setQuickCategoryServices(categoryServices);
       setShowQuickBookingServices(true);

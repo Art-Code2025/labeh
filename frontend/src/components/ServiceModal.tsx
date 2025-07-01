@@ -67,7 +67,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
           mainImage: editingService.mainImage || '',
           features: editingService.features || [],
           price: editingService.price || '',
-          expectedDuration: editingService.expectedDuration || '',
+          expectedDuration: editingService.duration || editingService.expectedDuration || '',
           customQuestions: editingService.customQuestions || []
         });
         setImagePreview(editingService.mainImage || null);
@@ -239,6 +239,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     const serviceData = {
       ...formData,
       price: finalPrice,
+      duration: formData.expectedDuration,
       isCloudinaryMainImage: !!formData.mainImage && formData.mainImage.includes('cloudinary'),
       customQuestions: formData.customQuestions
     };

@@ -336,51 +336,89 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                     تفاصيل المشوار الخارجي
                   </h3>
                   
-                  {/* اختيار الوجهة */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      اختر الوجهة *
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, selectedDestination: 'khamis_mushait' }))}
-                        className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                          formData.selectedDestination === 'khamis_mushait'
-                            ? 'border-green-500 bg-green-500/20 text-green-300'
-                            : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <div className="font-semibold text-lg">خميس مشيط</div>
-                            <div className="text-xs text-gray-400">9 ساعات كحد أقصى</div>
-                          </div>
-                          <div className="text-yellow-400 font-bold text-xl">250 ريال</div>
-                        </div>
-                      </button>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, selectedDestination: 'abha' }))}
-                        className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                          formData.selectedDestination === 'abha'
-                            ? 'border-green-500 bg-green-500/20 text-green-300'
-                            : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <div className="font-semibold text-lg">أبها</div>
-                            <div className="text-xs text-gray-400">9 ساعات كحد أقصى</div>
-                          </div>
-                          <div className="text-yellow-400 font-bold text-xl">300 ريال</div>
-                        </div>
-                      </button>
+                  {/* اختيار الوجهة - ديناميكي من بيانات الخدمة */}
+                  {service && service.price && typeof service.price === 'string' && service.price.includes('|') ? (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        اختر الوجهة *
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {service.price.split('|').map((priceOption: string, index: number) => {
+                          const parts = priceOption.trim().split(/(\s+)/);
+                          const price = parts.pop() || '';
+                          const name = parts.join('').trim();
+                          const destinationId = name.toLowerCase().replace(/\s+/g, '_');
+                          
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, selectedDestination: destinationId }))}
+                              className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                                formData.selectedDestination === destinationId
+                                  ? 'border-green-500 bg-green-500/20 text-green-300'
+                                  : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div>
+                                  <div className="font-semibold text-lg">{name}</div>
+                                  <div className="text-xs text-gray-400">9 ساعات كحد أقصى</div>
+                                </div>
+                                <div className="text-yellow-400 font-bold text-xl">{price}</div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    /* خيارات افتراضية إذا لم تكن هناك خيارات أسعار محددة */
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        اختر الوجهة *
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, selectedDestination: 'khamis_mushait' }))}
+                          className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                            formData.selectedDestination === 'khamis_mushait'
+                              ? 'border-green-500 bg-green-500/20 text-green-300'
+                              : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <div className="font-semibold text-lg">خميس مشيط</div>
+                              <div className="text-xs text-gray-400">9 ساعات كحد أقصى</div>
+                            </div>
+                            <div className="text-yellow-400 font-bold text-xl">250 ريال</div>
+                          </div>
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, selectedDestination: 'abha' }))}
+                          className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                            formData.selectedDestination === 'abha'
+                              ? 'border-green-500 bg-green-500/20 text-green-300'
+                              : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <div className="font-semibold text-lg">أبها</div>
+                              <div className="text-xs text-gray-400">9 ساعات كحد أقصى</div>
+                            </div>
+                            <div className="text-yellow-400 font-bold text-xl">300 ريال</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-                  {/* موقع الانطلاق ونقطة الوصول */}
+                  {/* موقع الانطلاق ونقطة الوصول - يظهر دائماً */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
