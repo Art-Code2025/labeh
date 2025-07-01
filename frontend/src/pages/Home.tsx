@@ -304,9 +304,23 @@ const Home: React.FC = () => {
       setLoadingQuickServices(true);
       setQuickCategoryServices([]);
       
-      // استخدام نفس طريقة CategoryServices - بسيطة ومباشرة
-      const servicesData = await servicesApi.getAll();
+      // جلب الفئات أولاً لمعرفة الـ Firebase IDs
+      const [servicesData, categoriesData] = await Promise.all([
+        servicesApi.getAll(),
+        categoriesApi.getAll()
+      ]);
+      
       console.log('[Home] 📊 إجمالي الخدمات المجلبة:', servicesData.services.length);
+      console.log('[Home] 📊 إجمالي الفئات المجلبة:', categoriesData.length);
+      
+      // البحث عن Firebase ID للفئة المطلوبة
+      const targetCategory = categoriesData.find(cat => 
+        cat.id === category || 
+        cat.name === getCategoryName(category) ||
+        getCategorySlug(cat.name) === category
+      );
+      
+      console.log('[Home] 🎯 الفئة المستهدفة:', targetCategory);
       
       // فلترة الخدمات حسب الفئة
       const categoryServices = servicesData.services.filter((service: any) => {
@@ -318,9 +332,32 @@ const Home: React.FC = () => {
           categoryName: service.categoryName 
         });
         
-        return service.category === category || 
-               service.categoryId === category ||
-               service.categoryName === getCategoryName(category);
+        // مطابقة مرنة للفئة
+        const matches = 
+          service.category === category || // مطابقة مباشرة للـ slug
+          service.categoryId === category || // مطابقة للـ categoryId
+          service.categoryName === getCategoryName(category) || // مطابقة للاسم العربي
+          (targetCategory && service.category === targetCategory.id) || // مطابقة للـ Firebase ID
+          // مطابقات إضافية للنصوص
+          (category === 'internal_delivery' && (
+            service.categoryName?.includes('توصيل') || 
+            service.categoryName?.includes('داخلي') ||
+            service.categoryName?.includes('اغراض')
+          )) ||
+          (category === 'external_trips' && (
+            service.categoryName?.includes('مشاوير') || 
+            service.categoryName?.includes('خارجية')
+          )) ||
+          (category === 'home_maintenance' && (
+            service.categoryName?.includes('صيانة') || 
+            service.categoryName?.includes('منزلية')
+          ));
+          
+        if (matches) {
+          console.log('[Home] ✅ خدمة متطابقة:', { id: service.id, name: service.name });
+        }
+        
+        return matches;
       });
       
       console.log('[Home] ✅ الخدمات المفلترة:', categoryServices.length);
