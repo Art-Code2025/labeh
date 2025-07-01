@@ -108,7 +108,7 @@ export default function ServiceDetail() {
             mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
             detailedImages: serviceData.detailedImages || [],
             features: serviceData.features || getDefaultFeatures(serviceData.categoryId || serviceData.category || ''),
-            duration: serviceData.duration || getDefaultDuration(serviceData.categoryId || serviceData.category || ''),
+            duration: serviceData.duration || "غير محدد",
             availability: serviceData.availability || "متاح 24/7",
             price: serviceData.price || serviceData.pricing || getDefaultPrice(serviceData.categoryId || serviceData.category || ''),
             homeShortDescription: serviceData.homeShortDescription || '',
@@ -167,15 +167,6 @@ export default function ServiceDetail() {
     return prices[categoryId] || 'حسب الطلب';
   }
 
-  function getDefaultDuration(categoryId: string) {
-    const durations: Record<string, string> = {
-      'internal_delivery': '30-60 دقيقة',
-      'external_trips': '2-8 ساعات',
-      'home_maintenance': '1-4 ساعات'
-    };
-    return durations[categoryId] || '1-2 ساعة';
-  }
-
   function getDefaultFeatures(categoryId: string) {
     const features: Record<string, string[]> = {
       'internal_delivery': ['توصيل سريع خلال ساعة', 'خدمة 24/7', 'تتبع الطلب مباشر', 'ضمان الأمان'],
@@ -211,6 +202,14 @@ export default function ServiceDetail() {
     if (!formData.fullName || !formData.phoneNumber || !formData.address) {
       toast.error('يرجى ملء جميع البيانات المطلوبة');
       return;
+    }
+
+    // التحقق من بيانات المشوار الخارجي إذا كانت الخدمة من هذه الفئة
+    if (service.category === 'external_trips') {
+      if (!formData.startLocation || !formData.endLocation) {
+        toast.error('يرجى تحديد موقع الانطلاق ونقطة الوصول للمشوار الخارجي');
+        return;
+      }
     }
 
     // التحقق من الأسئلة المخصصة الإجبارية
@@ -336,6 +335,123 @@ export default function ServiceDetail() {
   const getCategoryOptions = () => {
     if (!service) return null;
     return categoryOptions[service.category as keyof typeof categoryOptions];
+  };
+
+  // إضافة وظائف الحجز السريع
+  const handleQuickBookingByCategory = async (category: string) => {
+    try {
+      console.log('[ServiceDetail] 🔍 عرض خدمات الفئة:', category);
+      setSelectedQuickCategory(category);
+      setLoadingQuickServices(true);
+      
+      // جلب جميع خدمات الفئة من Firebase
+      const { collection, getDocs } = await import('firebase/firestore');
+      const servicesRef = collection(db, 'services');
+      const servicesSnapshot = await getDocs(servicesRef);
+      
+      const categoryServices: Service[] = [];
+      servicesSnapshot.docs.forEach(doc => {
+        const serviceData = doc.data();
+        if (serviceData.category === category || serviceData.categoryId === category) {
+          const transformedService: Service = {
+            id: doc.id,
+            name: serviceData.name || '',
+            category: serviceData.categoryId || serviceData.category || '',
+            categoryName: serviceData.categoryName || '',
+            description: serviceData.description || serviceData.homeShortDescription || '',
+            mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
+            detailedImages: serviceData.detailedImages || [],
+            features: serviceData.features || [],
+            duration: serviceData.duration || "غير محدد",
+            availability: serviceData.availability || "متاح 24/7",
+            price: serviceData.price || serviceData.pricing || '',
+            homeShortDescription: serviceData.homeShortDescription || '',
+            customQuestions: serviceData.customQuestions || []
+          };
+          categoryServices.push(transformedService);
+        }
+      });
+      
+      console.log('[ServiceDetail] 📋 خدمات الفئة الموجودة:', categoryServices.length);
+      
+      setQuickCategoryServices(categoryServices);
+      setShowQuickBookingServices(true);
+      
+    } catch (error) {
+      console.error('[ServiceDetail] ❌ خطأ في handleQuickBookingByCategory:', error);
+      toast.error('فشل في تحميل خدمات الفئة');
+    } finally {
+      setLoadingQuickServices(false);
+    }
+  };
+
+  // وظيفة اختيار خدمة من الحجز السريع
+  const handleQuickServiceSelect = (selectedService: Service) => {
+    try {
+      console.log('[ServiceDetail] ✅ تم اختيار الخدمة:', selectedService.name);
+      
+      // تحديث الخدمة المعروضة وإعادة تعيين النموذج
+      setService(selectedService);
+      
+      // تحديث خيارات السعر إذا كانت موجودة
+      const isComplexPrice = selectedService.price && typeof selectedService.price === 'string' && selectedService.price.includes('|');
+      if (isComplexPrice) {
+        const options = (selectedService.price as string).split('|').map((item: string) => {
+          const parts = item.trim().split(/(\s+)/);
+          const price = parts.pop() || '';
+          const name = parts.join('').trim();
+          return { name, price: price.replace('ريال', '').trim() + ' ريال' };
+        });
+        setPriceOptions(options);
+        if (options.length > 0) {
+          setSelectedPrice(`${options[0].name} ${options[0].price}`);
+          setFormData(prev => ({...prev, selectedDestination: options[0].name }));
+        }
+      } else if (selectedService.price) {
+        setSelectedPrice(selectedService.price);
+      }
+      
+      // إعادة تعيين النموذج مع الاحتفاظ بالبيانات الأساسية
+      setFormData(prev => ({
+        ...prev,
+        selectedOption: '',
+        selectedDestination: isComplexPrice && priceOptions.length > 0 ? priceOptions[0].name : '',
+        startLocation: '',
+        endLocation: '',
+        appointmentTime: '',
+        urgentDelivery: false,
+        returnTrip: false,
+        passengers: 1,
+        urgencyLevel: 'medium',
+        preferredTime: 'morning',
+        customAnswers: {}
+      }));
+      
+      // إخفاء قائمة الخدمات وإظهار فورم الحجز
+      setShowQuickBookingServices(false);
+      setShowBookingForm(true);
+      
+    } catch (error) {
+      console.error('[ServiceDetail] ❌ خطأ في اختيار الخدمة:', error);
+      toast.error('حدث خطأ في اختيار الخدمة');
+    }
+  };
+
+  // إغلاق قائمة خدمات الحجز السريع
+  const closeQuickBookingServices = () => {
+    setShowQuickBookingServices(false);
+    setSelectedQuickCategory('');
+    setQuickCategoryServices([]);
+  };
+
+  // الحصول على اسم الفئة
+  const getCategoryName = (category: string) => {
+    switch (category) {
+      case 'internal_delivery': return 'التوصيل الداخلي';
+      case 'external_trips': return 'المشاوير الخارجية';
+      case 'home_maintenance': return 'الصيانة المنزلية';
+      default: return 'خدمات متنوعة';
+    }
   };
 
   if (loading) {
@@ -620,6 +736,68 @@ export default function ServiceDetail() {
                   <p className="font-semibold text-slate-800">24/7 طوال الأسبوع</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Booking Section */}
+        <div className="mb-8 sm:mb-12">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-4">
+              حجز سريع لخدمات أخرى
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              تصفح وأحجز خدمات أخرى بسرعة من نفس الصفحة
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+            {/* التوصيل الداخلي */}
+            <div className="group bg-gradient-to-br from-blue-500 to-cyan-600 rounded-3xl p-6 sm:p-8 text-white shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 transform hover:-translate-y-2">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <Truck className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3 text-center">توصيل أغراض داخلي</h3>
+              <p className="text-blue-100 text-sm mb-4 text-center">صيدلية، بقالة، مستشفى، توصيلات أونلاين</p>
+              <div className="text-2xl font-bold text-yellow-300 mb-6 text-center">من 20 ريال</div>
+              <button
+                onClick={() => handleQuickBookingByCategory('internal_delivery')}
+                className="w-full px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors border border-white/30 font-semibold"
+              >
+                استعراض الخدمات
+              </button>
+            </div>
+
+            {/* المشاوير الخارجية */}
+            <div className="group bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 sm:p-8 text-white shadow-2xl hover:shadow-green-500/25 transition-all duration-300 transform hover:-translate-y-2">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <MapPin className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3 text-center">مشاوير خارجية</h3>
+              <p className="text-green-100 text-sm mb-4 text-center">خميس مشيط، أبها، المطار، المستشفيات</p>
+              <div className="text-2xl font-bold text-yellow-300 mb-6 text-center">من 250 ريال</div>
+              <button
+                onClick={() => handleQuickBookingByCategory('external_trips')}
+                className="w-full px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors border border-white/30 font-semibold"
+              >
+                استعراض الخدمات
+              </button>
+            </div>
+
+            {/* الصيانة المنزلية */}
+            <div className="group bg-gradient-to-br from-orange-500 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 transform hover:-translate-y-2">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <Wrench className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3 text-center">صيانة منزلية</h3>
+              <p className="text-orange-100 text-sm mb-4 text-center">سباكة، كهرباء، نظافة عامة</p>
+              <div className="text-2xl font-bold text-yellow-300 mb-6 text-center">حسب المطلوب</div>
+              <button
+                onClick={() => handleQuickBookingByCategory('home_maintenance')}
+                className="w-full px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors border border-white/30 font-semibold"
+              >
+                استعراض الخدمات
+              </button>
             </div>
           </div>
         </div>
@@ -969,7 +1147,7 @@ export default function ServiceDetail() {
                         </div>
                       )}
 
-                      {/* خيارات المشاوير الخارجية الديناميكية */}
+                      {/* تفاصيل المشوار الخارجي - لكل خدمة من هذه الفئة */}
                       {service.category === 'external_trips' && (
                         <div className="bg-green-50 rounded-xl p-4 border border-green-200">
                           <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -1011,7 +1189,7 @@ export default function ServiceDetail() {
                             </div>
                           )}
 
-                          {/* موقع الانطلاق ونقطة الوصول */}
+                          {/* موقع الانطلاق ونقطة الوصول - يظهر دائماً لخدمات المشاوير الخارجية */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-semibold text-slate-700 mb-3">
@@ -1252,6 +1430,138 @@ export default function ServiceDetail() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Category Services Modal */}
+      {showQuickBookingServices && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
+          <div className="bg-white rounded-3xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl border border-cyan-100">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-6 sm:p-8 rounded-t-3xl">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    <Package className="w-8 h-8" />
+                    خدمات {getCategoryName(selectedQuickCategory)}
+                  </h2>
+                  <p className="text-cyan-100">اختر الخدمة التي تريد حجزها</p>
+                </div>
+                <button
+                  onClick={closeQuickBookingServices}
+                  className="text-white/80 hover:text-white p-3 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 sm:p-8">
+              {loadingQuickServices ? (
+                <div className="text-center py-12">
+                  <div className="relative">
+                    <div className="w-20 h-20 border-4 border-cyan-200 border-t-cyan-600 rounded-full animate-spin mx-auto mb-6"></div>
+                    <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-r-blue-400 rounded-full animate-spin animation-delay-150 mx-auto"></div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">جاري تحميل الخدمات</h3>
+                  <p className="text-gray-600">يرجى الانتظار قليلاً...</p>
+                </div>
+              ) : quickCategoryServices.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Package className="w-10 h-10 text-slate-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">لا توجد خدمات في هذه الفئة</h3>
+                  <p className="text-slate-500 mb-6">لم نجد خدمات متاحة في فئة {getCategoryName(selectedQuickCategory)} حالياً</p>
+                  <button
+                    onClick={closeQuickBookingServices}
+                    className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl transition-colors"
+                  >
+                    إغلاق
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {quickCategoryServices.map((service) => (
+                    <div key={service.id} className="group bg-gradient-to-br from-slate-50 to-cyan-50 rounded-2xl p-6 border border-cyan-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                      {/* Service Image */}
+                      <div className="relative h-40 mb-4 rounded-xl overflow-hidden bg-slate-100">
+                        {service.mainImage ? (
+                          <img
+                            src={service.mainImage}
+                            alt={service.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cyan-100 to-blue-100">
+                            <div className="text-4xl">
+                              {selectedQuickCategory === 'internal_delivery' && '🚚'}
+                              {selectedQuickCategory === 'external_trips' && '🗺️'}
+                              {selectedQuickCategory === 'home_maintenance' && '🔧'}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Service Info */}
+                      <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-cyan-600 transition-colors">
+                        {service.name}
+                      </h3>
+                      <p className="text-slate-600 text-sm mb-4 line-clamp-2">
+                        {service.homeShortDescription || service.description}
+                      </p>
+                      
+                      {/* Price and Duration */}
+                      <div className="flex items-center justify-between mb-4">
+                        {service.duration && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                            <Clock className="w-3 h-3" />
+                            {service.duration}
+                          </span>
+                        )}
+                        {service.price && (
+                          <span className="text-lg font-bold text-amber-600">
+                            {typeof service.price === 'string' && service.price.includes('|') ? 
+                              service.price.split('|')[0].trim() : service.price
+                            }
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Custom Questions Count */}
+                      {service.customQuestions && service.customQuestions.length > 0 && (
+                        <div className="mb-4">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
+                            <MessageSquare className="w-3 h-3" />
+                            {service.customQuestions.length} أسئلة مخصصة
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Action Button */}
+                      <button
+                        onClick={() => handleQuickServiceSelect(service)}
+                        className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-md"
+                      >
+                        احجز هذه الخدمة
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Back to Categories */}
+              <div className="text-center mt-8">
+                <button
+                  onClick={closeQuickBookingServices}
+                  className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl transition-colors"
+                >
+                  العودة لاختيار فئة أخرى
+                </button>
+              </div>
             </div>
           </div>
         </div>
