@@ -3,6 +3,8 @@ import { X, MapPin, Phone, User, Clock, Package, Truck, Wrench, Send, DollarSign
 import { toast } from 'react-toastify';
 import { createBooking } from '../services/bookingsApi';
 import { servicesApi, Service } from '../services/servicesApi';
+import { collection, query as fbQuery, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase.config';
 
 interface CustomQuestion {
   id: string;
@@ -74,9 +76,12 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
       (async () => {
         try {
           setLoadingServices(true);
-          const { services } = await servicesApi.getAll();
-          const filtered = services.filter((s: Service) => (s.category || s.categoryId) === selectedCategory);
-          setCategoryServices(filtered);
+          const servicesRef = collection(db, 'services');
+          const q = fbQuery(servicesRef, where('categoryId', '==', selectedCategory));
+          const snapshot = await getDocs(q);
+          const list: any[] = [];
+          snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+          setCategoryServices(list);
         } catch (err) {
           console.error('[BookingModal] Error loading category services:', err);
           setCategoryServices([]);
@@ -304,7 +309,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
           )}
 
           {/* إظهار الحقول دائماً عند وجود خدمة أو اختيار فئة */}
-          {(selectedCategory || service) && (
+          {activeService && (
             <>
               {/* المعلومات الأساسية */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -723,8 +728,8 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
             </>
           )}
 
-          {/* قائمة خدمات الفئة المختارة */}
-          {!service && selectedCategory && !chosenService && (
+          {/* قائمة الخدمات عند اختيار الفئة ولم يتم اختيار خدمة */}
+          {!activeService && selectedCategory && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-3">اختر الخدمة *</label>
               {loadingServices ? (
