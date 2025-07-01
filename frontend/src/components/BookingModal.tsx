@@ -90,19 +90,21 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
         try {
           setLoadingServices(true);
           const servicesRef = collection(db, 'services');
+          let list: any[] = [];
+
+          // 1. جلب بالخانة category
           const q = fbQuery(servicesRef, where('category', '==', selectedCategory));
           const snapshot = await getDocs(q);
-          const list: any[] = [];
           snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
 
-          // إذا لم نجد نتائج بالـ category نجرب الحقل categoryId
+          // 2. جلب بالخانة categoryId
           if (list.length === 0) {
             const q2 = fbQuery(servicesRef, where('categoryId', '==', selectedCategory));
             const snap2 = await getDocs(q2);
             snap2.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
           }
 
-          // محاولة أخيرة بالبحث عبر categoryName (الاسم العربي)
+          // 3. جلب بالخانة categoryName (الاسم العربي)
           if (list.length === 0) {
             const arabicName = getArabicCategoryName(selectedCategory);
             if (arabicName) {
@@ -413,7 +415,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
               </div>
 
               {/* حقول خاصة بالمشاوير الخارجية */}
-              {currentCategory === 'external_trips' && (
+              {(currentCategory === 'external_trips' || (activeService && activeService.categoryName === 'مشاوير خارجية')) && (
                 <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-green-400" />
