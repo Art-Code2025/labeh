@@ -268,7 +268,18 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
         })
       };
 
-      await createBooking(bookingData);
+      console.log('🔥 [BookingModal] البيانات اللي هتتبعت:', {
+        serviceName: bookingServiceName,
+        price: bookingPrice,
+        isExternalTrip: isExternalTrip,
+        selectedDestination: isExternalTrip ? bookingDestination : 'غير مطلوب',
+        startLocation: isExternalTrip ? bookingStart : 'غير مطلوب',
+        endLocation: isExternalTrip ? bookingEnd : 'غير مطلوب',
+        fullBookingData: bookingData
+      });
+
+      const result = await createBooking(bookingData);
+      console.log('✅ [BookingModal] نتيجة الإرسال:', result);
       
       toast.success('✅ تم إرسال طلب الحجز بنجاح! سنتواصل معك قريباً');
       onClose();

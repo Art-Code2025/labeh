@@ -119,15 +119,31 @@ async function getBookingsFromFirebase(): Promise<any[]> {
 
 async function addBookingToFirebase(data: any): Promise<{ id: string }> {
     try {
-        const docRef = await addDoc(collection(db, 'bookings'), {
+        console.log('🔥 [bookingsApi] البيانات الواردة لـ Firebase:', data);
+        console.log('🔍 [bookingsApi] التحقق من البيانات المهمة:', {
+            serviceName: data.serviceName,
+            price: data.price,
+            selectedDestination: data.selectedDestination,
+            startLocation: data.startLocation,
+            endLocation: data.endLocation
+        });
+        
+        const finalData = {
             ...data,
             status: 'pending',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-        });
+        };
+        
+        console.log('📦 [bookingsApi] البيانات النهائية للحفظ:', finalData);
+        
+        const docRef = await addDoc(collection(db, 'bookings'), finalData);
+        
+        console.log('✅ [bookingsApi] تم الحفظ بنجاح - Document ID:', docRef.id);
+        
         return { id: docRef.id };
     } catch (error) {
-        console.error('Firebase add failed for bookings:', error);
+        console.error('❌ [bookingsApi] فشل في الحفظ:', error);
         throw new Error('Failed to add booking to database');
     }
 }

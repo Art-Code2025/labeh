@@ -356,12 +356,22 @@ export default function ServiceDetail() {
         }),
       };
 
-      console.log('[ServiceDetail] 📊 بيانات الحجز النهائية:', bookingData);
+      console.log('🔥 [ServiceDetail] البيانات اللي هتتبعت:', {
+        serviceName: bookingServiceName,
+        price: bookingPrice,
+        isExternalTrip: isExternalTrip,
+        selectedDestination: isExternalTrip ? bookingDestination : 'غير مطلوب',
+        startLocation: isExternalTrip ? bookingStart : 'غير مطلوب',
+        endLocation: isExternalTrip ? bookingEnd : 'غير مطلوب',
+        fullBookingData: bookingData
+      });
 
       // إرسال البيانات إلى Firebase
       const { collection, addDoc } = await import('firebase/firestore');
       
-      await addDoc(collection(db, 'bookings'), bookingData);
+      const result = await addDoc(collection(db, 'bookings'), bookingData);
+      console.log('✅ [ServiceDetail] تم الإرسال لـ Firebase بنجاح - ID:', result.id);
+      console.log('📊 [ServiceDetail] البيانات المحفوظة:', bookingData);
       
       console.log('[ServiceDetail] ✅ تم إرسال الحجز بنجاح');
       toast.success('🎉 تم إرسال طلب الحجز بنجاح! سنتواصل معك قريباً');
