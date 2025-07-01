@@ -192,22 +192,32 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
     try {
       setSubmitting(true);
       
-      // تحديد السعر حسب نوع الخدمة
-      let estimatedPrice = '';
+      // تجهيز بيانات الحجز بشكل مضمون (مثل ServiceDetail.tsx)
+      const isExternalTrip = currentCategory === 'external_trips' || (activeService && activeService.categoryName === 'مشاوير خارجية');
+      
+      // اجبار تعيين السعر والوجهة
+      let bookingPrice = '';
       if (currentCategory === 'internal_delivery') {
-        estimatedPrice = '20 ريال';
-      } else if (currentCategory === 'external_trips') {
+        bookingPrice = activeService?.price || '20 ريال';
+      } else if (isExternalTrip) {
         const destSlug = formData.selectedDestination;
         if (destSlug === 'خميس مشيط' || destSlug === 'خميس_مشيط') {
-          estimatedPrice = '250 ريال';
-        } else if (destSlug === 'أبها' || destSlug === 'أبها') {
-          estimatedPrice = '300 ريال';
+          bookingPrice = '250 ريال';
+        } else if (destSlug === 'أبها') {
+          bookingPrice = '300 ريال';
         } else {
-          estimatedPrice = 'على حسب المسافة';
+          bookingPrice = activeService?.price || 'على حسب المسافة';
         }
       } else if (currentCategory === 'home_maintenance') {
-        estimatedPrice = 'على حسب المطلوب';
+        bookingPrice = activeService?.price || 'على حسب المطلوب';
+      } else {
+        bookingPrice = activeService?.price || 'غير محدد';
       }
+      
+      let bookingDestination = formData.selectedDestination || 'غير محدد';
+      let bookingStart = formData.startLocation || 'غير محدد';
+      let bookingEnd = formData.endLocation || 'غير محدد';
+      let bookingServiceName = activeService ? activeService.name : getServiceName(currentCategory);
       
       // إعداد بيانات الحجز مع معلومات الأسئلة المخصصة
       const customAnswersWithQuestions: Record<string, { question: string; answer: any; type: string }> = {};
@@ -227,23 +237,35 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 
       const bookingData = {
         serviceId: activeService ? activeService.id : 'unknown',
-        serviceName: activeService ? activeService.name : 'خدمة غير محددة',
+        serviceName: bookingServiceName,
         serviceCategory: currentCategory,
+        serviceCategorySlug: currentCategory,
+        serviceCategoryName: activeService ? activeService.categoryName : getServiceName(currentCategory),
+        price: bookingPrice,
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         address: formData.address,
         serviceDetails: formData.serviceDetails,
-        selectedDestination: formData.selectedDestination,
-        startLocation: formData.startLocation,
-        endLocation: formData.endLocation,
         urgencyLevel: formData.urgencyLevel,
         notes: formData.notes,
-        customAnswers: formData.customAnswers, // الإجابات القديمة للتوافق
-        customAnswersWithQuestions: customAnswersWithQuestions, // الإجابات مع معلومات الأسئلة
+        customAnswers: formData.customAnswers,
+        customAnswersWithQuestions: customAnswersWithQuestions,
         status: 'pending',
         createdAt: new Date().toISOString(),
         categoryName: activeService ? activeService.categoryName : getServiceName(currentCategory),
-        price: estimatedPrice
+        // إرسال بيانات المشاوير الخارجية فقط إذا كانت الفئة مشاوير خارجية
+        ...(isExternalTrip && {
+          selectedDestination: bookingDestination,
+          startLocation: bookingStart,
+          endLocation: bookingEnd,
+          tripDetails: {
+            destination: bookingDestination,
+            price: bookingPrice,
+            duration: '9 ساعات كحد أقصى',
+            startLocation: bookingStart,
+            endLocation: bookingEnd
+          }
+        })
       };
 
       await createBooking(bookingData);
