@@ -305,42 +305,48 @@ export default function ServiceDetail() {
         });
       }
       
-      // إعداد بيانات الحجز
+      // تجهيز بيانات الحجز بشكل مضمون
+      const isExternalTrip = service.category === 'external_trips' || service.categoryName === 'مشاوير خارجية';
+      // اجبار تعيين السعر والوجهة
+      let bookingPrice = selectedPrice || service.price || (priceOptions.length > 0 ? `${priceOptions[0].name} ${priceOptions[0].price}` : 'غير محدد');
+      let bookingDestination = formData.selectedDestination || (priceOptions.length > 0 ? priceOptions[0].name : 'غير محدد');
+      let bookingStart = formData.startLocation || 'غير محدد';
+      let bookingEnd = formData.endLocation || 'غير محدد';
+      let bookingServiceName = service.name || 'غير محدد';
+
       const bookingData = {
         serviceId: service.id,
-        serviceName: service.name,
-        serviceCategory: service.category, // قد يكون ID
+        serviceName: bookingServiceName,
+        serviceCategory: service.category,
         serviceCategorySlug: service.category === 'external_trips' || service.category === 'internal_delivery' || service.category === 'home_maintenance' ? service.category : (service.categoryName === 'مشاوير خارجية' ? 'external_trips' : service.category),
         serviceCategoryName: service.categoryName || '',
-        price: selectedPrice || service.price || '',
+        price: bookingPrice,
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         address: formData.address,
         serviceDetails: formData.serviceDetails,
         status: 'pending',
         createdAt: new Date().toISOString(),
-        customAnswers: formData.customAnswers, // الإجابات القديمة للتوافق
-        customAnswersWithQuestions: customAnswersWithQuestions, // الإجابات مع معلومات الأسئلة
-        // بيانات مخصصة حسب الفئة
+        customAnswers: formData.customAnswers,
+        customAnswersWithQuestions: customAnswersWithQuestions,
         ...(service.category === 'internal_delivery' && {
           selectedOption: formData.selectedOption,
           urgentDelivery: formData.urgentDelivery
         }),
-        // دائماً أرسل الوجهة والسعر للمشاوير الخارجية
-        ...((service.category === 'external_trips' || service.categoryName === 'مشاوير خارجية') && {
+        ...(isExternalTrip && {
           selectedOption: formData.selectedOption,
-          selectedDestination: formData.selectedDestination || (priceOptions.length === 1 ? priceOptions[0].name : ''),
-          startLocation: formData.startLocation,
-          endLocation: formData.endLocation,
+          selectedDestination: bookingDestination,
+          startLocation: bookingStart,
+          endLocation: bookingEnd,
           appointmentTime: formData.appointmentTime,
           returnTrip: formData.returnTrip,
           passengers: formData.passengers,
           tripDetails: {
-            destination: formData.selectedDestination || (priceOptions.length === 1 ? priceOptions[0].name : ''),
-            price: selectedPrice || service.price || '',
+            destination: bookingDestination,
+            price: bookingPrice,
             duration: '9 ساعات كحد أقصى',
-            startLocation: formData.startLocation,
-            endLocation: formData.endLocation
+            startLocation: bookingStart,
+            endLocation: bookingEnd
           }
         }),
         ...(service.category === 'home_maintenance' && {
