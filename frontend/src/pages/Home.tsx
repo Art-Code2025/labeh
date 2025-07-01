@@ -29,6 +29,9 @@ import {
   Loader2,
   ChevronRight,
   X,
+  Facebook,  // Add Facebook icon
+  MessageCircle, // For Snapchat
+  Video // For TikTok
 } from 'lucide-react';
 import { db } from '../firebase.config';
 import { collection, getDocs, DocumentSnapshot } from 'firebase/firestore';
@@ -1268,17 +1271,32 @@ const Home: React.FC = () => {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <p className="text-sm font-semibold text-gray-700 mb-3">تابعنا</p>
                 <div className="flex items-center gap-3">
-                  <a href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" target="_blank" rel="noopener noreferrer" className="p-2 bg-black hover:bg-gray-800 text-white rounded-lg transition-all duration-300 transform hover:scale-110" title="تيك توك">
-                    <span className="text-sm font-bold">TT</span>
+                  <a 
+                    href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="p-2.5 bg-black hover:bg-gray-800 text-white rounded-xl transition-all duration-300 transform hover:scale-110 hover:shadow-lg flex items-center justify-center group"
+                    title="تيك توك"
+                  >
+                    <Video className="w-5 h-5 group-hover:animate-bounce" />
                   </a>
-                  <a href="https://snapchat.com/t/GOre0s0V" target="_blank" rel="noopener noreferrer" className="p-2 bg-yellow-400 hover:bg-yellow-500 text-white rounded-lg transition-all duration-300 transform hover:scale-110" title="سناب شات">
-                    <span className="text-sm font-bold">SC</span>
+                  <a 
+                    href="https://snapchat.com/t/GOre0s0V" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="p-2.5 bg-yellow-400 hover:bg-yellow-500 text-white rounded-xl transition-all duration-300 transform hover:scale-110 hover:shadow-lg flex items-center justify-center group"
+                    title="سناب شات"
+                  >
+                    <MessageCircle className="w-5 h-5 group-hover:animate-bounce" />
                   </a>
-                  <a href="#" className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 transform hover:scale-110" title="تويتر">
-                    <span className="text-sm font-bold">TW</span>
-                  </a>
-                  <a href="#" className="p-2 bg-blue-800 hover:bg-blue-900 text-white rounded-lg transition-all duration-300 transform hover:scale-110" title="لينكدإن">
-                    <span className="text-sm font-bold">LI</span>
+                  <a 
+                    href="https://www.facebook.com/share/r/173WAK1VMD/?mibextid=wwXIfr" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-300 transform hover:scale-110 hover:shadow-lg flex items-center justify-center group"
+                    title="فيسبوك"
+                  >
+                    <Facebook className="w-5 h-5 group-hover:animate-bounce" />
                   </a>
                 </div>
               </div>

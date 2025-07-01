@@ -9,7 +9,9 @@ import {
   ArrowRight,
   MessageCircle,
   User,
-  Building
+  Building,
+  Facebook,
+  Video
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -194,17 +196,32 @@ const Contact: React.FC = () => {
           <div className="mt-12 text-center">
             <h3 className="text-xl font-semibold text-white mb-6">تابعنا على وسائل التواصل</h3>
             <div className="flex items-center justify-center gap-4">
-              <a href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-black hover:bg-gray-800 rounded-lg flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110" title="تيك توك">
-                <span className="text-sm font-bold">TT</span>
+              <a 
+                href="https://www.facebook.com/share/r/173WAK1VMD/?mibextid=wwXIfr" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg" 
+                title="فيسبوك"
+              >
+                <Facebook className="w-6 h-6 group-hover:animate-bounce" />
               </a>
-              <a href="https://snapchat.com/t/GOre0s0V" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-yellow-400 hover:bg-yellow-500 rounded-lg flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110" title="سناب شات">
-                <span className="text-sm font-bold">SC</span>
+              <a 
+                href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-12 h-12 bg-black hover:bg-gray-800 rounded-xl flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg" 
+                title="تيك توك"
+              >
+                <Video className="w-6 h-6 group-hover:animate-bounce" />
               </a>
-              <a href="#" className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110" title="واتساب">
-                <MessageCircle className="w-6 h-6" />
-              </a>
-              <a href="#" className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110" title="تويتر">
-                <span className="text-sm font-bold">TW</span>
+              <a 
+                href="https://snapchat.com/t/GOre0s0V" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-12 h-12 bg-yellow-400 hover:bg-yellow-500 rounded-xl flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg" 
+                title="سناب شات"
+              >
+                <MessageCircle className="w-6 h-6 group-hover:animate-bounce" />
               </a>
             </div>
           </div>

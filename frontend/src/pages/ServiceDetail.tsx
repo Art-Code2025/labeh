@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { db } from '../firebase.config';
 
 interface Service {
-  id: string; // تغيير من number إلى string
+  id: string;
   name: string;
   category: string;
   categoryName: string;
@@ -24,7 +24,15 @@ interface Service {
     required: boolean;
     options?: string[];
     placeholder?: string;
-  }>; // إضافة الأسئلة المخصصة
+  }>;
+}
+
+interface TripDetails {
+  destination: string;
+  price: string;
+  duration: string;
+  startLocation: string;
+  endLocation: string;
 }
 
 // خيارات مخصصة لكل فئة
@@ -73,7 +81,14 @@ export default function ServiceDetail() {
     passengers: 1,
     urgencyLevel: 'medium',
     preferredTime: 'morning',
-    customAnswers: {} as Record<string, any> // إضافة إجابات الأسئلة المخصصة
+    customAnswers: {} as Record<string, any>,
+    tripDetails: {
+      destination: '',
+      price: '',
+      duration: '',
+      startLocation: '',
+      endLocation: ''
+    } as TripDetails
   });
   const [submitting, setSubmitting] = useState(false);
   const [showQuickBookingServices, setShowQuickBookingServices] = useState(false);
@@ -274,7 +289,14 @@ export default function ServiceDetail() {
           endLocation: formData.endLocation,
           appointmentTime: formData.appointmentTime,
           returnTrip: formData.returnTrip,
-          passengers: formData.passengers
+          passengers: formData.passengers,
+          tripDetails: {
+            destination: formData.selectedDestination,
+            price: selectedPrice,
+            duration: '9 ساعات كحد أقصى',
+            startLocation: formData.startLocation,
+            endLocation: formData.endLocation
+          }
         }),
         ...(service.category === 'home_maintenance' && {
           selectedOption: formData.selectedOption,
@@ -307,7 +329,14 @@ export default function ServiceDetail() {
         passengers: 1,
         urgencyLevel: 'medium',
         preferredTime: 'morning',
-        customAnswers: {}
+        customAnswers: {},
+        tripDetails: {
+          destination: '',
+          price: '',
+          duration: '',
+          startLocation: '',
+          endLocation: ''
+        }
       });
       
     } catch (error) {
@@ -344,54 +373,54 @@ export default function ServiceDetail() {
   // إضافة وظائف الحجز السريع
   const handleQuickBookingByCategory = async (category: string) => {
     try {
-      console.log('[ServiceDetail] 🔍 عرض خدمات الفئة:', category);
+      console.log('[ServiceDetail] 🔍 جاري البحث عن خدمات الفئة:', category);
       setSelectedQuickCategory(category);
       setLoadingQuickServices(true);
       
-      // جلب جميع خدمات الفئة من Firebase
-      const { collection, getDocs } = await import('firebase/firestore');
+      // جلب الخدمات من Firebase
+      const { collection, query, where, getDocs } = await import('firebase/firestore');
       const servicesRef = collection(db, 'services');
-      const servicesSnapshot = await getDocs(servicesRef);
       
-      console.log('[ServiceDetail] 📦 جميع الخدمات المجلبة:', servicesSnapshot.docs.length);
+      // إنشاء استعلام للبحث عن الخدمات في نفس الفئة
+      const servicesQuery = query(
+        servicesRef,
+        where('categoryId', '==', category)
+      );
       
+      const querySnapshot = await getDocs(servicesQuery);
       const categoryServices: Service[] = [];
-      servicesSnapshot.docs.forEach(doc => {
+      
+      querySnapshot.forEach((doc) => {
         const serviceData = doc.data();
-        // البحث في كلا الحقلين category و categoryId
-        const matches = serviceData.category === category || serviceData.categoryId === category;
+        const transformedService: Service = {
+          id: doc.id,
+          name: serviceData.name || '',
+          category: serviceData.categoryId || serviceData.category || '',
+          categoryName: serviceData.categoryName || '',
+          description: serviceData.description || serviceData.homeShortDescription || '',
+          mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
+          detailedImages: serviceData.detailedImages || [],
+          features: serviceData.features || [],
+          duration: serviceData.duration || serviceData.expectedDuration || "غير محدد",
+          availability: serviceData.availability || "متاح 24/7",
+          price: serviceData.price || serviceData.pricing || '',
+          homeShortDescription: serviceData.homeShortDescription || '',
+          customQuestions: serviceData.customQuestions || []
+        };
         
-        if (matches) {
-          console.log('[ServiceDetail] ✅ خدمة متطابقة:', serviceData.name, 'category:', serviceData.category, 'categoryId:', serviceData.categoryId);
-          
-          const transformedService: Service = {
-            id: doc.id,
-            name: serviceData.name || '',
-            category: serviceData.categoryId || serviceData.category || '',
-            categoryName: serviceData.categoryName || '',
-            description: serviceData.description || serviceData.homeShortDescription || '',
-            mainImage: serviceData.mainImage || getDefaultImage(serviceData.categoryId || serviceData.category || ''),
-            detailedImages: serviceData.detailedImages || [],
-            features: serviceData.features || [],
-            duration: serviceData.duration || serviceData.expectedDuration || "غير محدد",
-            availability: serviceData.availability || "متاح 24/7",
-            price: serviceData.price || serviceData.pricing || '',
-            homeShortDescription: serviceData.homeShortDescription || '',
-            customQuestions: serviceData.customQuestions || []
-          };
+        // لا نضيف الخدمة الحالية إلى القائمة
+        if (doc.id !== service?.id) {
           categoryServices.push(transformedService);
         }
       });
       
-      console.log('[ServiceDetail] 📋 خدمات الفئة الموجودة:', categoryServices.length);
-      console.log('[ServiceDetail] 📋 قائمة الخدمات:', categoryServices.map(s => ({ id: s.id, name: s.name, category: s.category })));
-      
+      console.log('[ServiceDetail] 📦 تم العثور على', categoryServices.length, 'خدمة في الفئة');
       setQuickCategoryServices(categoryServices);
       setShowQuickBookingServices(true);
       
     } catch (error) {
-      console.error('[ServiceDetail] ❌ خطأ في handleQuickBookingByCategory:', error);
-      toast.error('فشل في تحميل خدمات الفئة');
+      console.error('[ServiceDetail] ❌ خطأ في جلب الخدمات:', error);
+      toast.error('حدث خطأ في تحميل الخدمات المشابهة');
     } finally {
       setLoadingQuickServices(false);
     }
@@ -1130,54 +1159,112 @@ export default function ServiceDetail() {
 
                       {/* تفاصيل المشوار الخارجي - لكل خدمة من هذه الفئة */}
                       {service.category === 'external_trips' && (
-                        <div className="bg-green-50 rounded-xl p-4 border border-green-200 mb-6">
-                          <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-green-600" />
-                            اختيار الوجهة (مطلوب)
-                          </h4>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedPrice('خميس مشيط 250 ريال');
-                                setFormData(prev => ({...prev, selectedDestination: 'خميس مشيط' }));
-                              }}
-                              className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                                formData.selectedDestination === 'خميس مشيط'
-                                  ? 'border-green-500 bg-green-500/20 text-green-700'
-                                  : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div>
-                                  <div className="font-semibold text-lg">خميس مشيط</div>
-                                  <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
+                        <div className="bg-[#1B3337] text-white rounded-2xl p-6 mb-6">
+                          <div className="flex items-center gap-2 mb-6">
+                            <MapPin className="w-6 h-6" />
+                            <h3 className="text-xl font-bold">تفاصيل المشوار الخارجي</h3>
+                          </div>
+
+                          {/* اختيار الوجهة */}
+                          <div className="mb-4">
+                            <label className="block text-sm mb-2">
+                              اختر الوجهة *
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* خميس مشيط */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPrice('250 ريال');
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    selectedDestination: 'خميس مشيط',
+                                    tripDetails: {
+                                      ...prev.tripDetails,
+                                      destination: 'خميس مشيط',
+                                      price: '250 ريال',
+                                      duration: '9 ساعات كحد أقصى'
+                                    }
+                                  }));
+                                }}
+                                className={`w-full p-4 rounded-xl text-right transition-all duration-300 ${
+                                  formData.selectedDestination === 'خميس مشيط'
+                                  ? 'bg-[#2A4A51] border-2 border-[#FFA500]'
+                                  : 'bg-[#243B41] border-2 border-transparent hover:border-[#FFA500]'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h4 className="text-lg font-bold mb-1">خميس مشيط</h4>
+                                    <p className="text-sm text-gray-400">9 ساعات كحد أقصى</p>
+                                  </div>
+                                  <div className="text-[#FFA500] text-xl font-bold">250 ريال</div>
                                 </div>
-                                <div className="text-amber-600 font-bold text-xl">250 ريال</div>
-                              </div>
-                            </button>
-                            
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedPrice('أبها 300 ريال');
-                                setFormData(prev => ({...prev, selectedDestination: 'أبها' }));
-                              }}
-                              className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                                formData.selectedDestination === 'أبها'
-                                  ? 'border-green-500 bg-green-500/20 text-green-700'
-                                  : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div>
-                                  <div className="font-semibold text-lg">أبها</div>
-                                  <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
+                              </button>
+
+                              {/* أبها */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPrice('300 ريال');
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    selectedDestination: 'أبها',
+                                    tripDetails: {
+                                      ...prev.tripDetails,
+                                      destination: 'أبها',
+                                      price: '300 ريال',
+                                      duration: '9 ساعات كحد أقصى'
+                                    }
+                                  }));
+                                }}
+                                className={`w-full p-4 rounded-xl text-right transition-all duration-300 ${
+                                  formData.selectedDestination === 'أبها'
+                                  ? 'bg-[#2A4A51] border-2 border-[#FFA500]'
+                                  : 'bg-[#243B41] border-2 border-transparent hover:border-[#FFA500]'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h4 className="text-lg font-bold mb-1">أبها</h4>
+                                    <p className="text-sm text-gray-400">9 ساعات كحد أقصى</p>
+                                  </div>
+                                  <div className="text-[#FFA500] text-xl font-bold">300 ريال</div>
                                 </div>
-                                <div className="text-amber-600 font-bold text-xl">300 ريال</div>
-                              </div>
-                            </button>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* موقع الانطلاق ونقطة الوصول */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm mb-2">
+                                موقع الانطلاق *
+                              </label>
+                              <input
+                                type="text"
+                                name="startLocation"
+                                value={formData.startLocation}
+                                onChange={handleInputChange}
+                                placeholder="مثال: الخارجة - حي السلام"
+                                className="w-full p-3 rounded-xl bg-[#243B41] border-2 border-transparent focus:border-[#FFA500] text-white placeholder-gray-400"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm mb-2">
+                                نقطة الوصول *
+                              </label>
+                              <input
+                                type="text"
+                                name="endLocation"
+                                value={formData.endLocation}
+                                onChange={handleInputChange}
+                                placeholder="مثال: خميس مشيط - المستشفى العام"
+                                className="w-full p-3 rounded-xl bg-[#243B41] border-2 border-transparent focus:border-[#FFA500] text-white placeholder-gray-400"
+                                required
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
