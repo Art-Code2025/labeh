@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, Star, Clock, MapPin, CheckCircle, Package, Truck, Wrench, User, Phone, Home, MessageSquare, Calendar, AlertCircle, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { db } from '../firebase.config';
+import BookingModal from '../components/BookingModal';
 
 interface Service {
   id: string;
@@ -95,6 +96,7 @@ export default function ServiceDetail() {
   const [selectedQuickCategory, setSelectedQuickCategory] = useState<string>('');
   const [quickCategoryServices, setQuickCategoryServices] = useState<Service[]>([]);
   const [loadingQuickServices, setLoadingQuickServices] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -470,7 +472,7 @@ export default function ServiceDetail() {
       
       // إخفاء قائمة الخدمات وإظهار فورم الحجز
       setShowQuickBookingServices(false);
-      setShowBookingForm(true);
+      setShowBookingModal(true);
       
     } catch (error) {
       console.error('[ServiceDetail] ❌ خطأ في اختيار الخدمة:', error);
@@ -629,7 +631,7 @@ export default function ServiceDetail() {
             {/* Main CTA Button */}
             <div className="text-center">
               <button
-                onClick={() => setShowBookingForm(true)}
+                onClick={() => setShowBookingModal(true)}
                 className="group inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-6 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-2xl font-bold text-lg sm:text-xl transition-all duration-300 shadow-2xl hover:shadow-cyan-500/25 transform hover:-translate-y-1 hover:scale-105"
               >
                 <Calendar className="w-6 h-6 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform" />
@@ -1612,6 +1614,13 @@ export default function ServiceDetail() {
           </div>
         </div>
       )}
+
+      {/* Booking Modal unified */}
+      <BookingModal
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        service={service}
+      />
     </div>
   );
 }

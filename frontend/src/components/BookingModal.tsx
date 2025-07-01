@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, MapPin, Phone, User, Clock, Package, Truck, Wrench, Send, DollarSign, AlertCircle, FileText, Calendar } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { createBooking } from '../services/bookingsApi';
+import { servicesApi, Service } from '../services/servicesApi';
 
 interface CustomQuestion {
   id: string;
@@ -27,7 +28,6 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
     selectedDestination: '',
     startLocation: '',
     endLocation: '',
-    appointmentTime: '',
     urgencyLevel: 'medium' as 'low' | 'medium' | 'high',
     notes: '',
     customAnswers: {} as Record<string, any> // إجابات الأسئلة المخصصة
@@ -35,6 +35,12 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 
   const [submitting, setSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [categoryServices, setCategoryServices] = useState<any[]>([]);
+  const [chosenService, setChosenService] = useState<any | null>(null);
+  const [loadingServices, setLoadingServices] = useState(false);
+
+  // الخدمة النشطة (إما من الـ props أو المختارة من القائمة)
+  const activeService = service || chosenService;
 
   // تحديد فئة الخدمة عند فتح المودال
   useEffect(() => {
@@ -44,6 +50,8 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
       } else {
         setSelectedCategory('');
       }
+      setChosenService(null);
+      setCategoryServices([]);
       // إعادة تعيين النموذج
       setFormData({
         fullName: '',
@@ -53,7 +61,6 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
         selectedDestination: '',
         startLocation: '',
         endLocation: '',
-        appointmentTime: '',
         urgencyLevel: 'medium',
         notes: '',
         customAnswers: {}
@@ -61,14 +68,38 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
     }
   }, [isOpen, service]);
 
+  // جلب خدمات الفئة المختارة عندما لا تكون هناك خدمة محددة
+  useEffect(() => {
+    if (!service && selectedCategory) {
+      (async () => {
+        try {
+          setLoadingServices(true);
+          const { services } = await servicesApi.getAll();
+          const filtered = services.filter((s: Service) => (s.category || s.categoryId) === selectedCategory);
+          setCategoryServices(filtered);
+        } catch (err) {
+          console.error('[BookingModal] Error loading category services:', err);
+          setCategoryServices([]);
+        } finally {
+          setLoadingServices(false);
+        }
+      })();
+    }
+  }, [selectedCategory, service]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // استخدام selectedCategory أو service.category كبديل
-    const currentCategory = selectedCategory || (service && service.category);
+    // لابد من وجود خدمة مختارة
+    const currentCategory = activeService ? activeService.category : selectedCategory;
     
     if (!currentCategory) {
       toast.error('❌ يرجى اختيار نوع الخدمة أولاً');
+      return;
+    }
+
+    if (!activeService) {
+      toast.error('❌ يرجى اختيار خدمة من القائمة');
       return;
     }
 
@@ -78,8 +109,8 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
     }
 
     // التحقق من الأسئلة المخصصة الإجبارية
-    if (service && service.customQuestions) {
-      for (const question of service.customQuestions) {
+    if (activeService && activeService.customQuestions) {
+      for (const question of activeService.customQuestions) {
         if (question.required) {
           const answer = formData.customAnswers[question.id];
           if (!answer || (Array.isArray(answer) && answer.length === 0) || (typeof answer === 'string' && answer.trim() === '')) {
@@ -127,8 +158,8 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
       // إعداد بيانات الحجز مع معلومات الأسئلة المخصصة
       const customAnswersWithQuestions: Record<string, { question: string; answer: any; type: string }> = {};
       
-      if (service && service.customQuestions) {
-        service.customQuestions.forEach((q: CustomQuestion) => {
+      if (activeService && activeService.customQuestions) {
+        activeService.customQuestions.forEach((q: CustomQuestion) => {
           const answer = formData.customAnswers[q.id];
           if (answer !== undefined && answer !== '') {
             customAnswersWithQuestions[q.id] = {
@@ -141,8 +172,8 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
       }
 
       const bookingData = {
-        serviceId: service ? service.id : 'unknown',
-        serviceName: service ? service.name : 'خدمة غير محددة',
+        serviceId: activeService ? activeService.id : 'unknown',
+        serviceName: activeService ? activeService.name : 'خدمة غير محددة',
         serviceCategory: currentCategory,
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
@@ -151,14 +182,13 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
         selectedDestination: formData.selectedDestination,
         startLocation: formData.startLocation,
         endLocation: formData.endLocation,
-        appointmentTime: formData.appointmentTime,
         urgencyLevel: formData.urgencyLevel,
         notes: formData.notes,
         customAnswers: formData.customAnswers, // الإجابات القديمة للتوافق
         customAnswersWithQuestions: customAnswersWithQuestions, // الإجابات مع معلومات الأسئلة
         status: 'pending',
         createdAt: new Date().toISOString(),
-        categoryName: service ? service.categoryName : getServiceName(currentCategory),
+        categoryName: activeService ? activeService.categoryName : getServiceName(currentCategory),
         price: estimatedPrice
       };
 
@@ -256,20 +286,20 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
           )}
 
           {/* معلومات الخدمة المختارة */}
-          {service && (
+          {activeService && (
             <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl p-4 mb-6 border border-blue-500/30">
               <div className="flex items-center gap-3 mb-2">
                 <div className="text-2xl">
-                  {service.category === 'internal_delivery' && '🚚'}
-                  {service.category === 'external_trips' && '🗺️'}
-                  {service.category === 'home_maintenance' && '🔧'}
+                  {activeService.category === 'internal_delivery' && '🚚'}
+                  {activeService.category === 'external_trips' && '🗺️'}
+                  {activeService.category === 'home_maintenance' && '🔧'}
                 </div>
                 <div>
-                  <h3 className="text-white font-bold">{service.name}</h3>
-                  <p className="text-yellow-400 font-bold text-base">{service.price}</p>
+                  <h3 className="text-white font-bold">{activeService.name}</h3>
+                  <p className="text-yellow-400 font-bold text-base">{activeService.price}</p>
                 </div>
               </div>
-              <p className="text-gray-300 text-sm">{service.homeShortDescription}</p>
+              <p className="text-gray-300 text-sm">{activeService.homeShortDescription}</p>
             </div>
           )}
 
@@ -677,22 +707,6 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                 )
               )}
 
-              {/* الوقت المفضل */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  الوقت المفضل
-                </label>
-                <div className="relative">
-                  <Clock className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                    type="datetime-local"
-                    value={formData.appointmentTime}
-                    onChange={(e) => setFormData(prev => ({ ...prev, appointmentTime: e.target.value }))}
-                    className="w-full pl-4 pr-10 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
               {/* ملاحظات إضافية */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -707,6 +721,41 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                 />
               </div>
             </>
+          )}
+
+          {/* قائمة خدمات الفئة المختارة */}
+          {!service && selectedCategory && !chosenService && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-300 mb-3">اختر الخدمة *</label>
+              {loadingServices ? (
+                <p className="text-gray-400">جاري تحميل الخدمات...</p>
+              ) : categoryServices.length === 0 ? (
+                <p className="text-gray-400">لا توجد خدمات متاحة لهذه الفئة حالياً</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {categoryServices.map((srv: any) => (
+                    <button
+                      key={srv.id}
+                      type="button"
+                      onClick={() => setChosenService(srv)}
+                      className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                        chosenService && chosenService?.id === srv.id
+                          ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                          : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="font-semibold mb-1">{srv.name}</div>
+                      {srv.price && (
+                        <div className="text-yellow-400 font-bold text-sm">{srv.price}</div>
+                      )}
+                      {srv.homeShortDescription && (
+                        <div className="text-gray-400 text-xs mt-1 line-clamp-2">{srv.homeShortDescription}</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {/* أزرار التحكم */}
