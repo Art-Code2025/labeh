@@ -1270,44 +1270,44 @@ const Home: React.FC = () => {
               {/* Social Links */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <p className="text-sm font-semibold text-gray-700 mb-3">تابعنا</p>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <a 
                     href="https://www.facebook.com/share/r/173WAK1VMD/?mibextid=wwXIfr" 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
+                    className="w-10 h-10 bg-white rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
                     title="فيسبوك"
                   >
                     <img 
                       src="/social/facebook.png" 
                       alt="Facebook" 
-                      className="w-8 h-8 object-contain"
+                      className="w-6 h-6 object-contain"
                     />
                   </a>
                   <a 
                     href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
+                    className="w-10 h-10 bg-white rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
                     title="تيك توك"
                   >
                     <img 
                       src="/social/tiktok.png" 
                       alt="TikTok" 
-                      className="w-8 h-8 object-contain"
+                      className="w-6 h-6 object-contain"
                     />
                   </a>
                   <a 
                     href="https://snapchat.com/t/GOre0s0V" 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
+                    className="w-10 h-10 bg-white rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
                     title="سناب شات"
                   >
                     <img 
                       src="/social/snapchat.png" 
                       alt="Snapchat" 
-                      className="w-8 h-8 object-contain"
+                      className="w-6 h-6 object-contain"
                     />
                   </a>
                 </div>
