@@ -5,6 +5,7 @@ import { createBooking } from '../services/bookingsApi';
 import { servicesApi, Service } from '../services/servicesApi';
 import { collection, query as fbQuery, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { getArabicCategoryName, getCategorySlug, slugToNameMap } from '../utils/categoryMapping';
 
 interface CustomQuestion {
   id: string;
@@ -43,7 +44,18 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 
   // الخدمة النشطة (إما من الـ props أو المختارة من القائمة)
   const activeService = service || chosenService;
-  const currentCategory = activeService ? activeService.category : selectedCategory;
+  // نفك شفرة الفئة عند عدم توفر حقل category في المستند
+  const resolveCategorySlug = (srv: any): string | undefined => {
+    if (!srv) return undefined;
+    if (srv.category) return srv.category as string;
+    if (srv.categoryName) {
+      const slug = getCategorySlug(srv.categoryName);
+      return slug;
+    }
+    return undefined;
+  };
+
+  const currentCategory = resolveCategorySlug(activeService) || selectedCategory;
 
   // تحديد فئة الخدمة عند فتح المودال
   useEffect(() => {
@@ -90,6 +102,16 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
             snap2.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
           }
 
+          // محاولة أخيرة بالبحث عبر categoryName (الاسم العربي)
+          if (list.length === 0) {
+            const arabicName = getArabicCategoryName(selectedCategory);
+            if (arabicName) {
+              const q3 = fbQuery(servicesRef, where('categoryName', '==', arabicName));
+              const snap3 = await getDocs(q3);
+              snap3.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+            }
+          }
+
           setCategoryServices(list);
         } catch (err) {
           console.error('[BookingModal] Error loading category services:', err);
@@ -105,7 +127,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
     e.preventDefault();
     
     // لابد من وجود خدمة مختارة
-    const currentCategory = activeService ? activeService.category : selectedCategory;
+    const currentCategory = resolveCategorySlug(activeService) || selectedCategory;
     
     if (!currentCategory) {
       toast.error('❌ يرجى اختيار نوع الخدمة أولاً');
@@ -145,11 +167,11 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
         toast.error('❌ يرجى تحديد موقع الانطلاق ونقطة الوصول');
         return;
       }
-    }
-
-    if (currentCategory === 'home_maintenance' && !formData.serviceDetails) {
-      toast.error('❌ يرجى وصف نوع الصيانة المطلوبة');
-      return;
+    } else if (currentCategory === 'home_maintenance') {
+      if (!formData.serviceDetails) {
+        toast.error('❌ يرجى وصف نوع الصيانة المطلوبة');
+        return;
+      }
     }
 
     try {
@@ -160,10 +182,13 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
       if (currentCategory === 'internal_delivery') {
         estimatedPrice = '20 ريال';
       } else if (currentCategory === 'external_trips') {
-        if (formData.selectedDestination === 'خميس مشيط') {
+        const destSlug = formData.selectedDestination;
+        if (destSlug === 'خميس مشيط' || destSlug === 'خميس_مشيط') {
           estimatedPrice = '250 ريال';
-        } else if (formData.selectedDestination === 'أبها') {
+        } else if (destSlug === 'أبها' || destSlug === 'أبها') {
           estimatedPrice = '300 ريال';
+        } else {
+          estimatedPrice = 'على حسب المسافة';
         }
       } else if (currentCategory === 'home_maintenance') {
         estimatedPrice = 'على حسب المطلوب';
@@ -468,7 +493,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                   {formData.selectedDestination && (
                     <div className="mt-4 p-3 bg-green-500/20 rounded-lg border border-green-500/30">
                       <p className="text-yellow-400 font-bold text-lg">
-                        السعر: {formData.selectedDestination === 'خميس مشيط' ? '250 ريال' : formData.selectedDestination === 'أبها' ? '300 ريال' : ''}
+                        السعر: {(/خميس/.test(formData.selectedDestination) || formData.selectedDestination === 'خميس_مشيط') ? '250 ريال' : (/أبها/.test(formData.selectedDestination)) ? '300 ريال' : ''}
                       </p>
                     </div>
                   )}

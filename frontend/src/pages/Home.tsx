@@ -39,6 +39,7 @@ import { categoriesApi, servicesApi, Category, Service as ApiService } from '../
 import { toast } from 'react-hot-toast';
 import BookingModal from '../components/BookingModal';
 import { FaFacebook, FaTiktok, FaSnapchat } from 'react-icons/fa';
+import { getCategorySlug } from '../utils/categoryMapping';
 
 interface CustomQuestion {
   id: string;
@@ -360,7 +361,8 @@ const Home: React.FC = () => {
           const matches = service.category === category || 
                          service.categoryId === category ||
                          service.category?.toLowerCase() === category.toLowerCase() ||
-                         service.categoryId?.toLowerCase() === category.toLowerCase();
+                         service.categoryId?.toLowerCase() === category.toLowerCase() ||
+                         (service.categoryName && getCategorySlug(service.categoryName) === category);
           
           if (matches) {
             console.log('[Home] ✅ خدمة متطابقة:', {
