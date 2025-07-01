@@ -1163,8 +1163,8 @@ export default function ServiceDetail() {
                             تفاصيل المشوار الخارجي
                           </h4>
                           
-                          {/* اختيار الوجهة إذا كان هناك خيارات أسعار متعددة */}
-                          {priceOptions.length > 0 && (
+                          {/* اختيار الوجهة - ديناميكي من بيانات الخدمة */}
+                          {priceOptions.length > 0 ? (
                             <div className="mb-4">
                               <label className="block text-sm font-semibold text-slate-700 mb-3">
                                 اختر الوجهة *
@@ -1177,6 +1177,7 @@ export default function ServiceDetail() {
                                     onClick={() => {
                                       setSelectedPrice(`${option.name} ${option.price}`);
                                       setFormData(prev => ({...prev, selectedDestination: option.name }));
+                                      console.log('[ServiceDetail] 🎯 تم اختيار الوجهة:', option.name, option.price);
                                     }}
                                     className={`p-4 rounded-lg border transition-all duration-200 text-right ${
                                       formData.selectedDestination === option.name
@@ -1193,6 +1194,58 @@ export default function ServiceDetail() {
                                     </div>
                                   </button>
                                 ))}
+                              </div>
+                            </div>
+                          ) : (
+                            // خيارات افتراضية للمشاوير الخارجية
+                            <div className="mb-4">
+                              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                                اختر الوجهة *
+                              </label>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedPrice('خميس مشيط 250 ريال');
+                                    setFormData(prev => ({...prev, selectedDestination: 'خميس مشيط' }));
+                                    console.log('[ServiceDetail] 🎯 تم اختيار الوجهة الافتراضية: خميس مشيط');
+                                  }}
+                                  className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                                    formData.selectedDestination === 'خميس مشيط'
+                                      ? 'border-green-500 bg-green-500/20 text-green-700'
+                                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div>
+                                      <div className="font-semibold text-lg">خميس مشيط</div>
+                                      <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
+                                    </div>
+                                    <div className="text-amber-600 font-bold text-xl">250 ريال</div>
+                                  </div>
+                                </button>
+                                
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedPrice('أبها 300 ريال');
+                                    setFormData(prev => ({...prev, selectedDestination: 'أبها' }));
+                                    console.log('[ServiceDetail] 🎯 تم اختيار الوجهة الافتراضية: أبها');
+                                  }}
+                                  className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                                    formData.selectedDestination === 'أبها'
+                                      ? 'border-green-500 bg-green-500/20 text-green-700'
+                                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div>
+                                      <div className="font-semibold text-lg">أبها</div>
+                                      <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
+                                    </div>
+                                    <div className="text-amber-600 font-bold text-xl">300 ريال</div>
+                                  </div>
+                                </button>
                               </div>
                             </div>
                           )}
