@@ -275,39 +275,59 @@ function Dashboard() {
 
     intervalRef.current = setInterval(async () => {
       try {
-        const freshBookings = await fetchBookings();
-        // ترتيب الحجوزات من الأحدث إلى الأقدم
-        const sortedBookings = freshBookings.sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0).getTime();
-          const dateB = new Date(b.createdAt || 0).getTime();
-          return dateB - dateA; // الأحدث أولاً
+        const newBookings = await fetchBookings();
+        console.log('📊 [Dashboard] تم جلب الحجوزات:', newBookings.length);
+        
+        // إضافة logging مفصل لكل حجز
+        newBookings.forEach((booking, index) => {
+          console.log(`📋 [Dashboard] الحجز ${index + 1}:`, {
+            id: booking.id,
+            serviceName: booking.serviceName,
+            price: booking.price,
+            selectedDestination: booking.selectedDestination,
+            startLocation: booking.startLocation,
+            endLocation: booking.endLocation,
+            status: booking.status,
+            fullData: booking
+          });
         });
         
-        setBookings(prevBookings => {
-          const currentIds = new Set(prevBookings.map(booking => booking.id));
-          const newBookings = sortedBookings.filter(booking => !lastBookingIdsRef.current.has(booking.id));
+        const currentBookingIds = new Set(newBookings.map(b => b.id));
+        const previousBookingIds = lastBookingIdsRef.current;
+        
+        // Check for new bookings
+        const newBookingIds = [...currentBookingIds].filter(id => !previousBookingIds.has(id));
+        
+        if (newBookingIds.length > 0 && previousBookingIds.size > 0) {
+          setNewBookingsCount(prev => prev + newBookingIds.length);
+          setLastBookingUpdate(new Date());
           
-          if (newBookings.length > 0) {
-            const increment = newBookings.length;
-            setNewBookingsCount(prev => prev + increment);
-            
-            // Play notification sound for new bookings
-            if (audioRef.current && newBookings.some(booking => !currentIds.has(booking.id))) {
-              audioRef.current.play().catch(() => {
-                // Ignore audio play errors
-              });
+          // Play notification sound
+          if (audioRef.current) {
+            try {
+              await audioRef.current.play();
+            } catch (err) {
+              console.log('Could not play notification sound:', err);
             }
           }
           
-          lastBookingIdsRef.current = new Set(sortedBookings.map(booking => booking.id));
-          return sortedBookings;
-        });
+          // Show toast notification
+          toast.success(`🔔 حجز جديد! عدد الحجوزات الجديدة: ${newBookingIds.length}`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
         
-        setLastBookingUpdate(new Date());
+        lastBookingIdsRef.current = currentBookingIds;
+        setBookings(newBookings);
       } catch (error) {
-        console.error('Error fetching real-time bookings:', error);
+        console.error('❌ [Dashboard] خطأ في جلب الحجوزات الجديدة:', error);
       }
-    }, 30000); // كل 30 ثانية
+    }, 3000); // Poll every 3 seconds
   };
 
   // Service handlers
