@@ -89,31 +89,81 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
       (async () => {
         try {
           setLoadingServices(true);
+          console.log('🔍 [BookingModal] البحث عن خدمات للفئة:', selectedCategory);
+          
           const servicesRef = collection(db, 'services');
           let list: any[] = [];
 
           // 1. جلب بالخانة category
           const q = fbQuery(servicesRef, where('category', '==', selectedCategory));
           const snapshot = await getDocs(q);
-          snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+          console.log('📋 [BookingModal] البحث بـ category:', selectedCategory, 'النتائج:', snapshot.size);
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            console.log('   📄 خدمة موجودة:', { id: doc.id, name: data.name, category: data.category });
+            list.push({ id: doc.id, ...data });
+          });
 
           // 2. جلب بالخانة categoryId
           if (list.length === 0) {
+            console.log('🔍 [BookingModal] البحث بـ categoryId:', selectedCategory);
             const q2 = fbQuery(servicesRef, where('categoryId', '==', selectedCategory));
             const snap2 = await getDocs(q2);
-            snap2.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+            console.log('📋 [BookingModal] البحث بـ categoryId:', selectedCategory, 'النتائج:', snap2.size);
+            snap2.forEach(doc => {
+              const data = doc.data();
+              console.log('   📄 خدمة موجودة:', { id: doc.id, name: data.name, categoryId: data.categoryId });
+              list.push({ id: doc.id, ...data });
+            });
           }
 
           // 3. جلب بالخانة categoryName (الاسم العربي)
           if (list.length === 0) {
             const arabicName = getArabicCategoryName(selectedCategory);
+            console.log('🔍 [BookingModal] البحث بـ categoryName:', arabicName);
             if (arabicName) {
               const q3 = fbQuery(servicesRef, where('categoryName', '==', arabicName));
               const snap3 = await getDocs(q3);
-              snap3.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+              console.log('📋 [BookingModal] البحث بـ categoryName:', arabicName, 'النتائج:', snap3.size);
+              snap3.forEach(doc => {
+                const data = doc.data();
+                console.log('   📄 خدمة موجودة:', { id: doc.id, name: data.name, categoryName: data.categoryName });
+                list.push({ id: doc.id, ...data });
+              });
             }
           }
 
+          // 4. جلب جميع الخدمات وفلترة محلياً (كحل أخير)
+          if (list.length === 0) {
+            console.log('🔍 [BookingModal] جلب جميع الخدمات للفلترة المحلية...');
+            const allSnapshot = await getDocs(servicesRef);
+            console.log('📋 [BookingModal] إجمالي الخدمات:', allSnapshot.size);
+            
+            allSnapshot.forEach(doc => {
+              const data = doc.data();
+              console.log('   📄 خدمة في قاعدة البيانات:', { 
+                id: doc.id, 
+                name: data.name, 
+                category: data.category,
+                categoryId: data.categoryId,
+                categoryName: data.categoryName 
+              });
+              
+              // فلترة محلية مرنة
+              const matches = 
+                data.category === selectedCategory ||
+                data.categoryId === selectedCategory ||
+                data.categoryName === getArabicCategoryName(selectedCategory) ||
+                getCategorySlug(data.categoryName) === selectedCategory;
+                
+              if (matches) {
+                console.log('   ✅ خدمة متطابقة محلياً:', { id: doc.id, name: data.name });
+                list.push({ id: doc.id, ...data });
+              }
+            });
+          }
+
+          console.log('📊 [BookingModal] النتيجة النهائية:', list.length, 'خدمة');
           setCategoryServices(list);
         } catch (err) {
           console.error('[BookingModal] Error loading category services:', err);
