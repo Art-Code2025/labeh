@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { collection, getDocs, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../firebase.config';
 
 // تعريف نوع الخدمة
@@ -111,15 +111,15 @@ const BookService: React.FC = () => {
         const snapshot = await getDocs(servicesRef);
         
         let foundService: Service | null = null;
-        snapshot.forEach((doc: DocumentData) => {
+        snapshot.forEach((doc: QueryDocumentSnapshot) => {
           if (doc.id === id) {
-            foundService = { id: doc.id, ...doc.data() } as Service;
+            const data = doc.data() as Omit<Service, 'id'>;
+            foundService = { id: doc.id, ...data };
           }
         });
 
         if (foundService) {
           setService(foundService);
-          console.log('▶️ selectedCategory', foundService.category);
           console.log('🔎 list.length بعد query category', snapshot.size);
           console.log('🔁 list.length بعد query categoryId', snapshot.size);
         } else {
