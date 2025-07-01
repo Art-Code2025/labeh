@@ -200,28 +200,40 @@ const Contact: React.FC = () => {
                 href="https://www.facebook.com/share/r/173WAK1VMD/?mibextid=wwXIfr" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg" 
+                className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:bg-white/20" 
                 title="فيسبوك"
               >
-                <Facebook className="w-6 h-6 group-hover:animate-bounce" />
+                <img 
+                  src="/social/facebook.png" 
+                  alt="Facebook" 
+                  className="w-8 h-8 object-contain"
+                />
               </a>
               <a 
                 href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-12 h-12 bg-black hover:bg-gray-800 rounded-xl flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg" 
+                className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:bg-white/20" 
                 title="تيك توك"
               >
-                <Video className="w-6 h-6 group-hover:animate-bounce" />
+                <img 
+                  src="/social/tiktok.png" 
+                  alt="TikTok" 
+                  className="w-8 h-8 object-contain"
+                />
               </a>
               <a 
                 href="https://snapchat.com/t/GOre0s0V" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-12 h-12 bg-yellow-400 hover:bg-yellow-500 rounded-xl flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg" 
+                className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:bg-white/20" 
                 title="سناب شات"
               >
-                <MessageCircle className="w-6 h-6 group-hover:animate-bounce" />
+                <img 
+                  src="/social/snapchat.png" 
+                  alt="Snapchat" 
+                  className="w-8 h-8 object-contain"
+                />
               </a>
             </div>
           </div>
