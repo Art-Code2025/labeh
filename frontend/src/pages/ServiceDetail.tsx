@@ -309,8 +309,10 @@ export default function ServiceDetail() {
       const bookingData = {
         serviceId: service.id,
         serviceName: service.name,
-        serviceCategory: service.category,
-        price: selectedPrice,
+        serviceCategory: service.category, // قد يكون ID
+        serviceCategorySlug: service.category === 'external_trips' || service.category === 'internal_delivery' || service.category === 'home_maintenance' ? service.category : (service.categoryName === 'مشاوير خارجية' ? 'external_trips' : service.category),
+        serviceCategoryName: service.categoryName || '',
+        price: selectedPrice || service.price || '',
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
         address: formData.address,
@@ -324,17 +326,18 @@ export default function ServiceDetail() {
           selectedOption: formData.selectedOption,
           urgentDelivery: formData.urgentDelivery
         }),
-        ...(service.category === 'external_trips' && {
+        // دائماً أرسل الوجهة والسعر للمشاوير الخارجية
+        ...((service.category === 'external_trips' || service.categoryName === 'مشاوير خارجية') && {
           selectedOption: formData.selectedOption,
-          selectedDestination: formData.selectedDestination,
+          selectedDestination: formData.selectedDestination || (priceOptions.length === 1 ? priceOptions[0].name : ''),
           startLocation: formData.startLocation,
           endLocation: formData.endLocation,
           appointmentTime: formData.appointmentTime,
           returnTrip: formData.returnTrip,
           passengers: formData.passengers,
           tripDetails: {
-            destination: formData.selectedDestination,
-            price: selectedPrice,
+            destination: formData.selectedDestination || (priceOptions.length === 1 ? priceOptions[0].name : ''),
+            price: selectedPrice || service.price || '',
             duration: '9 ساعات كحد أقصى',
             startLocation: formData.startLocation,
             endLocation: formData.endLocation
