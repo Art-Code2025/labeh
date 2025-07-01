@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FaFacebook, FaTiktok, FaSnapchat } from 'react-icons/fa';
 
 interface ContactFormData {
   name: string;
@@ -200,40 +201,34 @@ const Contact: React.FC = () => {
                 href="https://www.facebook.com/share/r/173WAK1VMD/?mibextid=wwXIfr" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:bg-white" 
+                className="w-12 h-12 bg-[#1877F2] rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg text-white" 
                 title="فيسبوك"
               >
-                <img 
-                  src="/social/facebook.png" 
-                  alt="Facebook" 
-                  className="w-7 h-7 object-contain"
-                />
+                <div className="w-7 h-7">
+                  <FaFacebook size="100%" />
+                </div>
               </a>
               <a 
                 href="https://www.tiktok.com/@elsadigabualeen2019?_t=ZS-8xdjQmw2TX5&_r=1" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:bg-white" 
+                className="w-12 h-12 bg-black rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg text-white" 
                 title="تيك توك"
               >
-                <img 
-                  src="/social/tiktok.png" 
-                  alt="TikTok" 
-                  className="w-7 h-7 object-contain"
-                />
+                <div className="w-7 h-7">
+                  <FaTiktok size="100%" />
+                </div>
               </a>
               <a 
                 href="https://snapchat.com/t/GOre0s0V" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg hover:bg-white" 
+                className="w-12 h-12 bg-[#FFFC00] rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg text-black" 
                 title="سناب شات"
               >
-                <img 
-                  src="/social/snapchat.png" 
-                  alt="Snapchat" 
-                  className="w-7 h-7 object-contain"
-                />
+                <div className="w-7 h-7">
+                  <FaSnapchat size="100%" />
+                </div>
               </a>
             </div>
           </div>
