@@ -30,6 +30,7 @@ export interface Booking {
   
   // Additional fields for different service types
   startLocation?: string;
+  endLocation?: string;
   destination?: string;
   selectedDestination?: string;
   tripDuration?: string;
@@ -38,6 +39,13 @@ export interface Booking {
   deliveryLocation?: string;
   urgentDelivery?: boolean;
   serviceDetails?: string;
+  tripDetails?: {
+    destination: string;
+    price: string;
+    duration: string;
+    startLocation: string;
+    endLocation: string;
+  };
 }
 
 export interface BookingStats {

@@ -1163,35 +1163,56 @@ function Dashboard() {
                             ) : null}
 
                             {/* Service Details - only show if has content */}
-                            {(booking.destination || booking.issueDescription || booking.preferredTime || booking.urgentDelivery) && (
-                              <div className="bg-green-50 rounded-lg p-3 mb-3 border border-green-100">
-                                <h5 className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
-                                  <Package className="w-3 h-3" />
+                            {(booking.destination || booking.selectedDestination || booking.startLocation || booking.endLocation || booking.issueDescription || booking.preferredTime || booking.urgentDelivery) && (
+                              <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-100">
+                                <h4 className="text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
+                                  <Package className="w-4 h-4" />
                                   تفاصيل الخدمة:
-                                </h5>
-                                <div className="space-y-1 text-xs">
-                                  {booking.destination && (
-                                    <div className="flex flex-col sm:flex-row gap-1">
-                                      <span className="text-green-600 font-medium flex-shrink-0">الوجهة:</span>
-                                      <span className="text-green-800 break-words">{booking.destination}</span>
+                                </h4>
+                                <div className="space-y-2">
+                                  {/* بيانات المشاوير الخارجية */}
+                                  {(booking.selectedDestination || booking.destination) && (
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                        🗺️ الوجهة:
+                                      </span>
+                                      <span className="text-green-800 text-sm break-words font-bold">
+                                        {booking.selectedDestination || booking.destination}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {booking.startLocation && (
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                        📍 موقع الانطلاق:
+                                      </span>
+                                      <span className="text-green-800 text-sm break-words">{booking.startLocation}</span>
+                                    </div>
+                                  )}
+                                  {booking.endLocation && (
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                        🎯 نقطة الوصول:
+                                      </span>
+                                      <span className="text-green-800 text-sm break-words">{booking.endLocation}</span>
                                     </div>
                                   )}
                                   {booking.issueDescription && (
                                     <div className="flex flex-col gap-1">
-                                      <span className="text-green-600 font-medium">وصف المشكلة:</span>
-                                      <div className="bg-green-100 rounded-md p-1">
-                                        <span className="text-green-800 break-words whitespace-pre-wrap">{booking.issueDescription}</span>
+                                      <span className="text-green-600 font-medium text-sm">وصف المشكلة:</span>
+                                      <div className="bg-green-100 rounded-md p-2">
+                                        <span className="text-green-800 text-sm break-words whitespace-pre-wrap">{booking.issueDescription}</span>
                                       </div>
                                     </div>
                                   )}
                                   {booking.preferredTime && (
-                                    <div className="flex flex-col sm:flex-row gap-1">
-                                      <span className="text-green-600 font-medium flex-shrink-0">الوقت المفضل:</span>
-                                      <span className="text-green-800 break-words">{booking.preferredTime}</span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                      <span className="text-green-600 font-medium text-sm flex-shrink-0">الوقت المفضل:</span>
+                                      <span className="text-green-800 text-sm break-words">{booking.preferredTime}</span>
                                     </div>
                                   )}
                                   {booking.urgentDelivery && (
-                                    <div className="text-red-600 font-medium text-xs flex items-center gap-1">
+                                    <div className="text-red-600 font-medium text-sm flex items-center gap-2">
                                       🚨 <span>توصيل عاجل</span>
                                     </div>
                                   )}
@@ -1617,17 +1638,38 @@ function Dashboard() {
                             ) : null}
 
                             {/* Service Details - only show if has content */}
-                            {(booking.destination || booking.issueDescription || booking.preferredTime || booking.urgentDelivery) && (
+                            {(booking.destination || booking.selectedDestination || booking.startLocation || booking.endLocation || booking.issueDescription || booking.preferredTime || booking.urgentDelivery) && (
                               <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-100">
                                 <h4 className="text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
                                   <Package className="w-4 h-4" />
                                   تفاصيل الخدمة:
                                 </h4>
                                 <div className="space-y-2">
-                                  {booking.destination && (
+                                  {/* بيانات المشاوير الخارجية */}
+                                  {(booking.selectedDestination || booking.destination) && (
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                      <span className="text-green-600 font-medium text-sm flex-shrink-0">الوجهة:</span>
-                                      <span className="text-green-800 text-sm break-words">{booking.destination}</span>
+                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                        🗺️ الوجهة:
+                                      </span>
+                                      <span className="text-green-800 text-sm break-words font-bold">
+                                        {booking.selectedDestination || booking.destination}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {booking.startLocation && (
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                        📍 موقع الانطلاق:
+                                      </span>
+                                      <span className="text-green-800 text-sm break-words">{booking.startLocation}</span>
+                                    </div>
+                                  )}
+                                  {booking.endLocation && (
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                        🎯 نقطة الوصول:
+                                      </span>
+                                      <span className="text-green-800 text-sm break-words">{booking.endLocation}</span>
                                     </div>
                                   )}
                                   {booking.issueDescription && (
