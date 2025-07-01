@@ -123,6 +123,19 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
     }
   }, [selectedCategory, service]);
 
+  // Logging قوي جداً
+  useEffect(() => {
+    if (isOpen) {
+      console.log('[BookingModal][DEBUG] activeService:', activeService);
+      console.log('[BookingModal][DEBUG] currentCategory:', currentCategory);
+      if (activeService) {
+        console.log('[BookingModal][DEBUG] service.category:', activeService.category);
+        console.log('[BookingModal][DEBUG] service.price:', activeService.price);
+        console.log('[BookingModal][DEBUG] service.name:', activeService.name);
+      }
+    }
+  }, [isOpen, activeService, currentCategory]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -400,19 +413,17 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
               </div>
 
               {/* حقول خاصة بالمشاوير الخارجية */}
-              {(currentCategory === 'external_trips') && (
+              {currentCategory === 'external_trips' && (
                 <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-green-400" />
                     تفاصيل المشوار الخارجي
                   </h3>
-
                   {/* تنبيه مهم */}
                   <div className="bg-white/10 border border-green-400/30 rounded-lg p-3 mb-4 flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-green-300" />
                     <span className="text-green-200 font-bold">يرجى اختيار الوجهة المطلوبة لإتمام الحجز</span>
                   </div>
-
                   {/* اختيار الوجهة - دائماً زرين واضحين */}
                   <div className="mb-4">
                     <label className="block text-base font-bold text-green-200 mb-3 flex items-center gap-2">
@@ -467,7 +478,6 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                       </div>
                     )}
                   </div>
-
                   {/* موقع الانطلاق ونقطة الوصول - يظهر دائماً */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
