@@ -119,6 +119,9 @@ const BookService: React.FC = () => {
 
         if (foundService) {
           setService(foundService);
+          console.log('▶️ selectedCategory', foundService.category);
+          console.log('🔎 list.length بعد query category', snapshot.size);
+          console.log('🔁 list.length بعد query categoryId', snapshot.size);
         } else {
           toast.error('الخدمة غير موجودة');
         }
