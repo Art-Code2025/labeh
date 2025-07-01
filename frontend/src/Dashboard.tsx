@@ -1060,7 +1060,16 @@ function Dashboard() {
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
                               <h4 className="font-bold text-gray-900 text-lg break-words flex items-center gap-2">
-                                {booking.serviceName || 'خدمة غير محددة'}
+                                {(() => {
+                                  const serviceName = booking.serviceName || 'خدمة غير محددة';
+                                  console.log(`📝 [Dashboard] اسم الخدمة المعروض:`, {
+                                    bookingId: booking.id,
+                                    originalServiceName: booking.serviceName,
+                                    displayedServiceName: serviceName,
+                                    hasServiceName: !!booking.serviceName
+                                  });
+                                  return serviceName;
+                                })()}
                                 {booking.categoryName && (
                                   <span className="text-green-700 bg-green-100 px-2 py-0.5 rounded-full text-xs font-semibold">{booking.categoryName}</span>
                                 )}
@@ -1524,7 +1533,19 @@ function Dashboard() {
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
-                    {bookings.map((booking, index) => (
+                    {bookings.map((booking, index) => {
+                      // إضافة logging لكل حجز يتم عرضه
+                      console.log(`🎨 [Dashboard] عرض الحجز ${index + 1}:`, {
+                        id: booking.id,
+                        serviceName: booking.serviceName,
+                        price: booking.price,
+                        selectedDestination: booking.selectedDestination,
+                        startLocation: booking.startLocation,
+                        endLocation: booking.endLocation,
+                        fullBooking: booking
+                      });
+                      
+                      return (
                       <div 
                         key={booking.id} 
                         className="p-4 sm:p-6 hover:bg-gray-50 transition-all duration-300 animate-slide-up"
@@ -1535,7 +1556,16 @@ function Dashboard() {
                             {/* Header - responsive */}
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
                               <h4 className="font-bold text-gray-900 text-lg break-words flex items-center gap-2">
-                                {booking.serviceName || 'خدمة غير محددة'}
+                                {(() => {
+                                  const serviceName = booking.serviceName || 'خدمة غير محددة';
+                                  console.log(`📝 [Dashboard] اسم الخدمة المعروض:`, {
+                                    bookingId: booking.id,
+                                    originalServiceName: booking.serviceName,
+                                    displayedServiceName: serviceName,
+                                    hasServiceName: !!booking.serviceName
+                                  });
+                                  return serviceName;
+                                })()}
                                 {booking.categoryName && (
                                   <span className="text-green-700 bg-green-100 px-2 py-0.5 rounded-full text-xs font-semibold">{booking.categoryName}</span>
                                 )}
@@ -1771,7 +1801,8 @@ function Dashboard() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 )}
               </div>
