@@ -204,8 +204,12 @@ export default function ServiceDetail() {
       return;
     }
 
-    // التحقق من بيانات المشوار الخارجي إذا كانت الخدمة من هذه الفئة
+    // التحقق من اختيار الوجهة للمشاوير الخارجية
     if (service.category === 'external_trips') {
+      if (!formData.selectedDestination) {
+        toast.error('يرجى اختيار الوجهة (خميس مشيط أو أبها)');
+        return;
+      }
       if (!formData.startLocation || !formData.endLocation) {
         toast.error('يرجى تحديد موقع الانطلاق ونقطة الوصول للمشوار الخارجي');
         return;
@@ -752,61 +756,30 @@ export default function ServiceDetail() {
         <div className="mb-8 sm:mb-12">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-4">
-              حجز سريع لخدمات أخرى
+              خدمات مشابهة
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              تصفح وأحجز خدمات أخرى بسرعة من نفس الصفحة
+              تصفح وأحجز خدمات أخرى من نفس الفئة
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-            {/* التوصيل الداخلي */}
-            <div className="group bg-gradient-to-br from-blue-500 to-cyan-600 rounded-3xl p-6 sm:p-8 text-white shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 transform hover:-translate-y-2">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Truck className="w-8 h-8 text-white" />
+            {/* عرض الخدمات المشابهة مباشرة */}
+            {service && (
+              <div className="group bg-gradient-to-br from-blue-500 to-cyan-600 rounded-3xl p-6 sm:p-8 text-white shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 transform hover:-translate-y-2">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  {getCategoryIcon(service.category)}
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3 text-center">خدمات {service.categoryName || getCategoryName(service.category)}</h3>
+                <p className="text-blue-100 text-sm mb-4 text-center">اكتشف المزيد من الخدمات المشابهة</p>
+                <button
+                  onClick={() => handleQuickBookingByCategory(service.category)}
+                  className="w-full px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors border border-white/30 font-semibold"
+                >
+                  عرض الخدمات المشابهة
+                </button>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3 text-center">توصيل أغراض داخلي</h3>
-              <p className="text-blue-100 text-sm mb-4 text-center">صيدلية، بقالة، مستشفى، توصيلات أونلاين</p>
-              <div className="text-2xl font-bold text-yellow-300 mb-6 text-center">من 20 ريال</div>
-              <button
-                onClick={() => handleQuickBookingByCategory('internal_delivery')}
-                className="w-full px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors border border-white/30 font-semibold"
-              >
-                استعراض الخدمات
-              </button>
-            </div>
-
-            {/* المشاوير الخارجية */}
-            <div className="group bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 sm:p-8 text-white shadow-2xl hover:shadow-green-500/25 transition-all duration-300 transform hover:-translate-y-2">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <MapPin className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3 text-center">مشاوير خارجية</h3>
-              <p className="text-green-100 text-sm mb-4 text-center">خميس مشيط، أبها، المطار، المستشفيات</p>
-              <div className="text-2xl font-bold text-yellow-300 mb-6 text-center">من 250 ريال</div>
-              <button
-                onClick={() => handleQuickBookingByCategory('external_trips')}
-                className="w-full px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors border border-white/30 font-semibold"
-              >
-                استعراض الخدمات
-              </button>
-            </div>
-
-            {/* الصيانة المنزلية */}
-            <div className="group bg-gradient-to-br from-orange-500 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 transform hover:-translate-y-2">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Wrench className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3 text-center">صيانة منزلية</h3>
-              <p className="text-orange-100 text-sm mb-4 text-center">سباكة، كهرباء، نظافة عامة</p>
-              <div className="text-2xl font-bold text-yellow-300 mb-6 text-center">حسب المطلوب</div>
-              <button
-                onClick={() => handleQuickBookingByCategory('home_maintenance')}
-                className="w-full px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors border border-white/30 font-semibold"
-              >
-                استعراض الخدمات
-              </button>
-            </div>
+            )}
           </div>
         </div>
 
@@ -1157,129 +1130,54 @@ export default function ServiceDetail() {
 
                       {/* تفاصيل المشوار الخارجي - لكل خدمة من هذه الفئة */}
                       {service.category === 'external_trips' && (
-                        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                        <div className="bg-green-50 rounded-xl p-4 border border-green-200 mb-6">
                           <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                             <MapPin className="w-5 h-5 text-green-600" />
-                            تفاصيل المشوار الخارجي
+                            اختيار الوجهة (مطلوب)
                           </h4>
                           
-                          {/* اختيار الوجهة - ديناميكي من بيانات الخدمة */}
-                          {priceOptions.length > 0 ? (
-                            <div className="mb-4">
-                              <label className="block text-sm font-semibold text-slate-700 mb-3">
-                                اختر الوجهة *
-                              </label>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {priceOptions.map((option, index) => (
-                                  <button
-                                    key={index}
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedPrice(`${option.name} ${option.price}`);
-                                      setFormData(prev => ({...prev, selectedDestination: option.name }));
-                                      console.log('[ServiceDetail] 🎯 تم اختيار الوجهة:', option.name, option.price);
-                                    }}
-                                    className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                                      formData.selectedDestination === option.name
-                                        ? 'border-green-500 bg-green-500/20 text-green-700'
-                                        : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between mb-2">
-                                      <div>
-                                        <div className="font-semibold text-lg">{option.name}</div>
-                                        <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
-                                      </div>
-                                      <div className="text-amber-600 font-bold text-xl">{option.price}</div>
-                                    </div>
-                                  </button>
-                                ))}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedPrice('خميس مشيط 250 ريال');
+                                setFormData(prev => ({...prev, selectedDestination: 'خميس مشيط' }));
+                              }}
+                              className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                                formData.selectedDestination === 'خميس مشيط'
+                                  ? 'border-green-500 bg-green-500/20 text-green-700'
+                                  : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div>
+                                  <div className="font-semibold text-lg">خميس مشيط</div>
+                                  <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
+                                </div>
+                                <div className="text-amber-600 font-bold text-xl">250 ريال</div>
                               </div>
-                            </div>
-                          ) : (
-                            // خيارات افتراضية للمشاوير الخارجية
-                            <div className="mb-4">
-                              <label className="block text-sm font-semibold text-slate-700 mb-3">
-                                اختر الوجهة *
-                              </label>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedPrice('خميس مشيط 250 ريال');
-                                    setFormData(prev => ({...prev, selectedDestination: 'خميس مشيط' }));
-                                    console.log('[ServiceDetail] 🎯 تم اختيار الوجهة الافتراضية: خميس مشيط');
-                                  }}
-                                  className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                                    formData.selectedDestination === 'خميس مشيط'
-                                      ? 'border-green-500 bg-green-500/20 text-green-700'
-                                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div>
-                                      <div className="font-semibold text-lg">خميس مشيط</div>
-                                      <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
-                                    </div>
-                                    <div className="text-amber-600 font-bold text-xl">250 ريال</div>
-                                  </div>
-                                </button>
-                                
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedPrice('أبها 300 ريال');
-                                    setFormData(prev => ({...prev, selectedDestination: 'أبها' }));
-                                    console.log('[ServiceDetail] 🎯 تم اختيار الوجهة الافتراضية: أبها');
-                                  }}
-                                  className={`p-4 rounded-lg border transition-all duration-200 text-right ${
-                                    formData.selectedDestination === 'أبها'
-                                      ? 'border-green-500 bg-green-500/20 text-green-700'
-                                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div>
-                                      <div className="font-semibold text-lg">أبها</div>
-                                      <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
-                                    </div>
-                                    <div className="text-amber-600 font-bold text-xl">300 ريال</div>
-                                  </div>
-                                </button>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedPrice('أبها 300 ريال');
+                                setFormData(prev => ({...prev, selectedDestination: 'أبها' }));
+                              }}
+                              className={`p-4 rounded-lg border transition-all duration-200 text-right ${
+                                formData.selectedDestination === 'أبها'
+                                  ? 'border-green-500 bg-green-500/20 text-green-700'
+                                  : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div>
+                                  <div className="font-semibold text-lg">أبها</div>
+                                  <div className="text-xs text-slate-500">9 ساعات كحد أقصى</div>
+                                </div>
+                                <div className="text-amber-600 font-bold text-xl">300 ريال</div>
                               </div>
-                            </div>
-                          )}
-
-                          {/* موقع الانطلاق ونقطة الوصول - يظهر دائماً لخدمات المشاوير الخارجية */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-semibold text-slate-700 mb-3">
-                                موقع الانطلاق *
-                              </label>
-                              <input
-                                type="text"
-                                name="startLocation"
-                                value={formData.startLocation}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
-                                placeholder="مثال: الخارجة - حي السلام"
-                                required
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-semibold text-slate-700 mb-3">
-                                نقطة الوصول *
-                              </label>
-                              <input
-                                type="text"
-                                name="endLocation"
-                                value={formData.endLocation}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-300"
-                                placeholder="مثال: خميس مشيط - المستشفى العام"
-                                required
-                              />
-                            </div>
+                            </button>
                           </div>
                         </div>
                       )}
