@@ -10,6 +10,8 @@ export interface Booking {
   serviceId: string;
   serviceName: string;
   serviceCategory: string;
+  categoryName?: string;
+  price?: string;
   // Customer info - supporting both old and new field names
   customerName?: string;
   customerPhone?: string;

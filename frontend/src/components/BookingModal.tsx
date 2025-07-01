@@ -157,7 +157,9 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
         customAnswers: formData.customAnswers, // الإجابات القديمة للتوافق
         customAnswersWithQuestions: customAnswersWithQuestions, // الإجابات مع معلومات الأسئلة
         status: 'pending',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        categoryName: service ? service.categoryName : getServiceName(currentCategory),
+        price: estimatedPrice
       };
 
       await createBooking(bookingData);
@@ -264,7 +266,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                 </div>
                 <div>
                   <h3 className="text-white font-bold">{service.name}</h3>
-                  <p className="text-blue-300 text-sm">{service.price}</p>
+                  <p className="text-yellow-400 font-bold text-base">{service.price}</p>
                 </div>
               </div>
               <p className="text-gray-300 text-sm">{service.homeShortDescription}</p>
@@ -418,6 +420,15 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                     </div>
                   )}
 
+                  {/* عرض السعر بعد اختيار الوجهة */}
+                  {formData.selectedDestination && (
+                    <div className="mt-4 p-3 bg-green-500/20 rounded-lg border border-green-500/30">
+                      <p className="text-yellow-400 font-bold text-lg">
+                        السعر: {formData.selectedDestination === 'khamis_mushait' ? '250 ريال' : formData.selectedDestination === 'abha' ? '300 ريال' : ''}
+                      </p>
+                    </div>
+                  )}
+
                   {/* موقع الانطلاق ونقطة الوصول - يظهر دائماً */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -492,7 +503,7 @@ function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
                     <Truck className="w-6 h-6 text-blue-400" />
                     <div>
                       <h4 className="font-semibold text-blue-300">خدمة التوصيل الداخلي</h4>
-                      <p className="text-blue-200 font-bold text-lg">السعر: 20 ريال</p>
+                      <p className="text-yellow-400 font-bold text-lg">السعر: 20 ريال</p>
                     </div>
                   </div>
                 </div>

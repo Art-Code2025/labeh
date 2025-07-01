@@ -1349,18 +1349,18 @@ const Home: React.FC = () => {
               </div>
               
               <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 text-gray-600 order-1 lg:order-2">
-                <a href="#" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
+                <Link to="/privacy" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
                   <FileText className="w-4 h-4" />
                   سياسة الخصوصية
-                </a>
-                <a href="#" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
+                </Link>
+                <Link to="/terms" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
                   <FileText className="w-4 h-4" />
                   الشروط والأحكام  
-                </a>
-                <a href="#" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
+                </Link>
+                <Link to="/user-agreement" className="hover:text-blue-600 transition-colors duration-300 flex items-center gap-1">
                   <FileText className="w-4 h-4" />
                   اتفاقية الاستخدام
-                </a>
+                </Link>
               </div>
             </div>
           </div>

@@ -1039,7 +1039,15 @@ function Dashboard() {
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
-                              <h4 className="font-bold text-gray-900 text-lg break-words">{booking.serviceName || 'خدمة غير محددة'}</h4>
+                              <h4 className="font-bold text-gray-900 text-lg break-words flex items-center gap-2">
+                                {booking.serviceName || 'خدمة غير محددة'}
+                                {booking.categoryName && (
+                                  <span className="text-green-700 bg-green-100 px-2 py-0.5 rounded-full text-xs font-semibold">{booking.categoryName}</span>
+                                )}
+                                {booking.price && (
+                                  <span className="text-amber-600 font-bold text-sm">{booking.price}</span>
+                                )}
+                              </h4>
                               <span className={`self-start inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
                                 {getStatusIcon(booking.status)}
                                 {booking.status === 'pending' && 'معلق'}
@@ -1485,7 +1493,15 @@ function Dashboard() {
                           <div className="flex-1 min-w-0">
                             {/* Header - responsive */}
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
-                              <h4 className="font-bold text-gray-900 text-lg break-words">{booking.serviceName || 'خدمة غير محددة'}</h4>
+                              <h4 className="font-bold text-gray-900 text-lg break-words flex items-center gap-2">
+                                {booking.serviceName || 'خدمة غير محددة'}
+                                {booking.categoryName && (
+                                  <span className="text-green-700 bg-green-100 px-2 py-0.5 rounded-full text-xs font-semibold">{booking.categoryName}</span>
+                                )}
+                                {booking.price && (
+                                  <span className="text-amber-600 font-bold text-sm">{booking.price}</span>
+                                )}
+                              </h4>
                               <span className={`self-start flex items-center gap-1 text-xs px-2 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
                                 {getStatusIcon(booking.status)}
                                 {booking.status === 'pending' && 'معلق'}

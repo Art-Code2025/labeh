@@ -14,6 +14,9 @@ import Contact from './pages/Contact';
 import Media from './pages/Media';
 import Partners from './pages/Partners';
 import NotFound from './pages/NotFound';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
+import UserAgreement from './pages/UserAgreement';
 
 const App: React.FC = () => {
   return (
@@ -34,6 +37,9 @@ const App: React.FC = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/media" element={<Media />} />
         <Route path="/partners" element={<Partners />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/user-agreement" element={<UserAgreement />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
