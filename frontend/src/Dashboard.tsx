@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Link } from 'react-router-dom';
 
 import { DocumentSnapshot } from 'firebase/firestore';
 
@@ -119,7 +118,7 @@ function Dashboard() {
   const [lastBookingUpdate, setLastBookingUpdate] = useState<Date>(new Date());
   const lastBookingIdsRef = useRef<Set<string>>(new Set());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<{ play: () => Promise<void> } | null>(null);
 
   // Provider modal states
   const [showProviderModalForm, setShowProviderModalForm] = useState(false);
@@ -133,11 +132,48 @@ function Dashboard() {
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [selectedBookingForSend, setSelectedBookingForSend] = useState<any | null>(null);
 
-  // Initialize notification sound
+  // Initialize notification sound with better setup
   useEffect(() => {
-    audioRef.current = new Audio('/notification.mp3');
-    audioRef.current.volume = 0.6;
-    audioRef.current.preload = 'auto';
+    // تجربة أصوات مختلفة للإشعارات
+    const initSound = async () => {
+      try {
+        // إنشاء صوت بسيط باستخدام Web Audio API كبديل
+        const audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
+        audioRef.current = {
+          play: async () => {
+            try {
+              // محاولة تشغيل ملف الصوت أولاً
+              const audio = new Audio('/notification.mp3');
+              audio.volume = 0.7;
+              await audio.play();
+            } catch (err) {
+              // إذا فشل، استخدم صوت مولد
+              const oscillator = audioContext.createOscillator();
+              const gainNode = audioContext.createGain();
+              
+              oscillator.connect(gainNode);
+              gainNode.connect(audioContext.destination);
+              
+              oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+              oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+              oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+              
+              gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+              
+              oscillator.start(audioContext.currentTime);
+              oscillator.stop(audioContext.currentTime + 0.3);
+            }
+          }
+        };
+      } catch (error) {
+        console.log('تعذر إعداد الصوت:', error);
+        audioRef.current = { play: () => Promise.resolve() };
+      }
+    };
+    
+    initSound();
+    
     return () => {
       if (audioRef.current) {
         audioRef.current = null;
@@ -148,8 +184,13 @@ function Dashboard() {
   // Load data on mount and when activeTab changes
   useEffect(() => {
     loadData(true); // `true` to reset data
-    if (activeTab === 'bookings') {
+    if (activeTab === 'bookings' || activeTab === 'overview') {
       startRealTimeBookings();
+    } else {
+      // إيقاف real-time polling عند الخروج من الحجوزات أو نظرة عامة
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     }
     
     return () => {
@@ -214,13 +255,19 @@ function Dashboard() {
         }
         case 'overview': {
           const [servicesData, providersData, bookingsData] = await Promise.all([
-            servicesApi.getAll(null, 5),
+            servicesApi.getAll(null, undefined), // جيب كل الخدمات مش 5 بس
             providersApi.getAll(),
             fetchBookings()
           ]);
           setServices(servicesData.services);
           setProviders(providersData);
-          setBookings(bookingsData);
+          // ترتيب الحجوزات من الأحدث إلى الأقدم
+          const sortedBookings = bookingsData.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA; // الأحدث أولاً
+          });
+          setBookings(sortedBookings);
           logDetails = {
             ...logDetails,
             services: servicesData.services.length,
@@ -323,7 +370,13 @@ function Dashboard() {
         }
         
         lastBookingIdsRef.current = currentBookingIds;
-        setBookings(newBookings);
+        // ترتيب الحجوزات من الأحدث إلى الأقدم
+        const sortedRealTimeBookings = newBookings.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA; // الأحدث أولاً
+        });
+        setBookings(sortedRealTimeBookings);
       } catch (error) {
         console.error('❌ [Dashboard] خطأ في جلب الحجوزات الجديدة:', error);
       }
@@ -603,7 +656,7 @@ function Dashboard() {
     }
   };
 
-  // إضافة modal جديد لتعديل الحجوزات
+  // إضافة modal جديد لتعديل الحجوزات - ديناميكي
   const BookingEditModal = ({ booking, isOpen, onClose, onSave, onDelete }: {
     booking: Booking | null;
     isOpen: boolean;
@@ -611,25 +664,43 @@ function Dashboard() {
     onSave: (id: string, data: Partial<Booking>) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
   }) => {
-    const [formData, setFormData] = useState({
-      customerName: '',
-      customerPhone: '',
-      customerEmail: '',
-      notes: '',
-      status: 'pending' as Booking['status']
-    });
+    const [formData, setFormData] = useState<any>({});
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
       if (booking) {
-        setFormData({
-          customerName: booking.customerName || '',
-          customerPhone: booking.customerPhone || '',
-          customerEmail: booking.customerEmail || '',
-          notes: booking.notes || '',
-          status: booking.status
+        // إنشاء form data ديناميكي من بيانات الحجز
+        const dynamicFormData: any = {};
+        
+        // الحقول الأساسية
+        const basicFields = [
+          'customerName', 'customerPhone', 'customerEmail', 'fullName', 'phoneNumber', 'email',
+          'address', 'status', 'notes', 'serviceDetails', 'startLocation', 'endLocation',
+          'destination', 'selectedDestination', 'issueDescription', 'preferredTime',
+          'deliveryLocation', 'urgentDelivery', 'bookingDate'
+        ];
+        
+        basicFields.forEach(field => {
+          if (booking[field as keyof Booking] !== undefined && booking[field as keyof Booking] !== null) {
+            dynamicFormData[field] = booking[field as keyof Booking];
+          }
         });
+        
+        // التعامل مع الحقول الخاصة
+        if (booking.customAnswers) {
+          Object.keys(booking.customAnswers).forEach(key => {
+            dynamicFormData[`customAnswers_${key}`] = booking.customAnswers![key];
+          });
+        }
+        
+        if (booking.customAnswersWithQuestions) {
+          Object.keys(booking.customAnswersWithQuestions).forEach(key => {
+            dynamicFormData[`customAnswersWithQuestions_${key}`] = booking.customAnswersWithQuestions![key].answer;
+          });
+        }
+        
+        setFormData(dynamicFormData);
       }
     }, [booking]);
 
@@ -637,7 +708,51 @@ function Dashboard() {
       if (!booking) return;
       setSaving(true);
       try {
-        await onSave(booking.id, formData);
+        // تحضير البيانات للحفظ
+        const updateData: any = {};
+        
+        // الحقول الأساسية
+        const basicFields = [
+          'customerName', 'customerPhone', 'customerEmail', 'fullName', 'phoneNumber', 'email',
+          'address', 'status', 'notes', 'serviceDetails', 'startLocation', 'endLocation',
+          'destination', 'selectedDestination', 'issueDescription', 'preferredTime',
+          'deliveryLocation', 'urgentDelivery', 'bookingDate'
+        ];
+        
+        basicFields.forEach(field => {
+          if (formData[field] !== undefined) {
+            updateData[field] = formData[field];
+          }
+        });
+        
+        // التعامل مع customAnswers
+        const customAnswers: any = {};
+        const customAnswersWithQuestions: any = {};
+        
+        Object.keys(formData).forEach(key => {
+          if (key.startsWith('customAnswers_')) {
+            const originalKey = key.replace('customAnswers_', '');
+            customAnswers[originalKey] = formData[key];
+          } else if (key.startsWith('customAnswersWithQuestions_')) {
+            const originalKey = key.replace('customAnswersWithQuestions_', ''); 
+            if (booking.customAnswersWithQuestions && booking.customAnswersWithQuestions[originalKey]) {
+              customAnswersWithQuestions[originalKey] = {
+                ...booking.customAnswersWithQuestions[originalKey],
+                answer: formData[key]
+              };
+            }
+          }
+        });
+        
+        if (Object.keys(customAnswers).length > 0) {
+          updateData.customAnswers = customAnswers;
+        }
+        
+        if (Object.keys(customAnswersWithQuestions).length > 0) {
+          updateData.customAnswersWithQuestions = customAnswersWithQuestions;
+        }
+        
+        await onSave(booking.id, updateData);
         onClose();
       } catch (error) {
         console.error('Error saving booking:', error);
@@ -661,75 +776,124 @@ function Dashboard() {
       }
     };
 
+    const renderField = (key: string, value: any) => {
+      const label = getFieldLabel(key);
+      
+      if (key === 'status') {
+        return (
+          <div key={key}>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+            <select
+              value={formData[key] || ''}
+              onChange={(e) => setFormData((prev: any) => ({ ...prev, [key]: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="pending">معلق</option>
+              <option value="confirmed">مؤكد</option>
+              <option value="in_progress">قيد التنفيذ</option>
+              <option value="completed">مكتمل</option>
+              <option value="cancelled">ملغي</option>
+            </select>
+          </div>
+        );
+      }
+      
+      if (key === 'urgentDelivery') {
+        return (
+          <div key={key} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id={key}
+              checked={!!formData[key]}
+              onChange={(e) => setFormData((prev: any) => ({ ...prev, [key]: e.target.checked }))}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor={key} className="text-sm font-medium text-gray-700">{label}</label>
+          </div>
+        );
+      }
+      
+      if (key === 'notes' || key === 'serviceDetails' || key === 'issueDescription') {
+        return (
+          <div key={key}>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+            <textarea
+              value={formData[key] || ''}
+              onChange={(e) => setFormData((prev: any) => ({ ...prev, [key]: e.target.value }))}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        );
+      }
+      
+      return (
+        <div key={key}>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+          <input
+            type={key.includes('email') ? 'email' : key.includes('phone') || key.includes('Phone') ? 'tel' : 'text'}
+            value={formData[key] || ''}
+            onChange={(e) => setFormData((prev: any) => ({ ...prev, [key]: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+      );
+    };
+    
+    const getFieldLabel = (key: string): string => {
+      const labels: Record<string, string> = {
+        customerName: 'اسم العميل',
+        fullName: 'الاسم الكامل',
+        customerPhone: 'رقم هاتف العميل',
+        phoneNumber: 'رقم الهاتف',
+        customerEmail: 'بريد العميل',
+        email: 'البريد الإلكتروني',
+        address: 'العنوان',
+        status: 'حالة الحجز',
+        notes: 'ملاحظات',
+        serviceDetails: 'تفاصيل الخدمة',
+        startLocation: 'نقطة البداية',
+        endLocation: 'نقطة النهاية',
+        destination: 'الوجهة',
+        selectedDestination: 'الوجهة المختارة',
+        issueDescription: 'وصف المشكلة',
+        preferredTime: 'الوقت المفضل',
+        deliveryLocation: 'موقع التوصيل',
+        urgentDelivery: 'توصيل عاجل',
+        bookingDate: 'تاريخ الحجز'
+      };
+      
+      if (key.startsWith('customAnswers_')) {
+        return key.replace('customAnswers_', 'سؤال مخصص: ');
+      }
+      
+      if (key.startsWith('customAnswersWithQuestions_')) {
+        const originalKey = key.replace('customAnswersWithQuestions_', '');
+        if (booking?.customAnswersWithQuestions?.[originalKey]) {
+          return booking.customAnswersWithQuestions[originalKey].question;
+        }
+        return originalKey;
+      }
+      
+      return labels[key] || key;
+    };
+
     if (!isOpen || !booking) return null;
 
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
-        <div className="bg-white rounded-2xl p-8 max-w-md w-full border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-2xl p-8 max-w-2xl w-full border border-gray-200 relative max-h-[90vh] overflow-y-auto">
           <button onClick={onClose} className="absolute top-3 left-3 text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
           
           <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <Edit className="w-5 h-5 text-blue-500" />
-            تعديل الحجز
+            تعديل الحجز - {booking.serviceName}
           </h3>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">اسم العميل</label>
-              <input
-                type="text"
-                value={formData.customerName}
-                onChange={(e) => setFormData(prev => ({ ...prev, customerName: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
-              <input
-                type="tel"
-                value={formData.customerPhone}
-                onChange={(e) => setFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني (اختياري)</label>
-              <input
-                type="email"
-                value={formData.customerEmail}
-                onChange={(e) => setFormData(prev => ({ ...prev, customerEmail: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">حالة الحجز</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as Booking['status'] }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="pending">معلق</option>
-                <option value="confirmed">مؤكد</option>
-                <option value="in_progress">قيد التنفيذ</option>
-                <option value="completed">مكتمل</option>
-                <option value="cancelled">ملغي</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {Object.keys(formData).map(key => renderField(key, formData[key]))}
           </div>
 
           <div className="flex gap-3 mt-6">
@@ -924,20 +1088,9 @@ function Dashboard() {
 
           {/* Enhanced Footer */}
           <div className="p-4 border-t border-gray-100 space-y-2 bg-gradient-to-r from-gray-50 to-white">
-            <button
-              onClick={handleTestCloudinary}
-              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl font-medium transition-all duration-300 group transform hover:scale-105"
-            >
-              <Zap className="w-5 h-5 group-hover:text-yellow-500 transition-colors group-hover:animate-pulse" />
-              <span>اختبار Cloudinary</span>
-            </button>
-            <button
-              onClick={() => loadData()}
-              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl font-medium transition-all duration-300 group transform hover:scale-105"
-            >
-              <RefreshCw className="w-5 h-5 group-hover:animate-spin transition-all" />
-              <span>تحديث البيانات</span>
-            </button>
+            <div className="text-center text-xs text-gray-500">
+              © 2024 لبيه - جميع الحقوق محفوظة
+            </div>
           </div>
         </div>
       </div>
@@ -954,13 +1107,14 @@ function Dashboard() {
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <Link
-                to="/dashboard"
+              <button
+                onClick={() => window.location.reload()}
                 className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-md text-sm"
+                title="تحديث الصفحة"
               >
                 <Home className="w-4 h-4" />
-                <span className="hidden sm:inline">الصفحة الرئيسية</span>
-              </Link>
+                <span className="hidden sm:inline">الرئيسية</span>
+              </button>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                   {activeTab === 'overview' && '📊 نظرة عامة'}
@@ -1025,6 +1179,11 @@ function Dashboard() {
                         <Calendar className="w-5 h-5 text-white" />
                       </div>
                       <h3 className="text-xl font-bold text-gray-900">آخر الحجوزات</h3>
+                      {/* إضافة مؤشر التحديث المباشر */}
+                      <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs animate-pulse">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                        <span className="hidden sm:inline">مباشر</span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-2">
@@ -1553,9 +1712,9 @@ function Dashboard() {
                       >
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                            {/* Header - responsive */}
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
-                              <h4 className="font-bold text-gray-900 text-lg break-words flex items-center gap-2">
+                            {/* Header - responsive مع خطوط أصغر */}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+                              <h4 className="font-bold text-gray-900 text-base break-words flex items-center gap-2">
                                 {(() => {
                                   const serviceName = booking.serviceName || 'خدمة غير محددة';
                                   console.log(`📝 [Dashboard] اسم الخدمة المعروض:`, {
@@ -1573,7 +1732,7 @@ function Dashboard() {
                                   <span className="text-amber-600 font-bold text-sm">{booking.price}</span>
                                 )}
                               </h4>
-                              <span className={`self-start flex items-center gap-1 text-xs px-2 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
+                              <span className={`self-start inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
                                 {getStatusIcon(booking.status)}
                                 {booking.status === 'pending' && 'معلق'}
                                 {booking.status === 'confirmed' && 'مؤكد'}
@@ -1583,59 +1742,59 @@ function Dashboard() {
                               </span>
                             </div>
                             
-                            {/* Customer Info - enhanced and responsive */}
-                            <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-100">
-                              <h4 className="text-sm font-semibold text-blue-700 mb-3 flex items-center gap-2">
-                                <User className="w-4 h-4" />
+                            {/* Customer Info - محسن مع خطوط أصغر */}
+                            <div className="bg-blue-50 rounded-lg p-3 mb-3 border border-blue-100">
+                              <h5 className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1">
+                                <User className="w-3 h-3" />
                                 بيانات العميل:
-                              </h4>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="flex items-center gap-2 text-blue-600">
-                                  <User className="w-4 h-4 flex-shrink-0" />
-                                  <span className="text-sm font-medium">الاسم:</span>
-                                  <span className="text-sm text-blue-800 break-words">{booking.fullName || booking.customerName || 'غير محدد'}</span>
+                              </h5>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <div className="flex items-center gap-1 text-blue-600">
+                                  <User className="w-3 h-3 flex-shrink-0" />
+                                  <span className="font-medium">الاسم:</span>
+                                  <span className="text-blue-800 break-words">{booking.fullName || booking.customerName || 'غير محدد'}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-blue-600">
-                                  <Phone className="w-4 h-4 flex-shrink-0" />
-                                  <span className="text-sm font-medium">الهاتف:</span>
-                                  <span className="text-sm text-blue-800 break-words">{booking.phoneNumber || booking.customerPhone || 'غير محدد'}</span>
+                                <div className="flex items-center gap-1 text-blue-600">
+                                  <Phone className="w-3 h-3 flex-shrink-0" />
+                                  <span className="font-medium">الهاتف:</span>
+                                  <span className="text-blue-800 break-words">{booking.phoneNumber || booking.customerPhone || 'غير محدد'}</span>
                                 </div>
                                 {(booking.customerEmail || booking.email) && (
-                                  <div className="flex items-center gap-2 text-blue-600 sm:col-span-2">
-                                    <Mail className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm font-medium">البريد:</span>
-                                    <span className="text-sm text-blue-800 break-words">{booking.customerEmail || booking.email}</span>
+                                  <div className="flex items-center gap-1 text-blue-600 sm:col-span-2">
+                                    <Mail className="w-3 h-3 flex-shrink-0" />
+                                    <span className="font-medium">البريد:</span>
+                                    <span className="text-blue-800 break-words">{booking.customerEmail || booking.email}</span>
                                   </div>
                                 )}
-                                <div className="flex items-center gap-2 text-blue-600 sm:col-span-2">
-                                  <MapPin className="w-4 h-4 flex-shrink-0" />
-                                  <span className="text-sm font-medium">العنوان:</span>
-                                  <span className="text-sm text-blue-800 break-words">
+                                <div className="flex items-center gap-1 text-blue-600 sm:col-span-2">
+                                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                                  <span className="font-medium">العنوان:</span>
+                                  <span className="text-blue-800 break-words">
                                     {booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-blue-600">
-                                  <Clock className="w-4 h-4 flex-shrink-0" />
-                                  <span className="text-sm font-medium">منذ:</span>
-                                  <span className="text-sm text-blue-800">{formatTimeAgo(booking.createdAt)}</span>
+                                <div className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3 flex-shrink-0" />
+                                  <span className="font-medium">منذ:</span>
+                                  <span className="text-blue-800">{formatTimeAgo(booking.createdAt)}</span>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Custom Answers - enhanced responsive */}
+                            {/* Custom Answers - محسن مع خطوط أصغر */}
                             {(booking.customAnswersWithQuestions && Object.keys(booking.customAnswersWithQuestions).length > 0) ? (
-                              <div className="bg-purple-50 rounded-lg p-4 mb-4 border border-purple-100">
-                                <h4 className="text-sm font-semibold text-purple-700 mb-3 flex items-center gap-2">
-                                  <FileText className="w-4 h-4" />
+                              <div className="bg-purple-50 rounded-lg p-3 mb-3 border border-purple-100">
+                                <h5 className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1">
+                                  <FileText className="w-3 h-3" />
                                   أسئلة مخصصة:
-                                </h4>
-                                <div className="space-y-3">
+                                </h5>
+                                <div className="space-y-2">
                                   {Object.entries(booking.customAnswersWithQuestions).map(([key, data]: [string, { question: string; answer: any; type: string }]) => (
-                                    <div key={key} className="bg-white rounded-md p-3 border border-purple-200">
-                                      <div className="flex flex-col gap-2">
-                                        <span className="text-purple-700 font-medium text-sm">{data.question}:</span>
-                                        <div className="bg-purple-100 rounded-md p-2">
-                                          <span className="text-purple-800 text-sm break-words whitespace-pre-wrap">
+                                    <div key={key} className="bg-white rounded-md p-2 border border-purple-200">
+                                      <div className="flex flex-col gap-1">
+                                        <span className="text-purple-700 font-medium text-xs">{data.question}:</span>
+                                        <div className="bg-purple-100 rounded-md p-1">
+                                          <span className="text-purple-800 text-xs break-words whitespace-pre-wrap">
                                             {Array.isArray(data.answer) ? data.answer.join(', ') : String(data.answer)}
                                           </span>
                                         </div>
@@ -1645,18 +1804,18 @@ function Dashboard() {
                                 </div>
                               </div>
                             ) : (booking.customAnswers && Object.keys(booking.customAnswers).length > 0) ? (
-                              <div className="bg-purple-50 rounded-lg p-4 mb-4 border border-purple-100">
-                                <h4 className="text-sm font-semibold text-purple-700 mb-3 flex items-center gap-2">
-                                  <FileText className="w-4 h-4" />
+                              <div className="bg-purple-50 rounded-lg p-3 mb-3 border border-purple-100">
+                                <h5 className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1">
+                                  <FileText className="w-3 h-3" />
                                   تفاصيل إضافية:
-                                </h4>
-                                <div className="space-y-3">
+                                </h5>
+                                <div className="space-y-2">
                                   {Object.entries(booking.customAnswers).map(([key, value]) => (
-                                    <div key={key} className="bg-white rounded-md p-3 border border-purple-200">
-                                      <div className="flex flex-col gap-2">
-                                        <span className="text-purple-700 font-medium text-sm">{key}:</span>
-                                        <div className="bg-purple-100 rounded-md p-2">
-                                          <span className="text-purple-800 text-sm break-words whitespace-pre-wrap">
+                                    <div key={key} className="bg-white rounded-md p-2 border border-purple-200">
+                                      <div className="flex flex-col gap-1">
+                                        <span className="text-purple-700 font-medium text-xs">{key}:</span>
+                                        <div className="bg-purple-100 rounded-md p-1">
+                                          <span className="text-purple-800 text-xs break-words whitespace-pre-wrap">
                                             {Array.isArray(value) ? value.join(', ') : String(value)}
                                           </span>
                                         </div>
@@ -1667,57 +1826,57 @@ function Dashboard() {
                               </div>
                             ) : null}
 
-                            {/* Service Details - only show if has content */}
+                            {/* Service Details - only show if has content مع خطوط أصغر */}
                             {(booking.destination || booking.selectedDestination || booking.startLocation || booking.endLocation || booking.issueDescription || booking.preferredTime || booking.urgentDelivery) && (
-                              <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-100">
-                                <h4 className="text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
-                                  <Package className="w-4 h-4" />
+                              <div className="bg-green-50 rounded-lg p-3 mb-3 border border-green-100">
+                                <h4 className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
+                                  <Package className="w-3 h-3" />
                                   تفاصيل الخدمة:
                                 </h4>
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                   {/* بيانات المشاوير الخارجية */}
                                   {(booking.selectedDestination || booking.destination) && (
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                      <span className="text-green-600 font-medium text-xs flex-shrink-0 flex items-center gap-1">
                                         🗺️ الوجهة:
                                       </span>
-                                      <span className="text-green-800 text-sm break-words font-bold">
+                                      <span className="text-green-800 text-xs break-words font-bold">
                                         {booking.selectedDestination || booking.destination}
                                       </span>
                                     </div>
                                   )}
                                   {booking.startLocation && (
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                      <span className="text-green-600 font-medium text-xs flex-shrink-0 flex items-center gap-1">
                                         📍 موقع الانطلاق:
                                       </span>
-                                      <span className="text-green-800 text-sm break-words">{booking.startLocation}</span>
+                                      <span className="text-green-800 text-xs break-words">{booking.startLocation}</span>
                                     </div>
                                   )}
                                   {booking.endLocation && (
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                      <span className="text-green-600 font-medium text-sm flex-shrink-0 flex items-center gap-1">
+                                      <span className="text-green-600 font-medium text-xs flex-shrink-0 flex items-center gap-1">
                                         🎯 نقطة الوصول:
                                       </span>
-                                      <span className="text-green-800 text-sm break-words">{booking.endLocation}</span>
+                                      <span className="text-green-800 text-xs break-words">{booking.endLocation}</span>
                                     </div>
                                   )}
                                   {booking.issueDescription && (
                                     <div className="flex flex-col gap-1">
-                                      <span className="text-green-600 font-medium text-sm">وصف المشكلة:</span>
-                                      <div className="bg-green-100 rounded-md p-2">
-                                        <span className="text-green-800 text-sm break-words whitespace-pre-wrap">{booking.issueDescription}</span>
+                                      <span className="text-green-600 font-medium text-xs">وصف المشكلة:</span>
+                                      <div className="bg-green-100 rounded-md p-1">
+                                        <span className="text-green-800 text-xs break-words whitespace-pre-wrap">{booking.issueDescription}</span>
                                       </div>
                                     </div>
                                   )}
                                   {booking.preferredTime && (
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                      <span className="text-green-600 font-medium text-sm flex-shrink-0">الوقت المفضل:</span>
-                                      <span className="text-green-800 text-sm break-words">{booking.preferredTime}</span>
+                                      <span className="text-green-600 font-medium text-xs flex-shrink-0">الوقت المفضل:</span>
+                                      <span className="text-green-800 text-xs break-words">{booking.preferredTime}</span>
                                     </div>
                                   )}
                                   {booking.urgentDelivery && (
-                                    <div className="text-red-600 font-medium text-sm flex items-center gap-2">
+                                    <div className="text-red-600 font-medium text-xs flex items-center gap-2">
                                       🚨 <span>توصيل عاجل</span>
                                     </div>
                                   )}
@@ -1726,78 +1885,73 @@ function Dashboard() {
                             )}
 
                             {booking.notes && (
-                              <div className="bg-yellow-50 rounded-lg p-4 mb-4 border border-yellow-200">
-                                <h4 className="text-sm font-semibold text-yellow-700 mb-2 flex items-center gap-2">
-                                  <FileText className="w-4 h-4" />
+                              <div className="bg-yellow-50 rounded-lg p-3 mb-3 border border-yellow-200">
+                                <h5 className="text-xs font-semibold text-yellow-700 mb-1 flex items-center gap-1">
+                                  <FileText className="w-3 h-3" />
                                   ملاحظات:
-                                </h4>
-                                <div className="bg-yellow-100 rounded-md p-2">
-                                  <p className="text-sm text-yellow-600 break-words whitespace-pre-wrap">{booking.notes}</p>
+                                </h5>
+                                <div className="bg-yellow-100 rounded-md p-1">
+                                  <p className="text-xs text-yellow-600 break-words whitespace-pre-wrap">{booking.notes}</p>
                                 </div>
                               </div>
                             )}
                           </div>
 
-                          {/* Action Buttons - responsive */}
                           <div className="flex flex-row lg:flex-col gap-2 lg:ml-4 flex-wrap lg:flex-nowrap">
-                            {/* Management Buttons */}
-                            <div className="flex flex-row lg:flex-col gap-2 flex-wrap lg:flex-nowrap">
+                            {/* أزرار الإدارة الجديدة مع حجم أصغر */}
+                            <div className="flex flex-row lg:flex-col gap-1 mb-2">
                               <button
                                 onClick={() => openProviderModal(booking)}
-                                className="px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1 min-w-[100px]"
+                                className="px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-sm flex items-center justify-center gap-1"
                                 title="إرسال للمورد"
                               >
                                 <Send className="w-3 h-3" />
-                                <span className="hidden sm:inline">إرسال للمورد</span>
-                                <span className="sm:hidden">إرسال</span>
+                                <span className="hidden sm:inline text-xs">إرسال</span>
                               </button>
                               
                               <button
                                 onClick={() => handleBookingEdit(booking)}
-                                className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1 min-w-[80px]"
+                                className="px-2 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-md hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-sm flex items-center justify-center gap-1"
                                 title="تعديل الحجز"
                               >
                                 <Edit className="w-3 h-3" />
-                                <span>تعديل</span>
+                                <span className="text-xs">تعديل</span>
                               </button>
                               
                               <button
                                 onClick={() => handleBookingDelete(booking.id)}
-                                className="px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center gap-1 min-w-[80px]"
+                                className="px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-md hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-sm flex items-center justify-center gap-1"
                                 title="حذف الحجز"
                               >
                                 <Trash2 className="w-3 h-3" />
-                                <span>حذف</span>
                               </button>
                             </div>
 
-                            {/* Status Change Buttons */}
-                            <div className="flex flex-row lg:flex-col gap-2 flex-wrap lg:flex-nowrap">
-                              {booking.status === 'pending' && (
-                                <>
-                                  <button
-                                    onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
-                                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white text-sm rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-md min-w-[80px]"
-                                  >
-                                    تأكيد
-                                  </button>
-                                  <button
-                                    onClick={() => handleBookingStatusUpdate(booking.id, 'cancelled')}
-                                    className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white text-sm rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-300 transform hover:scale-105 shadow-md min-w-[80px]"
-                                  >
-                                    إلغاء
-                                  </button>
-                                </>
-                              )}
-                              {booking.status === 'confirmed' && (
+                            {/* أزرار تغيير الحالة مع حجم أصغر */}
+                            {booking.status === 'pending' && (
+                              <div className="flex flex-row lg:flex-col gap-1">
                                 <button
-                                  onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
-                                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-md min-w-[80px]"
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
+                                  className="px-2 py-1 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white text-xs rounded-md hover:from-cyan-600 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-sm"
                                 >
-                                  إكمال
+                                  تأكيد
                                 </button>
-                              )}
-                            </div>
+                                <button
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'cancelled')}
+                                  className="px-2 py-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white text-xs rounded-md hover:from-gray-600 hover:to-gray-700 transition-all duration-300 transform hover:scale-105 shadow-sm"
+                                >
+                                  إلغاء
+                                </button>
+                              </div>
+                            )}
+                            {booking.status === 'confirmed' && (
+                              <button
+                                onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
+                                className="px-2 py-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs rounded-md hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-sm"
+                              >
+                                إكمال
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
