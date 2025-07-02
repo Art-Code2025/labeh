@@ -489,7 +489,7 @@ const Home: React.FC = () => {
                   <span className="text-3xl sm:text-4xl lg:text-5xl">طلبك بين ايديك </span>
                 </h1>
                 <p className="text-lg sm:text-xl lg:text-2xl text-slate-700 max-w-2xl leading-relaxed font-medium">
-                  عالم جديد في خدمة توصيل الطلبات ومشاويرك الخاصة لأهالي الخرجة وما حولها.
+                  عالم جديد في خدمة توصيل الطلبات ومشاويرك الخاصة لأهالي الحرجة وما حولها.
                 </p>
                 <p className="text-base sm:text-lg lg:text-xl text-cyan-700 font-semibold max-w-2xl italic">
                   "You ask, we deliver — your request is in your hands."
