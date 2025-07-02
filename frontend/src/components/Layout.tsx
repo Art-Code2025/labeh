@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import Navbar from './Navbar';
+import WhatsAppButton from '../components/WhatsAppButton';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <>
       {!shouldHideLayout && <Navbar />}
       <div>{children}</div>
+      <WhatsAppButton />
     </>
   );
 };
