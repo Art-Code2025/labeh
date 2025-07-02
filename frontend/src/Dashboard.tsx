@@ -1446,17 +1446,119 @@ function Dashboard() {
                               {(booking.selectedDestination || booking.destination) && (
                                 <div className="text-xs">
                                   <span className="font-medium text-green-700">🗺️ الوجهة: </span>
-                                  <span className="text-green-800 break-words line-clamp-2">{booking.selectedDestination || booking.destination}</span>
+                                  <span className="text-green-800">{booking.selectedDestination || booking.destination}</span>
                                 </div>
                               )}
                               {booking.issueDescription && (
                                 <div className="text-xs mt-1">
                                   <span className="font-medium text-green-700">🔧 المشكلة: </span>
-                                  <span className="text-green-800 break-words line-clamp-2">{booking.issueDescription}</span>
+                                  <span className="text-green-800">{booking.issueDescription}</span>
                                 </div>
                               )}
                             </div>
                           )}
+
+                          {/* تفاصيل إضافية مفصلة */}
+                          <div className="space-y-2">
+                            {/* معلومات الرحلة والمواقع */}
+                            {(booking.startLocation || booking.endLocation) && (
+                              <div className="bg-cyan-50 rounded-lg p-2 border border-cyan-100">
+                                <div className="text-xs space-y-1">
+                                  {booking.startLocation && (
+                                    <div>
+                                      <span className="font-medium text-cyan-700">🚩 نقطة البداية: </span>
+                                      <span className="text-cyan-800">{booking.startLocation}</span>
+                                    </div>
+                                  )}
+                                  {booking.endLocation && (
+                                    <div>
+                                      <span className="font-medium text-cyan-700">🏁 نقطة النهاية: </span>
+                                      <span className="text-cyan-800">{booking.endLocation}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* الملاحظات وتفاصيل الخدمة */}
+                            {(booking.notes || booking.serviceDetails) && (
+                              <div className="bg-yellow-50 rounded-lg p-2 border border-yellow-100">
+                                <div className="text-xs space-y-1">
+                                  {booking.notes && (
+                                    <div>
+                                      <span className="font-medium text-yellow-700">📝 ملاحظات: </span>
+                                      <span className="text-yellow-800">{booking.notes}</span>
+                                    </div>
+                                  )}
+                                  {booking.serviceDetails && (
+                                    <div>
+                                      <span className="font-medium text-yellow-700">🔧 تفاصيل الخدمة: </span>
+                                      <span className="text-yellow-800">{booking.serviceDetails}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* الأسئلة المخصصة */}
+                            {booking.customAnswersWithQuestions && Object.keys(booking.customAnswersWithQuestions).length > 0 && (
+                              <div className="bg-purple-50 rounded-lg p-2 border border-purple-100">
+                                <div className="text-xs">
+                                  <div className="font-medium text-purple-700 mb-1">❓ أسئلة مخصصة:</div>
+                                  {Object.entries(booking.customAnswersWithQuestions).map(([key, data]: [string, any]) => (
+                                    <div key={key} className="mb-1">
+                                      <span className="font-medium text-purple-600">• {data.question}: </span>
+                                      <span className="text-purple-800">
+                                        {Array.isArray(data.answer) ? data.answer.join(', ') : String(data.answer)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* إجابات مخصصة إضافية */}
+                            {booking.customAnswers && Object.keys(booking.customAnswers).length > 0 && !booking.customAnswersWithQuestions && (
+                              <div className="bg-indigo-50 rounded-lg p-2 border border-indigo-100">
+                                <div className="text-xs">
+                                  <div className="font-medium text-indigo-700 mb-1">📋 تفاصيل إضافية:</div>
+                                  {Object.entries(booking.customAnswers).map(([key, value]) => (
+                                    <div key={key} className="mb-1">
+                                      <span className="font-medium text-indigo-600">• {key}: </span>
+                                      <span className="text-indigo-800">
+                                        {Array.isArray(value) ? value.join(', ') : String(value)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* معلومات إضافية */}
+                            {(booking.preferredTime || booking.urgentDelivery || booking.deliveryLocation) && (
+                              <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                                <div className="text-xs space-y-1">
+                                  {booking.preferredTime && (
+                                    <div>
+                                      <span className="font-medium text-gray-700">⏰ الوقت المفضل: </span>
+                                      <span className="text-gray-800">{booking.preferredTime}</span>
+                                    </div>
+                                  )}
+                                  {booking.urgentDelivery && (
+                                    <div>
+                                      <span className="font-medium text-red-700">🚨 توصيل عاجل</span>
+                                    </div>
+                                  )}
+                                  {booking.deliveryLocation && booking.deliveryLocation !== booking.address && (
+                                    <div>
+                                      <span className="font-medium text-gray-700">📦 موقع التوصيل: </span>
+                                      <span className="text-gray-800">{booking.deliveryLocation}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
 
                           {/* أزرار مبسطة */}
                           <div className="flex flex-col sm:flex-row gap-2">
@@ -1757,23 +1859,21 @@ function Dashboard() {
                           </div>
                           
                           <div className="bg-blue-50 rounded-lg p-2 border border-blue-100">
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                               <div className="flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                <span>{booking.fullName || booking.customerName || 'غير محدد'}</span>
+                                <User className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{booking.fullName || booking.customerName || 'غير محدد'}</span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <Phone className="w-3 h-3" />
-                                <span>{booking.phoneNumber || booking.customerPhone || 'غير محدد'}</span>
+                                <Phone className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{booking.phoneNumber || booking.customerPhone || 'غير محدد'}</span>
                               </div>
-                              <div className="col-span-2 flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                <span className="break-words">
-                                  {booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}
-                                </span>
+                              <div className="col-span-1 sm:col-span-2 flex items-center gap-1">
+                                <MapPin className="w-3 h-3 flex-shrink-0" />
+                                <span className="break-words line-clamp-2">{booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}</span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
+                                <Clock className="w-3 h-3 flex-shrink-0" />
                                 <span>{formatTimeAgo(booking.createdAt)}</span>
                               </div>
                             </div>
@@ -1796,6 +1896,108 @@ function Dashboard() {
                               )}
                             </div>
                           )}
+
+                          {/* تفاصيل إضافية مفصلة */}
+                          <div className="space-y-2">
+                            {/* معلومات الرحلة والمواقع */}
+                            {(booking.startLocation || booking.endLocation) && (
+                              <div className="bg-cyan-50 rounded-lg p-2 border border-cyan-100">
+                                <div className="text-xs space-y-1">
+                                  {booking.startLocation && (
+                                    <div>
+                                      <span className="font-medium text-cyan-700">🚩 نقطة البداية: </span>
+                                      <span className="text-cyan-800">{booking.startLocation}</span>
+                                    </div>
+                                  )}
+                                  {booking.endLocation && (
+                                    <div>
+                                      <span className="font-medium text-cyan-700">🏁 نقطة النهاية: </span>
+                                      <span className="text-cyan-800">{booking.endLocation}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* الملاحظات وتفاصيل الخدمة */}
+                            {(booking.notes || booking.serviceDetails) && (
+                              <div className="bg-yellow-50 rounded-lg p-2 border border-yellow-100">
+                                <div className="text-xs space-y-1">
+                                  {booking.notes && (
+                                    <div>
+                                      <span className="font-medium text-yellow-700">📝 ملاحظات: </span>
+                                      <span className="text-yellow-800">{booking.notes}</span>
+                                    </div>
+                                  )}
+                                  {booking.serviceDetails && (
+                                    <div>
+                                      <span className="font-medium text-yellow-700">🔧 تفاصيل الخدمة: </span>
+                                      <span className="text-yellow-800">{booking.serviceDetails}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* الأسئلة المخصصة */}
+                            {booking.customAnswersWithQuestions && Object.keys(booking.customAnswersWithQuestions).length > 0 && (
+                              <div className="bg-purple-50 rounded-lg p-2 border border-purple-100">
+                                <div className="text-xs">
+                                  <div className="font-medium text-purple-700 mb-1">❓ أسئلة مخصصة:</div>
+                                  {Object.entries(booking.customAnswersWithQuestions).map(([key, data]: [string, any]) => (
+                                    <div key={key} className="mb-1">
+                                      <span className="font-medium text-purple-600">• {data.question}: </span>
+                                      <span className="text-purple-800">
+                                        {Array.isArray(data.answer) ? data.answer.join(', ') : String(data.answer)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* إجابات مخصصة إضافية */}
+                            {booking.customAnswers && Object.keys(booking.customAnswers).length > 0 && !booking.customAnswersWithQuestions && (
+                              <div className="bg-indigo-50 rounded-lg p-2 border border-indigo-100">
+                                <div className="text-xs">
+                                  <div className="font-medium text-indigo-700 mb-1">📋 تفاصيل إضافية:</div>
+                                  {Object.entries(booking.customAnswers).map(([key, value]) => (
+                                    <div key={key} className="mb-1">
+                                      <span className="font-medium text-indigo-600">• {key}: </span>
+                                      <span className="text-indigo-800">
+                                        {Array.isArray(value) ? value.join(', ') : String(value)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* معلومات إضافية */}
+                            {(booking.preferredTime || booking.urgentDelivery || booking.deliveryLocation) && (
+                              <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                                <div className="text-xs space-y-1">
+                                  {booking.preferredTime && (
+                                    <div>
+                                      <span className="font-medium text-gray-700">⏰ الوقت المفضل: </span>
+                                      <span className="text-gray-800">{booking.preferredTime}</span>
+                                    </div>
+                                  )}
+                                  {booking.urgentDelivery && (
+                                    <div>
+                                      <span className="font-medium text-red-700">🚨 توصيل عاجل</span>
+                                    </div>
+                                  )}
+                                  {booking.deliveryLocation && booking.deliveryLocation !== booking.address && (
+                                    <div>
+                                      <span className="font-medium text-gray-700">📦 موقع التوصيل: </span>
+                                      <span className="text-gray-800">{booking.deliveryLocation}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
 
                           {/* أزرار مبسطة */}
                           <div className="flex flex-col sm:flex-row gap-2">
