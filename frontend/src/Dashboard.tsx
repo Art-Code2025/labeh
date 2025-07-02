@@ -216,13 +216,22 @@ function Dashboard() {
         setHasMore(true); 
       }
 
-      // تحميل الفئات دائماً لأنها مطلوبة في جميع المودالز
-      const categoriesData = await categoriesApi.getAll();
+      // تحميل الفئات والموردين دائماً لأنهما مطلوبان في جميع الحالات
+      const [categoriesData, providersData] = await Promise.all([
+        categoriesApi.getAll(),
+        providersApi.getAll()
+      ]);
+      
       setCategories(categoriesData);
+      setProviders(providersData);
+      
       console.log('📂 [Dashboard] تم تحميل الفئات:', categoriesData.length);
       console.log('📂 [Dashboard] تفاصيل الفئات:', categoriesData.map(c => ({ id: c.id, name: c.name })));
+      console.log('👥 [Dashboard] تم تحميل الموردين (عام):', providersData.length);
+      console.log('👥 [Dashboard] تفاصيل الموردين (عام):', providersData.map(p => ({ id: p.id, name: p.name, category: p.category, phone: p.phone })));
 
-      let logDetails: any = { categories: categoriesData.length };
+      let logDetails: any = { categories: categoriesData.length, providers: providersData.length };
+      
       switch(activeTab) {
         case 'services': {
           const serviceResponse = await servicesApi.getAll(null, undefined); // جيب كل الخدمات
@@ -239,11 +248,7 @@ function Dashboard() {
           break;
         }
         case 'providers': {
-          const providerResponse = await providersApi.getAll();
-          setProviders(providerResponse);
-          console.log('👥 [Dashboard] تم تحميل الموردين:', providerResponse.length);
-          console.log('👥 [Dashboard] تفاصيل الموردين:', providerResponse.map(p => ({ id: p.id, name: p.name, category: p.category, phone: p.phone })));
-          logDetails.providers = providerResponse.length;
+          // الموردين تم تحميلهم فعلاً في الأعلى
           break;
         }
         case 'bookings': {
@@ -268,15 +273,12 @@ function Dashboard() {
           break;
         }
         case 'overview': {
-          const [servicesData, providersData, bookingsData] = await Promise.all([
+          const [servicesData, bookingsData] = await Promise.all([
             servicesApi.getAll(null, undefined), // جيب كل الخدمات مش 5 بس
-            providersApi.getAll(),
             fetchBookings()
           ]);
           console.log('🔍 [Dashboard] عدد الخدمات المسترد:', servicesData.services.length);
           console.log('🔍 [Dashboard] أول 3 خدمات:', servicesData.services.slice(0, 3).map(s => ({ id: s.id, name: s.name })));
-          console.log('👥 [Dashboard] تم تحميل الموردين في overview:', providersData.length);
-          console.log('👥 [Dashboard] تفاصيل الموردين في overview:', providersData.map(p => ({ id: p.id, name: p.name, category: p.category, phone: p.phone })));
           console.log('📅 [Dashboard] تم تحميل الحجوزات في overview:', bookingsData.length);
           console.log('📅 [Dashboard] أول 3 حجوزات في overview:', bookingsData.slice(0, 3).map(b => ({ 
             id: b.id, 
@@ -286,7 +288,6 @@ function Dashboard() {
             categoryName: b.categoryName
           })));
           setServices(servicesData.services);
-          setProviders(providersData);
           // ترتيب الحجوزات من الأحدث إلى الأقدم
           const sortedBookings = bookingsData.sort((a, b) => {
             const dateA = new Date(a.createdAt || 0).getTime();
@@ -297,7 +298,6 @@ function Dashboard() {
           logDetails = {
             ...logDetails,
             services: servicesData.services.length,
-            providers: providersData.length,
             bookings: bookingsData.length
           };
           break;
@@ -641,31 +641,61 @@ function Dashboard() {
 
   // دالة لتنظيف رقم الهاتف وتحويله للشكل المناسب لواتساب
   const formatPhoneForWhatsApp = (phone: string): string => {
-    console.log('📞 [Dashboard] تنسيق رقم الهاتف الأصلي:', phone);
+    console.log('📞 [Dashboard] === تنسيق رقم الهاتف ===');
+    console.log('📞 [Dashboard] الرقم الأصلي:', phone);
+    console.log('📞 [Dashboard] نوع البيانات:', typeof phone);
+    console.log('📞 [Dashboard] القيمة الخام:', JSON.stringify(phone));
     
-    if (!phone) {
-      console.log('⚠️ [Dashboard] رقم الهاتف فارغ');
+    if (!phone || phone === null || phone === undefined) {
+      console.log('⚠️ [Dashboard] رقم الهاتف فارغ أو null');
       return '';
     }
     
-    // إزالة المسافات والرموز الخاصة
-    let cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-    console.log('🧹 [Dashboard] بعد إزالة الرموز:', cleanPhone);
+    // تحويل إلى string إذا لم يكن كذلك
+    const phoneStr = String(phone).trim();
+    console.log('📱 [Dashboard] بعد التحويل لـ string وإزالة المسافات:', phoneStr);
+    
+    if (phoneStr.length === 0) {
+      console.log('⚠️ [Dashboard] رقم الهاتف فارغ بعد trim');
+      return '';
+    }
+    
+    // إزالة جميع الرموز غير الرقمية
+    let cleanPhone = phoneStr.replace(/[^\d]/g, '');
+    console.log('🧹 [Dashboard] بعد إزالة الرموز غير الرقمية:', cleanPhone);
+    
+    if (cleanPhone.length === 0) {
+      console.log('⚠️ [Dashboard] لا توجد أرقام في النص');
+      return '';
+    }
     
     // إزالة الصفر الأول إذا كان موجود
     if (cleanPhone.startsWith('0')) {
       cleanPhone = cleanPhone.substring(1);
-      console.log('🔢 [Dashboard] بعد إزالة الصفر:', cleanPhone);
+      console.log('🔢 [Dashboard] بعد إزالة الصفر الأول:', cleanPhone);
     }
     
-    // إضافة كود السعودية إذا لم يكن موجود
-    if (!cleanPhone.startsWith('966')) {
-      cleanPhone = '966' + cleanPhone;
-      console.log('🇸🇦 [Dashboard] بعد إضافة كود البلد:', cleanPhone);
+    // إزالة كود البلد إذا كان موجود مسبقاً وإعادة إضافته
+    if (cleanPhone.startsWith('966')) {
+      cleanPhone = cleanPhone.substring(3);
+      console.log('🇸🇦 [Dashboard] بعد إزالة كود البلد الموجود:', cleanPhone);
     }
     
-    console.log('✅ [Dashboard] الرقم النهائي:', cleanPhone);
-    return cleanPhone;
+    // التحقق من صحة الرقم (الأرقام السعودية تبدأ بـ 5 عادة وطولها 9 أرقام)
+    if (cleanPhone.length < 8 || cleanPhone.length > 10) {
+      console.warn('⚠️ [Dashboard] طول الرقم غير صحيح:', cleanPhone.length);
+    }
+    
+    // إضافة كود السعودية
+    const finalPhone = '966' + cleanPhone;
+    console.log('✅ [Dashboard] الرقم النهائي:', finalPhone);
+    
+    // التحقق النهائي
+    if (finalPhone.length < 12 || finalPhone.length > 15) {
+      console.warn('⚠️ [Dashboard] طول الرقم النهائي غير طبيعي:', finalPhone.length);
+    }
+    
+    return finalPhone;
   };
 
   const buildWhatsAppMessage = (booking: any) => {
@@ -729,23 +759,50 @@ function Dashboard() {
 
   const handleSendToProvider = (provider: Provider) => {
     console.log('📤 [Dashboard] === إرسال للمورد ===');
-    console.log('👤 [Dashboard] تفاصيل المورد:', JSON.stringify(provider, null, 2));
-    console.log('📞 [Dashboard] رقم المورد الأصلي:', provider.phone);
+    console.log('👤 [Dashboard] تفاصيل المورد الكاملة:', JSON.stringify(provider, null, 2));
+    console.log('📞 [Dashboard] رقم المورد الأصلي من الكائن:', provider.phone);
+    console.log('🔍 [Dashboard] نوع البيانات لرقم الهاتف:', typeof provider.phone);
+    console.log('📱 [Dashboard] طول الرقم:', provider.phone?.length);
     
     if (!selectedBookingForSend) {
       console.log('⚠️ [Dashboard] لا يوجد حجز محدد للإرسال');
       return;
     }
     
+    if (!provider.phone) {
+      console.error('❌ [Dashboard] رقم الهاتف فارغ للمورد:', provider.name);
+      toast.error('رقم هاتف المورد غير متوفر');
+      return;
+    }
+    
+    console.log('📝 [Dashboard] بناء الرسالة...');
     const message = buildWhatsAppMessage(selectedBookingForSend);
+    
+    console.log('📞 [Dashboard] تنسيق رقم الهاتف...');
     const formattedPhone = formatPhoneForWhatsApp(provider.phone);
+    
+    console.log('🔗 [Dashboard] بناء رابط واتساب...');
     const waUrl = `https://wa.me/${formattedPhone}?text=${message}`;
     
     console.log('🔗 [Dashboard] رابط واتساب النهائي:', waUrl);
+    console.log('📞 [Dashboard] الرقم المستخدم في الرابط:', formattedPhone);
     console.log('🌐 [Dashboard] فتح النافذة...');
     
-    window.open(waUrl, '_blank');
-    toast.success(`📤 تم فتح واتساب لإرسال الحجز إلى ${provider.name}`);
+    // إضافة محاولة فتح النافذة مع error handling
+    try {
+      const newWindow = window.open(waUrl, '_blank');
+      if (!newWindow) {
+        console.error('❌ [Dashboard] فشل في فتح النافذة - ربما محجوبة بواسطة popup blocker');
+        toast.error('فشل في فتح واتساب - تأكد من السماح للنوافذ المنبثقة');
+      } else {
+        console.log('✅ [Dashboard] تم فتح النافذة بنجاح');
+        toast.success(`📤 تم فتح واتساب لإرسال الحجز إلى ${provider.name}`);
+      }
+    } catch (error) {
+      console.error('❌ [Dashboard] خطأ في فتح النافذة:', error);
+      toast.error('حدث خطأ في فتح واتساب');
+    }
+    
     closeProviderModal();
   };
 
