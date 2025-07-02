@@ -555,7 +555,39 @@ function Dashboard() {
     console.log('[Dashboard] فئة الخدمة:', booking.serviceCategory);
     console.log('[Dashboard] جميع الموردين:', providers);
     console.log('[Dashboard] الموردين المتاحين للفئة:', providers.filter(p => p.category === booking.serviceCategory));
-    setSelectedBookingForSend(booking);
+    
+    // إضافة منطق للحصول على categoryId من الخدمة إذا لم يكن موجود
+    let bookingWithCategory = { ...booking };
+    if (!booking.serviceCategory) {
+      // محاولة الحصول على الفئة من serviceId
+      if (booking.serviceId) {
+        const service = services.find(s => s.id === booking.serviceId);
+        if (service) {
+          bookingWithCategory.serviceCategory = service.categoryId;
+          console.log('[Dashboard] تم العثور على الفئة من الخدمة:', service.categoryId);
+        }
+      }
+      // محاولة الحصول على الفئة من اسم الفئة
+      else if (booking.categoryName) {
+        const category = categories.find(c => c.name === booking.categoryName);
+        if (category) {
+          bookingWithCategory.serviceCategory = category.id;
+          console.log('[Dashboard] تم العثور على الفئة من اسم الفئة:', category.id);
+        }
+      }
+      // محاولة الحصول على الفئة من اسم الخدمة
+      else if (booking.serviceName) {
+        const service = services.find(s => s.name === booking.serviceName);
+        if (service) {
+          bookingWithCategory.serviceCategory = service.categoryId;
+          console.log('[Dashboard] تم العثور على الفئة من اسم الخدمة:', service.categoryId);
+        }
+      }
+    }
+    
+    console.log('[Dashboard] الحجز مع الفئة:', bookingWithCategory);
+    console.log('[Dashboard] الموردين المتاحين للفئة المحدثة:', providers.filter(p => p.category === bookingWithCategory.serviceCategory));
+    setSelectedBookingForSend(bookingWithCategory);
     setShowProviderModal(true);
   };
 
@@ -564,62 +596,86 @@ function Dashboard() {
     setSelectedBookingForSend(null);
   };
 
+  // دالة لتنظيف رقم الهاتف وتحويله للشكل المناسب لواتساب
+  const formatPhoneForWhatsApp = (phone: string): string => {
+    if (!phone) return '';
+    
+    // إزالة المسافات والرموز الخاصة
+    let cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    
+    // إزالة الصفر الأول إذا كان موجود
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = cleanPhone.substring(1);
+    }
+    
+    // إضافة كود السعودية إذا لم يكن موجود
+    if (!cleanPhone.startsWith('966')) {
+      cleanPhone = '966' + cleanPhone;
+    }
+    
+    return cleanPhone;
+  };
+
   const buildWhatsAppMessage = (booking: any) => {
-    let msg = `🔔 *حجز جديد لخدمة ${booking.serviceName}*\n\n`;
-    msg += `👤 *العميل:* ${booking.fullName || booking.customerName || 'غير محدد'}\n`;
-    msg += `📞 *الهاتف:* ${booking.phoneNumber || booking.customerPhone || 'غير محدد'}\n`;
-    msg += `🏠 *العنوان:* ${booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}\n`;
-    msg += `🆔 *رقم الحجز:* ${booking.id}\n`;
-    msg += `📅 *تاريخ الحجز:* ${new Date(booking.createdAt).toLocaleString('ar-SA')}\n\n`;
+    // بناء الرسالة بدون encoding مبكر
+    let msg = `🔔 حجز جديد لخدمة ${booking.serviceName}\n\n`;
+    msg += `👤 العميل: ${booking.fullName || booking.customerName || 'غير محدد'}\n`;
+    msg += `📞 الهاتف: ${booking.phoneNumber || booking.customerPhone || 'غير محدد'}\n`;
+    msg += `🏠 العنوان: ${booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}\n`;
+    msg += `🆔 رقم الحجز: ${booking.id}\n`;
+    msg += `📅 تاريخ الحجز: ${new Date(booking.createdAt).toLocaleString('ar-SA')}\n\n`;
     
     if (booking.serviceDetails) {
-      msg += `📝 *تفاصيل الخدمة:* ${booking.serviceDetails}\n\n`;
+      msg += `📝 تفاصيل الخدمة: ${booking.serviceDetails}\n\n`;
     }
     
     // إضافة الأسئلة المخصصة مع معلومات كاملة
     if (booking.customAnswersWithQuestions && Object.keys(booking.customAnswersWithQuestions).length > 0) {
-      msg += `🔍 *أسئلة مخصصة:*\n`;
+      msg += `🔍 أسئلة مخصصة:\n`;
       Object.entries(booking.customAnswersWithQuestions).forEach(([key, data]: [string, any]) => {
         const answer = Array.isArray(data.answer) ? data.answer.join(', ') : String(data.answer);
-        msg += `• *${data.question}:* ${answer}\n`;
+        msg += `• ${data.question}: ${answer}\n`;
       });
       msg += '\n';
     } else if (booking.customAnswers && Object.keys(booking.customAnswers).length > 0) {
-      msg += `📋 *تفاصيل إضافية:*\n`;
+      msg += `📋 تفاصيل إضافية:\n`;
       Object.entries(booking.customAnswers).forEach(([key, val]) => {
         const value = Array.isArray(val) ? val.join(', ') : String(val);
-        msg += `• *${key}:* ${value}\n`;
+        msg += `• ${key}: ${value}\n`;
       });
       msg += '\n';
     }
     
     // معلومات إضافية حسب نوع الخدمة
     if (booking.destination) {
-      msg += `📍 *الوجهة:* ${booking.destination}\n`;
+      msg += `📍 الوجهة: ${booking.destination}\n`;
     }
     if (booking.startLocation && booking.startLocation !== booking.address) {
-      msg += `🚩 *نقطة البداية:* ${booking.startLocation}\n`;
+      msg += `🚩 نقطة البداية: ${booking.startLocation}\n`;
     }
     if (booking.preferredTime) {
-      msg += `⏰ *الوقت المفضل:* ${booking.preferredTime}\n`;
+      msg += `⏰ الوقت المفضل: ${booking.preferredTime}\n`;
     }
     if (booking.urgentDelivery) {
-      msg += `🚨 *توصيل عاجل* ⚡\n`;
+      msg += `🚨 توصيل عاجل ⚡\n`;
     }
     if (booking.issueDescription) {
-      msg += `🔧 *وصف المشكلة:* ${booking.issueDescription}\n`;
+      msg += `🔧 وصف المشكلة: ${booking.issueDescription}\n`;
     }
     
-    msg += '\n⚡ *يرجى التواصل مع العميل في أقرب وقت ممكن*\n';
+    msg += '\n⚡ يرجى التواصل مع العميل في أقرب وقت ممكن\n';
     msg += '🙏 شكراً لتعاونكم';
     
+    // استخدام encodeURIComponent هنا فقط
     return encodeURIComponent(msg);
   };
 
   const handleSendToProvider = (provider: Provider) => {
     if (!selectedBookingForSend) return;
     const message = buildWhatsAppMessage(selectedBookingForSend);
-    const waUrl = `https://wa.me/${provider.phone}?text=${message}`;
+    const formattedPhone = formatPhoneForWhatsApp(provider.phone);
+    const waUrl = `https://wa.me/${formattedPhone}?text=${message}`;
+    console.log('[Dashboard] رابط واتساب:', waUrl);
     window.open(waUrl, '_blank');
     toast.success(`📤 تم فتح واتساب لإرسال الحجز إلى ${provider.name}`);
     closeProviderModal();

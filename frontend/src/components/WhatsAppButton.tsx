@@ -5,7 +5,7 @@ const WhatsAppButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const location = useLocation();
   const phoneNumber = '+966569806839';
-  const message = 'مرحباً، أريد الاستفسار عن منتجاتكم';
+  const message = 'مرحباً، أريد الاستفسار عن خدماتكم';
 
   useEffect(() => {
     // إذا كانت الصفحة الرئيسية، اظهر الزر بعد السكرول
