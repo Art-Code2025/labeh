@@ -219,6 +219,8 @@ function Dashboard() {
       // تحميل الفئات دائماً لأنها مطلوبة في جميع المودالز
       const categoriesData = await categoriesApi.getAll();
       setCategories(categoriesData);
+      console.log('📂 [Dashboard] تم تحميل الفئات:', categoriesData.length);
+      console.log('📂 [Dashboard] تفاصيل الفئات:', categoriesData.map(c => ({ id: c.id, name: c.name })));
 
       let logDetails: any = { categories: categoriesData.length };
       switch(activeTab) {
@@ -239,11 +241,21 @@ function Dashboard() {
         case 'providers': {
           const providerResponse = await providersApi.getAll();
           setProviders(providerResponse);
+          console.log('👥 [Dashboard] تم تحميل الموردين:', providerResponse.length);
+          console.log('👥 [Dashboard] تفاصيل الموردين:', providerResponse.map(p => ({ id: p.id, name: p.name, category: p.category, phone: p.phone })));
           logDetails.providers = providerResponse.length;
           break;
         }
         case 'bookings': {
           const bookingsData = await fetchBookings();
+          console.log('📅 [Dashboard] تم تحميل الحجوزات:', bookingsData.length);
+          console.log('📅 [Dashboard] أول 3 حجوزات:', bookingsData.slice(0, 3).map(b => ({ 
+            id: b.id, 
+            serviceName: b.serviceName, 
+            serviceCategory: b.serviceCategory,
+            serviceId: b.serviceId,
+            categoryName: b.categoryName
+          })));
           // ترتيب الحجوزات من الأحدث إلى الأقدم
           const sortedBookings = bookingsData.sort((a, b) => {
             const dateA = new Date(a.createdAt || 0).getTime();
@@ -263,6 +275,16 @@ function Dashboard() {
           ]);
           console.log('🔍 [Dashboard] عدد الخدمات المسترد:', servicesData.services.length);
           console.log('🔍 [Dashboard] أول 3 خدمات:', servicesData.services.slice(0, 3).map(s => ({ id: s.id, name: s.name })));
+          console.log('👥 [Dashboard] تم تحميل الموردين في overview:', providersData.length);
+          console.log('👥 [Dashboard] تفاصيل الموردين في overview:', providersData.map(p => ({ id: p.id, name: p.name, category: p.category, phone: p.phone })));
+          console.log('📅 [Dashboard] تم تحميل الحجوزات في overview:', bookingsData.length);
+          console.log('📅 [Dashboard] أول 3 حجوزات في overview:', bookingsData.slice(0, 3).map(b => ({ 
+            id: b.id, 
+            serviceName: b.serviceName, 
+            serviceCategory: b.serviceCategory,
+            serviceId: b.serviceId,
+            categoryName: b.categoryName
+          })));
           setServices(servicesData.services);
           setProviders(providersData);
           // ترتيب الحجوزات من الأحدث إلى الأقدم
@@ -551,42 +573,63 @@ function Dashboard() {
 
   /* =======================  حالة مودال اختيار المورّد  ======================= */
   const openProviderModal = (booking: any) => {
-    console.log('[Dashboard] فتح مودال المورد للحجز:', booking);
-    console.log('[Dashboard] فئة الخدمة:', booking.serviceCategory);
-    console.log('[Dashboard] جميع الموردين:', providers);
-    console.log('[Dashboard] الموردين المتاحين للفئة:', providers.filter(p => p.category === booking.serviceCategory));
+    console.log('🔍 [Dashboard] === فتح مودال المورد ===');
+    console.log('📋 [Dashboard] تفاصيل الحجز الكاملة:', JSON.stringify(booking, null, 2));
+    console.log('🏷️ [Dashboard] فئة الخدمة الحالية:', booking.serviceCategory);
+    console.log('🔧 [Dashboard] معرف الخدمة:', booking.serviceId);
+    console.log('🏪 [Dashboard] اسم الخدمة:', booking.serviceName);
+    console.log('📂 [Dashboard] اسم الفئة:', booking.categoryName);
+    console.log('👥 [Dashboard] عدد الموردين الإجمالي:', providers.length);
+    console.log('📝 [Dashboard] قائمة جميع الموردين:', providers.map(p => ({ id: p.id, name: p.name, category: p.category, phone: p.phone })));
+    console.log('🎯 [Dashboard] الموردين المتاحين للفئة الحالية:', providers.filter(p => p.category === booking.serviceCategory));
     
     // إضافة منطق للحصول على categoryId من الخدمة إذا لم يكن موجود
     let bookingWithCategory = { ...booking };
     if (!booking.serviceCategory) {
+      console.log('⚠️ [Dashboard] لا توجد فئة خدمة في الحجز - سأبحث عنها');
+      
       // محاولة الحصول على الفئة من serviceId
       if (booking.serviceId) {
+        console.log('🔍 [Dashboard] البحث بـ serviceId:', booking.serviceId);
         const service = services.find(s => s.id === booking.serviceId);
+        console.log('🎯 [Dashboard] الخدمة الموجودة:', service);
         if (service) {
           bookingWithCategory.serviceCategory = service.categoryId;
-          console.log('[Dashboard] تم العثور على الفئة من الخدمة:', service.categoryId);
+          console.log('✅ [Dashboard] تم العثور على الفئة من الخدمة:', service.categoryId);
         }
       }
       // محاولة الحصول على الفئة من اسم الفئة
       else if (booking.categoryName) {
+        console.log('🔍 [Dashboard] البحث بـ categoryName:', booking.categoryName);
         const category = categories.find(c => c.name === booking.categoryName);
+        console.log('🎯 [Dashboard] الفئة الموجودة:', category);
         if (category) {
           bookingWithCategory.serviceCategory = category.id;
-          console.log('[Dashboard] تم العثور على الفئة من اسم الفئة:', category.id);
+          console.log('✅ [Dashboard] تم العثور على الفئة من اسم الفئة:', category.id);
         }
       }
       // محاولة الحصول على الفئة من اسم الخدمة
       else if (booking.serviceName) {
+        console.log('🔍 [Dashboard] البحث بـ serviceName:', booking.serviceName);
         const service = services.find(s => s.name === booking.serviceName);
+        console.log('🎯 [Dashboard] الخدمة الموجودة:', service);
         if (service) {
           bookingWithCategory.serviceCategory = service.categoryId;
-          console.log('[Dashboard] تم العثور على الفئة من اسم الخدمة:', service.categoryId);
+          console.log('✅ [Dashboard] تم العثور على الفئة من اسم الخدمة:', service.categoryId);
         }
       }
+    } else {
+      console.log('✅ [Dashboard] فئة الخدمة موجودة مسبقاً:', booking.serviceCategory);
     }
     
-    console.log('[Dashboard] الحجز مع الفئة:', bookingWithCategory);
-    console.log('[Dashboard] الموردين المتاحين للفئة المحدثة:', providers.filter(p => p.category === bookingWithCategory.serviceCategory));
+    console.log('📦 [Dashboard] الحجز مع الفئة النهائية:', bookingWithCategory);
+    console.log('🔍 [Dashboard] الفئة النهائية للبحث:', bookingWithCategory.serviceCategory);
+    console.log('🎯 [Dashboard] الموردين المتاحين للفئة المحدثة:', providers.filter(p => p.category === bookingWithCategory.serviceCategory));
+    console.log('📊 [Dashboard] تفاصيل المقارنة:');
+    providers.forEach(provider => {
+      console.log(`   - ${provider.name}: ${provider.category} === ${bookingWithCategory.serviceCategory} ? ${provider.category === bookingWithCategory.serviceCategory}`);
+    });
+    
     setSelectedBookingForSend(bookingWithCategory);
     setShowProviderModal(true);
   };
@@ -598,21 +641,30 @@ function Dashboard() {
 
   // دالة لتنظيف رقم الهاتف وتحويله للشكل المناسب لواتساب
   const formatPhoneForWhatsApp = (phone: string): string => {
-    if (!phone) return '';
+    console.log('📞 [Dashboard] تنسيق رقم الهاتف الأصلي:', phone);
+    
+    if (!phone) {
+      console.log('⚠️ [Dashboard] رقم الهاتف فارغ');
+      return '';
+    }
     
     // إزالة المسافات والرموز الخاصة
     let cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    console.log('🧹 [Dashboard] بعد إزالة الرموز:', cleanPhone);
     
     // إزالة الصفر الأول إذا كان موجود
     if (cleanPhone.startsWith('0')) {
       cleanPhone = cleanPhone.substring(1);
+      console.log('🔢 [Dashboard] بعد إزالة الصفر:', cleanPhone);
     }
     
     // إضافة كود السعودية إذا لم يكن موجود
     if (!cleanPhone.startsWith('966')) {
       cleanPhone = '966' + cleanPhone;
+      console.log('🇸🇦 [Dashboard] بعد إضافة كود البلد:', cleanPhone);
     }
     
+    console.log('✅ [Dashboard] الرقم النهائي:', cleanPhone);
     return cleanPhone;
   };
 
@@ -666,16 +718,32 @@ function Dashboard() {
     msg += '\n⚡ يرجى التواصل مع العميل في أقرب وقت ممكن\n';
     msg += '🙏 شكراً لتعاونكم';
     
+    console.log('💬 [Dashboard] الرسالة النهائية قبل encoding:', msg);
+    
     // استخدام encodeURIComponent هنا فقط
-    return encodeURIComponent(msg);
+    const encodedMsg = encodeURIComponent(msg);
+    console.log('🔐 [Dashboard] الرسالة بعد encoding:', encodedMsg);
+    
+    return encodedMsg;
   };
 
   const handleSendToProvider = (provider: Provider) => {
-    if (!selectedBookingForSend) return;
+    console.log('📤 [Dashboard] === إرسال للمورد ===');
+    console.log('👤 [Dashboard] تفاصيل المورد:', JSON.stringify(provider, null, 2));
+    console.log('📞 [Dashboard] رقم المورد الأصلي:', provider.phone);
+    
+    if (!selectedBookingForSend) {
+      console.log('⚠️ [Dashboard] لا يوجد حجز محدد للإرسال');
+      return;
+    }
+    
     const message = buildWhatsAppMessage(selectedBookingForSend);
     const formattedPhone = formatPhoneForWhatsApp(provider.phone);
     const waUrl = `https://wa.me/${formattedPhone}?text=${message}`;
-    console.log('[Dashboard] رابط واتساب:', waUrl);
+    
+    console.log('🔗 [Dashboard] رابط واتساب النهائي:', waUrl);
+    console.log('🌐 [Dashboard] فتح النافذة...');
+    
     window.open(waUrl, '_blank');
     toast.success(`📤 تم فتح واتساب لإرسال الحجز إلى ${provider.name}`);
     closeProviderModal();
@@ -1759,13 +1827,24 @@ function Dashboard() {
               <p className="text-white font-semibold">{selectedBookingForSend.serviceName}</p>
               <p className="text-gray-400 text-xs">العميل: {selectedBookingForSend.fullName || selectedBookingForSend.customerName}</p>
               <p className="text-gray-400 text-xs">الفئة: {selectedBookingForSend.serviceCategory}</p>
-              <p className="text-gray-400 text-xs">الموردين المتاحين للفئة: {providers.filter(p => p.category === selectedBookingForSend.serviceCategory).length}</p>
+              <p className="text-gray-400 text-xs">الموردين المتاحين للفئة: {providers.filter(p => {
+                console.log(`🔍 [Modal] فحص المورد ${p.name}: ${p.category} === ${selectedBookingForSend.serviceCategory} = ${p.category === selectedBookingForSend.serviceCategory}`);
+                return p.category === selectedBookingForSend.serviceCategory;
+              }).length}</p>
             </div>
             <p className="text-sm text-gray-400 mb-4">اختر المورد لإرسال تفاصيل الحجز عبر واتساب:</p>
             <div className="space-y-3 max-h-60 overflow-y-auto">
-              {providers
-                .filter(p => p.category === selectedBookingForSend.serviceCategory)
-                .map(provider => (
+              {(() => {
+                const filteredProviders = providers.filter(p => {
+                  const matches = p.category === selectedBookingForSend.serviceCategory;
+                  console.log(`🎯 [Modal] فلترة المورد ${p.name} (${p.category}): ${matches}`);
+                  return matches;
+                });
+                
+                console.log('📋 [Modal] النتيجة النهائية للفلترة:', filteredProviders.length, 'موردين');
+                console.log('📋 [Modal] تفاصيل الموردين المفلترين:', filteredProviders.map(p => ({ name: p.name, category: p.category, phone: p.phone })));
+                
+                return filteredProviders.map(provider => (
                   <div key={provider.id} className="flex items-center justify-between bg-gray-700/40 p-3 rounded-lg border border-gray-600">
                     <div>
                       <div className="text-white text-sm font-medium">{provider.name}</div>
@@ -1778,12 +1857,19 @@ function Dashboard() {
                       إرسال
                     </button>
                   </div>
-                ))}
+                ));
+              })()}
               {providers.filter(p => p.category === selectedBookingForSend.serviceCategory).length === 0 && (
                 <div className="text-center py-4">
                   <p className="text-gray-500 text-sm mb-2">لا يوجد مورّدون مرتبطون بهذه الفئة.</p>
                   <p className="text-gray-400 text-xs">الفئة المطلوبة: {selectedBookingForSend.serviceCategory}</p>
                   <p className="text-gray-400 text-xs">الموردين المتاحين: {providers.length}</p>
+                  <div className="mt-2 text-xs text-gray-500">
+                    <p>جميع الموردين والفئات:</p>
+                    {providers.map(p => (
+                      <p key={p.id} className="text-xs">• {p.name}: {p.category}</p>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
