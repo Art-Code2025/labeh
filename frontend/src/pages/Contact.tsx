@@ -118,7 +118,7 @@ const Contact: React.FC = () => {
                     <Icon className="w-8 h-8" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 mb-2">{info.title}</h3>
-                  <p className="text-slate-900 font-semibold mb-1">{info.details}</p>
+                  <p className="text-slate-900 font-semibold mb-1" dir="ltr">{info.details}</p>
                   <p className="text-slate-600 text-sm">{info.description}</p>
                   {info.action !== '#' && (
                     <a 

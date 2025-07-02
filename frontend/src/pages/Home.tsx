@@ -627,83 +627,84 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Quick Booking Section */}
-      <section className="py-16 bg-gradient-to-r from-green-600 to-blue-700 relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-white/5 rounded-full blur-2xl animate-float" style={{animationDelay: '2s'}}></div>
+      {/*
+<section className="py-16 bg-gradient-to-r from-green-600 to-blue-700 relative overflow-hidden">
+  <div className="absolute inset-0">
+    <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+    <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-white/5 rounded-full blur-2xl animate-float" style={{animationDelay: '2s'}}></div>
+  </div>
+  
+  <div className="container-custom px-4 sm:px-6 lg:px-8 relative z-10">
+    <div className="text-center mb-12 scroll-animate opacity-0 translate-y-8">
+      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">حجز سريع وفوري</h2>
+      <p className="text-lg text-green-100 max-w-2xl mx-auto">
+        احجز خدمتك الآن في ثوانٍ معدودة - سنصلك في أسرع وقت!
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover-lift">
+        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Truck className="w-8 h-8 text-white" />
         </div>
-        
-        <div className="container-custom px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12 scroll-animate opacity-0 translate-y-8">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">حجز سريع وفوري</h2>
-            <p className="text-lg text-green-100 max-w-2xl mx-auto">
-              احجز خدمتك الآن في ثوانٍ معدودة - سنصلك في أسرع وقت!
-            </p>
-          </div>
+        <h3 className="text-xl font-bold text-white mb-2">توصيل أغراض داخلي</h3>
+        <p className="text-green-100 text-sm mb-4">صيدلية، بقالة، مستشفى، توصيلات أونلاين</p>
+        <div className="text-2xl font-bold text-yellow-300 mb-4">20 ريال</div>
+        <button
+          onClick={() => handleQuickBookingByCategory('internal_delivery')}
+          className="w-full px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors border border-white/30"
+        >
+          احجز الآن
+        </button>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover-lift">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Truck className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">توصيل أغراض داخلي</h3>
-              <p className="text-green-100 text-sm mb-4">صيدلية، بقالة، مستشفى، توصيلات أونلاين</p>
-              <div className="text-2xl font-bold text-yellow-300 mb-4">20 ريال</div>
-              <button
-                onClick={() => handleQuickBookingByCategory('internal_delivery')}
-                className="w-full px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors border border-white/30"
-              >
-                احجز الآن
-              </button>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover-lift">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">مشاوير خارجية</h3>
-              <p className="text-green-100 text-sm mb-4">خميس مشيط، أبها، المطار، المرافق العامة</p>
-              <div className="text-2xl font-bold text-yellow-300 mb-4">من 250 ريال</div>
-              <button
-                onClick={() => {
-                  console.log('[Home] 🚀 تم الضغط على مشاوير خارجية');
-                  handleQuickBookingByCategory('external_trips');
-                }}
-                className="w-full px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors border border-white/30"
-              >
-                احجز الآن
-              </button>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover-lift">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Wrench className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">صيانة منزلية</h3>
-              <p className="text-green-100 text-sm mb-4">سباكة، كهرباء، نظافة عامة</p>
-              <div className="text-2xl font-bold text-yellow-300 mb-4">حسب المطلوب</div>
-              <button
-                onClick={() => handleQuickBookingByCategory('home_maintenance')}
-                className="w-full px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors border border-white/30"
-              >
-                احجز الآن
-              </button>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <button
-              onClick={() => handleQuickBooking()}
-              className="inline-flex items-center gap-3 px-12 py-6 bg-white hover:bg-gray-100 text-green-700 rounded-2xl font-bold text-xl transition-all duration-300 shadow-2xl transform hover:scale-105 animate-bounce"
-            >
-              <Bell className="w-8 h-8" />
-              احجز الآن - خدمة فورية!
-            </button>
-          </div>
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover-lift">
+        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <MapPin className="w-8 h-8 text-white" />
         </div>
-      </section>
+        <h3 className="text-xl font-bold text-white mb-2">مشاوير خارجية</h3>
+        <p className="text-green-100 text-sm mb-4">خميس مشيط، أبها، المطار، المرافق العامة</p>
+        <div className="text-2xl font-bold text-yellow-300 mb-4">من 250 ريال</div>
+        <button
+          onClick={() => {
+            console.log('[Home] 🚀 تم الضغط على مشاوير خارجية');
+            handleQuickBookingByCategory('external_trips');
+          }}
+          className="w-full px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors border border-white/30"
+        >
+          احجز الآن
+        </button>
+      </div>
+
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover-lift">
+        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Wrench className="w-8 h-8 text-white" />
+        </div>
+        <h3 className="text-xl font-bold text-white mb-2">صيانة منزلية</h3>
+        <p className="text-green-100 text-sm mb-4">سباكة، كهرباء، نظافة عامة</p>
+        <div className="text-2xl font-bold text-yellow-300 mb-4">حسب المطلوب</div>
+        <button
+          onClick={() => handleQuickBookingByCategory('home_maintenance')}
+          className="w-full px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors border border-white/30"
+        >
+          احجز الآن
+        </button>
+      </div>
+    </div>
+
+    <div className="text-center">
+      <button
+        onClick={() => handleQuickBooking()}
+        className="inline-flex items-center gap-3 px-12 py-6 bg-white hover:bg-gray-100 text-green-700 rounded-2xl font-bold text-xl transition-all duration-300 shadow-2xl transform hover:scale-105 animate-bounce"
+      >
+        <Bell className="w-8 h-8" />
+        احجز الآن - خدمة فورية!
+      </button>
+    </div>
+  </div>
+</section>
+*/}
+
 
       {/* Popular Services Section */}
       <section className="py-20 bg-gradient-to-b from-[#f0faff] to-[#e0f2fe]">
@@ -782,12 +783,7 @@ const Home: React.FC = () => {
                     >
                       عرض التفاصيل
                     </Link>
-                    <button
-                      onClick={() => handleQuickBooking(service)}
-                      className="flex-1 text-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-                    >
-                      احجز الآن
-                    </button>
+                    
                     </div>
                     </div>
               ))}
@@ -1244,7 +1240,7 @@ const Home: React.FC = () => {
                     <Phone className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">+966 56 980 6839</p>
+                    <p className="font-semibold text-gray-900" dir="ltr">+966 56 980 6839</p>
                     <p className="text-xs text-gray-500">متاح 24/7</p>
                   </div>
                 </li>
