@@ -1053,7 +1053,7 @@ function Dashboard() {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2">
             {[
-              { id: 'overview', label: 'نظرة عامة', icon: BarChart3, color: 'from-blue-500 to-blue-600' },
+              { id: 'overview', label: 'الصفحة الرئيسية', icon: BarChart3, color: 'from-blue-500 to-blue-600' },
               { id: 'categories', label: 'إدارة الفئات', icon: Tag, color: 'from-purple-500 to-purple-600' },
               { id: 'services', label: 'إدارة الخدمات', icon: Package, color: 'from-green-500 to-green-600' },
               { id: 'providers', label: 'إدارة المورّدين', icon: Users, color: 'from-orange-500 to-orange-600' },
@@ -1121,7 +1121,7 @@ function Dashboard() {
               </button>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-                  {activeTab === 'overview' && '📊 نظرة عامة'}
+                  {activeTab === 'overview' && '📊 الصفحة الرئيسية'}
                   {activeTab === 'categories' && '🏷️ إدارة الفئات'}
                   {activeTab === 'services' && '📦 إدارة الخدمات'}
                   {activeTab === 'providers' && '👥 إدارة المورّدين'}
