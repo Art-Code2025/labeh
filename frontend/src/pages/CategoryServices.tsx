@@ -359,19 +359,19 @@ const CategoryServices: React.FC = () => {
                       {/* السعر أو أسعار الوجهات للمشاوير الخارجية */}
                       <div className="mb-4">
                         {service.categoryName?.includes('خارجية') ? (
-                          <div className="space-y-3">
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-100">
-                                <div className="flex items-center gap-2">
-                                  <span className="bg-green-100 text-green-700 text-sm font-bold px-3 py-1.5 rounded-lg">خميس مشيط</span>
+                          <div className="space-y-2">
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between bg-green-50 px-2.5 py-1.5 rounded-md border border-green-100">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-md">خميس مشيط</span>
                                 </div>
-                                <span className="text-green-700 font-bold text-lg">250 ريال</span>
+                                <span className="text-green-700 font-medium text-sm">250 ريال</span>
                               </div>
-                              <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-100">
-                                <div className="flex items-center gap-2">
-                                  <span className="bg-green-100 text-green-700 text-sm font-bold px-3 py-1.5 rounded-lg">أبها</span>
+                              <div className="flex items-center justify-between bg-green-50 px-2.5 py-1.5 rounded-md border border-green-100">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-md">أبها</span>
                                 </div>
-                                <span className="text-green-700 font-bold text-lg">300 ريال</span>
+                                <span className="text-green-700 font-medium text-sm">300 ريال</span>
                               </div>
                             </div>
                           </div>
