@@ -1176,31 +1176,30 @@ function Dashboard() {
 
               {/* Enhanced Recent Bookings */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-up" style={{animationDelay: '0.4s'}}>
-                <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
                         <Calendar className="w-5 h-5 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900">آخر الحجوزات</h3>
-                      {/* إضافة مؤشر التحديث المباشر */}
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900">آخر الحجوزات</h3>
                       <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs animate-pulse">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
-                        <span className="hidden sm:inline">مباشر</span>
+                        <span>مباشر</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-                        <span className="text-gray-600">معلق ({bookings.filter(b => b.status === 'pending').length})</span>
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <div className="flex items-center gap-1 bg-yellow-50 text-yellow-600 px-2 py-1 rounded-lg">
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                        <span>معلق ({bookings.filter(b => b.status === 'pending').length})</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
-                        <span className="text-gray-600">مؤكد ({bookings.filter(b => b.status === 'confirmed').length})</span>
+                      <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span>مؤكد ({bookings.filter(b => b.status === 'confirmed').length})</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                        <span className="text-gray-600">مكتمل ({bookings.filter(b => b.status === 'completed').length})</span>
+                      <div className="flex items-center gap-1 bg-green-50 text-green-600 px-2 py-1 rounded-lg">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span>مكتمل ({bookings.filter(b => b.status === 'completed').length})</span>
                       </div>
                     </div>
                   </div>
@@ -1216,20 +1215,20 @@ function Dashboard() {
                     {bookings.slice(0, 5).map((booking, index) => (
                       <div 
                         key={booking.id} 
-                        className="p-3 hover:bg-gray-50 transition-all duration-300"
+                        className="p-4 hover:bg-gray-50 transition-all duration-300"
                       >
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                              {booking.serviceName || 'خدمة غير محددة'}
+                            <h4 className="font-bold text-gray-900 text-sm flex flex-wrap items-center gap-2">
+                              <span className="min-w-0 truncate">{booking.serviceName || 'خدمة غير محددة'}</span>
                               {booking.categoryName && (
-                                <span className="text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs">{booking.categoryName}</span>
+                                <span className="text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs whitespace-nowrap">{booking.categoryName}</span>
                               )}
                               {booking.price && (
-                                <span className="text-amber-600 font-bold text-xs">{booking.price}</span>
+                                <span className="text-amber-600 font-bold text-xs whitespace-nowrap">{booking.price}</span>
                               )}
                             </h4>
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${getStatusColor(booking.status)}`}>
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border whitespace-nowrap ${getStatusColor(booking.status)}`}>
                               {getStatusIcon(booking.status)}
                               {booking.status === 'pending' && 'معلق'}
                               {booking.status === 'confirmed' && 'مؤكد'}
@@ -1240,23 +1239,21 @@ function Dashboard() {
                           </div>
                           
                           <div className="bg-blue-50 rounded-lg p-2 border border-blue-100">
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                               <div className="flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                <span>{booking.fullName || booking.customerName || 'غير محدد'}</span>
+                                <User className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{booking.fullName || booking.customerName || 'غير محدد'}</span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <Phone className="w-3 h-3" />
-                                <span>{booking.phoneNumber || booking.customerPhone || 'غير محدد'}</span>
+                                <Phone className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{booking.phoneNumber || booking.customerPhone || 'غير محدد'}</span>
                               </div>
-                              <div className="col-span-2 flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                <span className="break-words">
-                                  {booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}
-                                </span>
+                              <div className="col-span-1 sm:col-span-2 flex items-center gap-1">
+                                <MapPin className="w-3 h-3 flex-shrink-0" />
+                                <span className="break-words line-clamp-2">{booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}</span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
+                                <Clock className="w-3 h-3 flex-shrink-0" />
                                 <span>{formatTimeAgo(booking.createdAt)}</span>
                               </div>
                             </div>
@@ -1268,59 +1265,55 @@ function Dashboard() {
                               {(booking.selectedDestination || booking.destination) && (
                                 <div className="text-xs">
                                   <span className="font-medium text-green-700">🗺️ الوجهة: </span>
-                                  <span className="text-green-800">{booking.selectedDestination || booking.destination}</span>
+                                  <span className="text-green-800 break-words line-clamp-2">{booking.selectedDestination || booking.destination}</span>
                                 </div>
                               )}
                               {booking.issueDescription && (
                                 <div className="text-xs mt-1">
                                   <span className="font-medium text-green-700">🔧 المشكلة: </span>
-                                  <span className="text-green-800">{booking.issueDescription}</span>
+                                  <span className="text-green-800 break-words line-clamp-2">{booking.issueDescription}</span>
                                 </div>
                               )}
                             </div>
                           )}
 
                           {/* أزرار مبسطة */}
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <button
                               onClick={() => openProviderModal(booking)}
-                              className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
+                              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1 flex-1"
                             >
                               <Send className="w-3 h-3" />
                               إرسال للمورد
                             </button>
                             
-                            <button
-                              onClick={() => handleBookingEdit(booking)}
-                              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </button>
-                            
-                            <button
-                              onClick={() => handleBookingDelete(booking.id)}
-                              className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg transition-colors"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                            
-                            {booking.status === 'pending' && (
+                            <div className="flex gap-2 flex-1">
                               <button
-                                onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
-                                className="px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs rounded-lg transition-colors"
+                                onClick={() => handleBookingEdit(booking)}
+                                className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
                               >
-                                تأكيد
+                                <Edit className="w-3 h-3" />
+                                تعديل
                               </button>
-                            )}
-                            
-                            {booking.status === 'confirmed' && (
-                              <button
-                                onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
-                                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
-                              >
-                                إكمال
-                              </button>
-                            )}
+                              
+                              {booking.status === 'pending' && (
+                                <button
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
+                                  className="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs rounded-lg transition-colors whitespace-nowrap"
+                                >
+                                  تأكيد
+                                </button>
+                              )}
+                              
+                              {booking.status === 'confirmed' && (
+                                <button
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
+                                  className="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors whitespace-nowrap"
+                                >
+                                  إكمال
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1624,46 +1617,42 @@ function Dashboard() {
                           )}
 
                           {/* أزرار مبسطة */}
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <button
                               onClick={() => openProviderModal(booking)}
-                              className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
+                              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
                             >
                               <Send className="w-3 h-3" />
                               إرسال للمورد
                             </button>
                             
-                            <button
-                              onClick={() => handleBookingEdit(booking)}
-                              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </button>
-                            
-                            <button
-                              onClick={() => handleBookingDelete(booking.id)}
-                              className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg transition-colors"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                            
-                            {booking.status === 'pending' && (
+                            <div className="flex gap-2">
                               <button
-                                onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
-                                className="px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs rounded-lg transition-colors"
+                                onClick={() => handleBookingEdit(booking)}
+                                className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
                               >
-                                تأكيد
+                                <Edit className="w-3 h-3" />
+                                <span className="hidden sm:inline">تعديل</span>
                               </button>
-                            )}
-                            
-                            {booking.status === 'confirmed' && (
-                              <button
-                                onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
-                                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
-                              >
-                                إكمال
-                              </button>
-                            )}
+                              
+                              {booking.status === 'pending' && (
+                                <button
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
+                                  className="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs rounded-lg transition-colors"
+                                >
+                                  تأكيد
+                                </button>
+                              )}
+                              
+                              {booking.status === 'confirmed' && (
+                                <button
+                                  onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
+                                  className="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
+                                >
+                                  إكمال
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

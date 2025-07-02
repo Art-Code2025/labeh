@@ -63,20 +63,31 @@ export interface Service {
 // Services API
 export const servicesApi = {
   // Get all services with pagination
-  async getAll(lastVisible?: DocumentSnapshot | null, count = 10): Promise<{ services: Service[], lastVisible: DocumentSnapshot | null }> {
+  async getAll(lastVisible?: DocumentSnapshot | null, count?: number): Promise<{ services: Service[], lastVisible: DocumentSnapshot | null }> {
     try {
-      let q = query(
-        collection(db, 'services'), 
-        orderBy('createdAt', 'desc'), 
-        limit(count)
-      );
-
-      if (lastVisible) {
+      let q;
+      
+      if (count) {
+        // لو فيه count، استخدم pagination
         q = query(
           collection(db, 'services'), 
           orderBy('createdAt', 'desc'), 
-          startAfter(lastVisible), 
           limit(count)
+        );
+
+        if (lastVisible) {
+          q = query(
+            collection(db, 'services'), 
+            orderBy('createdAt', 'desc'), 
+            startAfter(lastVisible), 
+            limit(count)
+          );
+        }
+      } else {
+        // لو مفيش count، جيب كل الخدمات
+        q = query(
+          collection(db, 'services'), 
+          orderBy('createdAt', 'desc')
         );
       }
       
@@ -86,9 +97,9 @@ export const servicesApi = {
         services.push({ id: doc.id, ...doc.data() } as Service);
       });
 
-      const newLastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+      const newLastVisible = count ? (querySnapshot.docs[querySnapshot.docs.length - 1] || null) : null;
       
-      return { services, lastVisible: newLastVisible || null };
+      return { services, lastVisible: newLastVisible };
     } catch (error) {
       console.error('Error fetching services:', error);
       throw new Error('فشل في جلب الخدمات');
