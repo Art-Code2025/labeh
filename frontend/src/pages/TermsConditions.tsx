@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 
 const TermsConditions: React.FC = () => {
   const termsText = `تخضع هذه الشروط لأنظمة وقوانين المملكة العربية السعودية
@@ -28,26 +28,31 @@ const TermsConditions: React.FC = () => {
 يحق لإدارة "لبيه" تعديل أو تحديث الشروط في أي وقت دون إشعار مسبق، وتُعتبر سارية بمجرد نشرها على المنصة.`;
 
   return (
-    <div dir="rtl" className="min-h-screen flex flex-col bg-white text-gray-800">
-      <header className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">الشروط والأحكام</h1>
-          <p className="text-blue-100">آخر تحديث: 1 يوليو 2025</p>
+    <div dir="rtl" className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-cyan-100 text-gray-800">
+      <header className="relative bg-gradient-to-r from-blue-700 to-cyan-600 text-white py-20 shadow-lg">
+        <div className="max-w-3xl mx-auto px-4 text-center flex flex-col items-center">
+          <div className="mb-4 animate-fade-in">
+            <ShieldCheck className="w-16 h-16 text-white/80 drop-shadow-lg" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-2 tracking-tight drop-shadow-lg">الشروط والأحكام</h1>
+          <p className="text-blue-100 text-lg">آخر تحديث: 1 يوليو 2025</p>
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-12">
-        <p className="whitespace-pre-line leading-loose text-right">
-          {termsText}
-        </p>
+      <main className="flex-1 flex items-center justify-center py-12 px-2 animate-fade-in">
+        <div className="w-full max-w-2xl bg-white/80 rounded-3xl shadow-2xl p-8 md:p-12 backdrop-blur-md border border-blue-100">
+          <p className="whitespace-pre-line leading-loose text-right text-lg text-blue-900 font-medium">
+            {termsText}
+          </p>
+        </div>
       </main>
 
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 z-50"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-white/80 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 z-50 backdrop-blur-md"
         aria-label="العودة للأعلى"
       >
-        <ArrowRight className="w-5 h-5 transform rotate-90" />
+        <ArrowRight className="w-6 h-6 transform rotate-90" />
       </button>
     </div>
   );

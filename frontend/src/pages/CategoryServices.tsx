@@ -321,6 +321,12 @@ const CategoryServices: React.FC = () => {
                       ? 'w-full sm:w-64 h-48 sm:h-auto flex-shrink-0' 
                       : 'h-48 sm:h-56'
                   }`}>
+                    {/* الفئة كبادج صغيرة أعلى الصورة */}
+                    {service.categoryName && (
+                      <div className="absolute top-3 right-3 z-10 bg-blue-500/80 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                        {service.categoryName}
+                      </div>
+                    )}
                     {service.mainImage ? (
                       <img
                         src={getImageSrc(service.mainImage ?? '')}
@@ -350,19 +356,32 @@ const CategoryServices: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                          {service.duration && (
-                            <span className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-                              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                              {service.duration}
+                      {/* السعر أو أسعار الوجهات للمشاوير الخارجية */}
+                      <div className="mb-4">
+                        {service.categoryName?.includes('خارجية') ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">خميس مشيط</span>
+                              <span className="text-green-700 font-bold text-base">250 ريال</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">أبها</span>
+                              <span className="text-green-700 font-bold text-base">300 ريال</span>
+                            </div>
+                          </div>
+                        ) : (
+                          service.price && (
+                            <span className="text-lg sm:text-xl font-bold text-amber-600 block">
+                              {service.price}
                             </span>
-                          )}
-                        </div>
-                        {service.price && (
-                          <span className="text-lg sm:text-xl font-bold text-amber-600">
-                            {service.price}
+                          )
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mb-6">
+                        {service.duration && (
+                          <span className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            {service.duration}
                           </span>
                         )}
                       </div>

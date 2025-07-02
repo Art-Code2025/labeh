@@ -824,14 +824,14 @@ export default function ServiceDetail() {
                 <Phone className="w-5 h-5 text-cyan-600" />
                 <div>
                   <p className="text-sm text-slate-600">هاتف</p>
-                  <p className="font-semibold text-slate-800">0123-456-789</p>
+                  <p className="font-semibold text-slate-800" dir="ltr"> +966 56 980 6839</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
                 <MessageSquare className="w-5 h-5 text-green-600" />
                 <div>
                   <p className="text-sm text-slate-600">واتساب</p>
-                  <p className="font-semibold text-slate-800">0123-456-789</p>
+                  <p className="font-semibold text-slate-800" dir="ltr">+966 56 980 6839</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
