@@ -701,25 +701,65 @@ function Dashboard() {
   const buildWhatsAppMessage = (booking: any) => {
     // بناء الرسالة بدون encoding مبكر
     let msg = `🔔 حجز جديد لخدمة ${booking.serviceName}\n\n`;
+    
+    // معلومات العميل الأساسية
     msg += `👤 العميل: ${booking.fullName || booking.customerName || 'غير محدد'}\n`;
     msg += `📞 الهاتف: ${booking.phoneNumber || booking.customerPhone || 'غير محدد'}\n`;
-    msg += `🏠 العنوان: ${booking.address || booking.startLocation || booking.deliveryLocation || booking.destination || 'غير محدد'}\n`;
-    msg += `🆔 رقم الحجز: ${booking.id}\n`;
-    msg += `📅 تاريخ الحجز: ${new Date(booking.createdAt).toLocaleString('ar-SA')}\n\n`;
     
+    // العنوان الأساسي
+    if (booking.address) {
+      msg += `🏠 العنوان: ${booking.address}\n`;
+    }
+    
+    // تفاصيل الرحلة والمواقع
+    if (booking.startLocation) {
+      msg += `🚩 نقطة البداية: ${booking.startLocation}\n`;
+    }
+    if (booking.endLocation) {
+      msg += `🏁 نقطة النهاية: ${booking.endLocation}\n`;
+    }
+    if (booking.selectedDestination || booking.destination) {
+      msg += `📍 الوجهة: ${booking.selectedDestination || booking.destination}\n`;
+    }
+    if (booking.deliveryLocation && booking.deliveryLocation !== booking.address) {
+      msg += `📦 موقع التوصيل: ${booking.deliveryLocation}\n`;
+    }
+    
+    // معلومات الحجز
+    msg += `🆔 رقم الحجز: ${booking.id}\n`;
+    msg += `📅 تاريخ الحجز: ${new Date(booking.createdAt).toLocaleString('ar-SA')}\n`;
+    
+    // السعر إذا كان موجود
+    if (booking.price) {
+      msg += `💰 السعر: ${booking.price}\n`;
+    }
+    
+    msg += '\n';
+    
+    // تفاصيل الخدمة والملاحظات
     if (booking.serviceDetails) {
       msg += `📝 تفاصيل الخدمة: ${booking.serviceDetails}\n\n`;
     }
     
-    // إضافة الأسئلة المخصصة مع معلومات كاملة
+    if (booking.notes) {
+      msg += `📋 ملاحظات: ${booking.notes}\n\n`;
+    }
+    
+    if (booking.issueDescription) {
+      msg += `🔧 وصف المشكلة: ${booking.issueDescription}\n\n`;
+    }
+    
+    // الأسئلة المخصصة مع الأسئلة الكاملة
     if (booking.customAnswersWithQuestions && Object.keys(booking.customAnswersWithQuestions).length > 0) {
-      msg += `🔍 أسئلة مخصصة:\n`;
+      msg += `❓ أسئلة مخصصة:\n`;
       Object.entries(booking.customAnswersWithQuestions).forEach(([key, data]: [string, any]) => {
         const answer = Array.isArray(data.answer) ? data.answer.join(', ') : String(data.answer);
         msg += `• ${data.question}: ${answer}\n`;
       });
       msg += '\n';
-    } else if (booking.customAnswers && Object.keys(booking.customAnswers).length > 0) {
+    } 
+    // الإجابات المخصصة العادية إذا لم توجد الأسئلة المفصلة
+    else if (booking.customAnswers && Object.keys(booking.customAnswers).length > 0) {
       msg += `📋 تفاصيل إضافية:\n`;
       Object.entries(booking.customAnswers).forEach(([key, val]) => {
         const value = Array.isArray(val) ? val.join(', ') : String(val);
@@ -728,25 +768,36 @@ function Dashboard() {
       msg += '\n';
     }
     
-    // معلومات إضافية حسب نوع الخدمة
-    if (booking.destination) {
-      msg += `📍 الوجهة: ${booking.destination}\n`;
-    }
-    if (booking.startLocation && booking.startLocation !== booking.address) {
-      msg += `🚩 نقطة البداية: ${booking.startLocation}\n`;
-    }
+    // معلومات التوقيت والأولوية
     if (booking.preferredTime) {
       msg += `⏰ الوقت المفضل: ${booking.preferredTime}\n`;
     }
+    
     if (booking.urgentDelivery) {
-      msg += `🚨 توصيل عاجل ⚡\n`;
-    }
-    if (booking.issueDescription) {
-      msg += `🔧 وصف المشكلة: ${booking.issueDescription}\n`;
+      msg += `🚨 توصيل عاجل - أولوية عالية!\n`;
     }
     
-    msg += '\n⚡ يرجى التواصل مع العميل في أقرب وقت ممكن\n';
-    msg += '🙏 شكراً لتعاونكم';
+    // معلومات إضافية متنوعة
+    if (booking.urgencyLevel) {
+      const urgencyText = {
+        low: 'منخفضة',
+        medium: 'متوسطة', 
+        high: 'عالية'
+      };
+      msg += `⚡ مستوى الأولوية: ${urgencyText[booking.urgencyLevel as keyof typeof urgencyText] || booking.urgencyLevel}\n`;
+    }
+    
+    if (booking.appointmentTime) {
+      msg += `📅 موعد الخدمة: ${booking.appointmentTime}\n`;
+    }
+    
+    if (booking.passengers) {
+      msg += `👥 عدد الركاب: ${booking.passengers}\n`;
+    }
+    
+    // رسالة الختام
+    msg += '\n⚡ يرجى التواصل مع العميل في أقرب وقت ممكن';
+    msg += '\n🙏 شكراً لتعاونكم';
     
     console.log('💬 [Dashboard] الرسالة النهائية قبل encoding:', msg);
     
