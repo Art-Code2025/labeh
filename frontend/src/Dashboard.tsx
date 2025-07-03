@@ -25,7 +25,12 @@ import {
   FileText,
   Send,
   Home,
-  Mail
+  Mail,
+  DollarSign,
+  TrendingUp,
+  BarChart,
+  PieChart,
+  Activity
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -37,11 +42,13 @@ import { servicesApi, categoriesApi, Service, Category } from './services/servic
 import { fetchBookings, Booking, updateBooking, bookingsAPI } from './services/bookingsApi';
 import { testCloudinaryConnection } from './services/cloudinary';
 import { providersApi, Provider } from './services/providersApi';
+import { ordersAPI, Order, ProviderOrderSummary } from './services/ordersApi';
 
 // Components
 import ServiceModal from './components/ServiceModal';
 import CategoryModal from './components/CategoryModal';
 import ProviderModal from './components/ProviderModal';
+import AddOrderModal from './components/AddOrderModal';
 
 // Add custom scrollbar styles and animations
 const customScrollbarStyles = `
@@ -110,7 +117,7 @@ function Dashboard() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   
   // UI states
-  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'categories' | 'providers' | 'bookings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'categories' | 'providers' | 'bookings' | 'orders'>('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Real-time bookings
@@ -131,6 +138,13 @@ function Dashboard() {
   // Provider selection states - محدث
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [selectedBookingForSend, setSelectedBookingForSend] = useState<any | null>(null);
+
+  // Orders states - جديد
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [providerOrderSummaries, setProviderOrderSummaries] = useState<ProviderOrderSummary[]>([]);
+  const [showAddOrderModal, setShowAddOrderModal] = useState(false);
+  const [selectedProviderForOrder, setSelectedProviderForOrder] = useState<Provider | null>(null);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   // Initialize notification sound with better setup
   useEffect(() => {
@@ -212,25 +226,30 @@ function Dashboard() {
         setCategories([]);
         setProviders([]);
         setBookings([]);
+        setOrders([]);
+        setProviderOrderSummaries([]);
         setLastVisible(null);
         setHasMore(true); 
       }
 
-      // تحميل الفئات والموردين دائماً لأنهما مطلوبان في جميع الحالات
-      const [categoriesData, providersData] = await Promise.all([
+      // تحميل الفئات والموردين والأوردرات دائماً لأنها مطلوبة في جميع الحالات
+      const [categoriesData, providersData, ordersData] = await Promise.all([
         categoriesApi.getAll(),
-        providersApi.getAll()
+        providersApi.getAll(),
+        ordersAPI.getAll()
       ]);
       
       setCategories(categoriesData);
       setProviders(providersData);
+      setOrders(ordersData);
       
       console.log('📂 [Dashboard] تم تحميل الفئات:', categoriesData.length);
       console.log('📂 [Dashboard] تفاصيل الفئات:', categoriesData.map(c => ({ id: c.id, name: c.name })));
       console.log('👥 [Dashboard] تم تحميل الموردين (عام):', providersData.length);
       console.log('👥 [Dashboard] تفاصيل الموردين (عام):', providersData.map(p => ({ id: p.id, name: p.name, category: p.category, phone: p.phone })));
+      console.log('💰 [Dashboard] تم تحميل الأوردرات:', ordersData.length);
 
-      let logDetails: any = { categories: categoriesData.length, providers: providersData.length };
+      let logDetails: any = { categories: categoriesData.length, providers: providersData.length, orders: ordersData.length };
       
       switch(activeTab) {
         case 'services': {
@@ -249,6 +268,17 @@ function Dashboard() {
         }
         case 'providers': {
           // الموردين تم تحميلهم فعلاً في الأعلى
+          // تحميل ملخص الأوردرات للموردين
+          const providerSummaries = await ordersAPI.getAllProvidersSummary();
+          setProviderOrderSummaries(providerSummaries);
+          console.log('📊 [Dashboard] تم تحميل ملخص أوردرات الموردين:', providerSummaries.length);
+          break;
+        }
+        case 'orders': {
+          // الأوردرات تم تحميلها فعلاً في الأعلى
+          const providerSummaries = await ordersAPI.getAllProvidersSummary();
+          setProviderOrderSummaries(providerSummaries);
+          console.log('📊 [Dashboard] تم تحميل ملخص أوردرات الموردين للأوردرات:', providerSummaries.length);
           break;
         }
         case 'bookings': {
@@ -287,6 +317,11 @@ function Dashboard() {
             serviceId: b.serviceId,
             categoryName: b.categoryName
           })));
+          
+          // تحميل ملخص الأوردرات للنظرة العامة أيضاً
+          const providerSummaries = await ordersAPI.getAllProvidersSummary();
+          setProviderOrderSummaries(providerSummaries);
+          
           setServices(servicesData.services);
           // ترتيب الحجوزات من الأحدث إلى الأقدم
           const sortedBookings = bookingsData.sort((a, b) => {
@@ -892,6 +927,73 @@ function Dashboard() {
     }
   };
 
+  // ----- Orders handlers -----
+  const handleAddOrderClick = (provider: Provider) => {
+    setSelectedProviderForOrder(provider);
+    setShowAddOrderModal(true);
+  };
+
+  const handleOrderSave = async (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'adminProfit'>) => {
+    try {
+      setLoadingOrders(true);
+      console.log('💰 [Dashboard] إضافة أوردر جديد:', orderData);
+      
+      await ordersAPI.create(orderData);
+      toast.success('✅ تم إضافة الأوردر بنجاح');
+      
+      // إعادة تحميل البيانات لإظهار الأوردر الجديد
+      await loadData();
+      
+      setShowAddOrderModal(false);
+      setSelectedProviderForOrder(null);
+    } catch (error) {
+      console.error('❌ [Dashboard] فشل في إضافة الأوردر:', error);
+      toast.error('❌ فشل في إضافة الأوردر');
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  const handleOrderDelete = async (orderId: string) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا الأوردر؟')) {
+      try {
+        setLoadingOrders(true);
+        await ordersAPI.delete(orderId);
+        toast.success('✅ تم حذف الأوردر بنجاح');
+        
+        // إعادة تحميل البيانات
+        await loadData();
+      } catch (error) {
+        console.error('❌ [Dashboard] فشل في حذف الأوردر:', error);
+        toast.error('❌ فشل في حذف الأوردر');
+      } finally {
+        setLoadingOrders(false);
+      }
+    }
+  };
+
+  // Helper functions for formatting
+  const formatCurrency = (amount: number) => {
+    return amount.toFixed(2) + ' ريال';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ar-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getMonthName = (monthString: string) => {
+    const [year, month] = monthString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('ar-SA', {
+      year: 'numeric',
+      month: 'long'
+    });
+  };
+
   // إضافة modal جديد لتعديل الحجوزات - ديناميكي
   const BookingEditModal = ({ booking, isOpen, onClose, onSave, onDelete }: {
     booking: Booking | null;
@@ -1289,7 +1391,8 @@ function Dashboard() {
               { id: 'categories', label: 'إدارة الفئات', icon: Tag, color: 'from-purple-500 to-purple-600' },
               { id: 'services', label: 'إدارة الخدمات', icon: Package, color: 'from-green-500 to-green-600' },
               { id: 'providers', label: 'إدارة المورّدين', icon: Users, color: 'from-orange-500 to-orange-600' },
-              { id: 'bookings', label: 'إدارة الحجوزات', icon: Calendar, color: 'from-red-500 to-red-600' }
+              { id: 'bookings', label: 'إدارة الحجوزات', icon: Calendar, color: 'from-red-500 to-red-600' },
+              { id: 'orders', label: 'إدارة الأوردرات', icon: DollarSign, color: 'from-green-600 to-green-700' }
             ].map(({ id, label, icon: Icon, color }) => (
               <button
                 key={id}
@@ -1358,6 +1461,7 @@ function Dashboard() {
                   {activeTab === 'services' && '📦 إدارة الخدمات'}
                   {activeTab === 'providers' && '👥 إدارة المورّدين'}
                   {activeTab === 'bookings' && '📅 إدارة الحجوزات'}
+                  {activeTab === 'orders' && '💰 إدارة الأوردرات'}
                 </h2>
                 {activeTab === 'bookings' && (
                   <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs animate-pulse">
@@ -1404,6 +1508,59 @@ function Dashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* إحصائيات الأوردرات والأرباح - جديد */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {(() => {
+                  const totalOrders = orders.length;
+                  const totalCost = orders.reduce((sum, order) => sum + order.orderCost, 0);
+                  const totalProfit = orders.reduce((sum, order) => sum + order.adminProfit, 0);
+                  
+                  return [
+                    { 
+                      label: 'إجمالي الأوردرات', 
+                      value: totalOrders.toString(), 
+                      icon: DollarSign, 
+                      color: 'from-green-500 to-green-600', 
+                      bg: 'bg-green-50',
+                      suffix: 'أوردر'
+                    },
+                    { 
+                      label: 'إجمالي التكلفة', 
+                      value: formatCurrency(totalCost), 
+                      icon: TrendingUp, 
+                      color: 'from-blue-500 to-blue-600', 
+                      bg: 'bg-blue-50',
+                      suffix: ''
+                    },
+                    { 
+                      label: 'إجمالي الأرباح (30%)', 
+                      value: formatCurrency(totalProfit), 
+                      icon: PieChart, 
+                      color: 'from-emerald-500 to-emerald-600', 
+                      bg: 'bg-emerald-50',
+                      suffix: ''
+                    }
+                  ].map((stat, index) => (
+                    <div 
+                      key={index}
+                      className={`${stat.bg} rounded-2xl p-6 border border-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 animate-slide-up`}
+                      style={{animationDelay: `${(index + 4) * 0.1}s`}}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-gray-600 text-sm font-medium mb-2">{stat.label}</p>
+                          <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                          {stat.suffix && <p className="text-gray-500 text-xs mt-1">{stat.suffix}</p>}
+                        </div>
+                        <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg transform transition-all duration-300 hover:scale-110`}>
+                          <stat.icon className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
 
               {/* Enhanced Recent Bookings */}
@@ -1799,37 +1956,92 @@ function Dashboard() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {providers.map((provider, index) => (
-                  <div 
-                    key={provider.id} 
-                    className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-orange-200 transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg animate-slide-up"
-                    style={{animationDelay: `${index * 0.1}s`}}
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h4 className="font-bold text-gray-900 text-lg">{provider.name}</h4>
-                        <p className="text-gray-500 text-sm">{provider.phone}</p>
+                {providers.map((provider, index) => {
+                  // البحث عن إحصائيات المورد
+                  const providerSummary = providerOrderSummaries.find(s => s.providerId === provider.id);
+                  
+                  return (
+                    <div 
+                      key={provider.id} 
+                      className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-orange-200 transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg animate-slide-up"
+                      style={{animationDelay: `${index * 0.1}s`}}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-lg">{provider.name}</h4>
+                          <p className="text-gray-500 text-sm">{provider.phone}</p>
+                          <span className="text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 mt-2 inline-block">
+                            {categories.find(c => c.id === provider.category)?.name || provider.category}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
-                        {categories.find(c => c.id === provider.category)?.name || provider.category}
-                      </span>
+
+                      {/* إحصائيات المورد */}
+                      {providerSummary ? (
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 mb-4 border border-green-100">
+                          <h5 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                            <Activity className="w-4 h-4" />
+                            إحصائيات الأوردرات
+                          </h5>
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="bg-white/50 rounded-lg p-2">
+                              <p className="text-green-600 font-medium">إجمالي الأوردرات</p>
+                              <p className="text-green-900 font-bold text-lg">{providerSummary.totalOrders}</p>
+                            </div>
+                            <div className="bg-white/50 rounded-lg p-2">
+                              <p className="text-green-600 font-medium">إجمالي التكلفة</p>
+                              <p className="text-green-900 font-bold text-lg">{formatCurrency(providerSummary.totalCost)}</p>
+                            </div>
+                            <div className="col-span-2 bg-white/50 rounded-lg p-2">
+                              <p className="text-emerald-600 font-medium">ربح الأدمن</p>
+                              <p className="text-emerald-900 font-bold text-xl">{formatCurrency(providerSummary.totalProfit)}</p>
+                            </div>
+                          </div>
+                          
+                          {providerSummary.lastOrderDate && (
+                            <div className="mt-3 pt-3 border-t border-green-200">
+                              <p className="text-green-600 text-xs">
+                                آخر أوردر: {formatDate(providerSummary.lastOrderDate)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100 text-center">
+                          <p className="text-gray-500 text-sm">لا توجد أوردرات حتى الآن</p>
+                        </div>
+                      )}
+
+                      {/* أزرار العمليات */}
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => handleAddOrderClick(provider)}
+                          className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 font-medium flex items-center justify-center gap-2"
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          إضافة أوردر
+                        </button>
+                        
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleProviderEdit(provider)} 
+                            className="flex-1 p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110 flex items-center justify-center gap-1"
+                          >
+                            <Edit className="w-4 h-4"/>
+                            <span className="text-sm">تعديل</span>
+                          </button>
+                          <button 
+                            onClick={() => handleProviderDelete(provider.id)} 
+                            className="flex-1 p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:scale-110 flex items-center justify-center gap-1"
+                          >
+                            <Trash2 className="w-4 h-4"/>
+                            <span className="text-sm">حذف</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleProviderEdit(provider)} 
-                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                      >
-                        <Edit className="w-4 h-4"/>
-                      </button>
-                      <button 
-                        onClick={() => handleProviderDelete(provider.id)} 
-                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:scale-110"
-                      >
-                        <Trash2 className="w-4 h-4"/>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -2096,6 +2308,261 @@ function Dashboard() {
               </div>
             </div>
           )}
+
+          {/* Enhanced Orders Tab - جديد */}
+          {activeTab === 'orders' && (
+            <div className="animate-fade-in">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">إدارة الأوردرات والأرباح</h3>
+                <button
+                  onClick={() => loadData()}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  تحديث
+                </button>
+              </div>
+
+              {/* إحصائيات عامة */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                {(() => {
+                  const totalOrders = orders.length;
+                  const totalCost = orders.reduce((sum, order) => sum + order.orderCost, 0);
+                  const totalProfit = orders.reduce((sum, order) => sum + order.adminProfit, 0);
+                  const activeProviders = providerOrderSummaries.filter(p => p.totalOrders > 0).length;
+                  
+                  return [
+                    { 
+                      label: 'إجمالي الأوردرات', 
+                      value: totalOrders.toString(), 
+                      icon: DollarSign, 
+                      color: 'from-blue-500 to-blue-600', 
+                      bg: 'bg-blue-50' 
+                    },
+                    { 
+                      label: 'إجمالي التكلفة', 
+                      value: formatCurrency(totalCost), 
+                      icon: TrendingUp, 
+                      color: 'from-green-500 to-green-600', 
+                      bg: 'bg-green-50' 
+                    },
+                    { 
+                      label: 'إجمالي الأرباح', 
+                      value: formatCurrency(totalProfit), 
+                      icon: PieChart, 
+                      color: 'from-emerald-500 to-emerald-600', 
+                      bg: 'bg-emerald-50' 
+                    },
+                    { 
+                      label: 'موردين نشطين', 
+                      value: activeProviders.toString(), 
+                      icon: Users, 
+                      color: 'from-orange-500 to-orange-600', 
+                      bg: 'bg-orange-50' 
+                    }
+                  ].map((stat, index) => (
+                    <div 
+                      key={index}
+                      className={`${stat.bg} rounded-2xl p-6 border border-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 animate-slide-up`}
+                      style={{animationDelay: `${index * 0.1}s`}}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-gray-600 text-sm font-medium mb-1">{stat.label}</p>
+                          <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                        </div>
+                        <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg`}>
+                          <stat.icon className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+
+              {/* تفاصيل الموردين مع إحصائياتهم */}
+              <div className="space-y-8">
+                {providerOrderSummaries
+                  .filter(summary => providers.find(p => p.id === summary.providerId)) // تفيلتر المورّدين الموجودين فقط
+                  .map((summary, providerIndex) => {
+                    const provider = providers.find(p => p.id === summary.providerId)!; // استخدام ! لأننا فيلترنا فعلاً
+
+                    return (
+                      <div key={summary.providerId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-up" style={{animationDelay: `${(providerIndex + 4) * 0.1}s`}}>
+                        <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                                <Users className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="text-xl font-bold text-gray-900">{summary.providerName}</h4>
+                                <p className="text-gray-600 text-sm">{provider.phone}</p>
+                                <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 mt-1 inline-block">
+                                  {categories.find(c => c.id === provider.category)?.name || provider.category}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-center">
+                                <p className="text-2xl font-bold text-green-600">{summary.totalOrders}</p>
+                                <p className="text-xs text-gray-500">أوردر</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-bold text-blue-600">{formatCurrency(summary.totalCost)}</p>
+                                <p className="text-xs text-gray-500">إجمالي التكلفة</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(summary.totalProfit)}</p>
+                                <p className="text-xs text-gray-500">ربح الأدمن</p>
+                              </div>
+                              <button
+                                onClick={() => handleAddOrderClick(provider)}
+                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 font-medium flex items-center gap-2"
+                              >
+                                <Plus className="w-4 h-4" />
+                                إضافة أوردر
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {summary.totalOrders > 0 && (
+                          <div className="p-6">
+                            {/* الإحصائيات اليومية */}
+                            {summary.dailyStats.length > 0 && (
+                              <div className="mb-6">
+                                <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                  <BarChart className="w-5 h-5 text-blue-500" />
+                                  الإحصائيات اليومية
+                                </h5>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="border-b border-gray-200 bg-gray-50">
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">التاريخ</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">عدد الأوردرات</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">إجمالي التكلفة</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">ربح الأدمن</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {summary.dailyStats.slice(0, 7).map((daily, index) => (
+                                        <tr key={daily.date} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
+                                          <td className="py-3 px-4 font-medium text-gray-900">{formatDate(daily.date)}</td>
+                                          <td className="py-3 px-4 text-center">
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                              {daily.ordersCount}
+                                            </span>
+                                          </td>
+                                          <td className="py-3 px-4 text-center font-semibold text-gray-900">{formatCurrency(daily.totalCost)}</td>
+                                          <td className="py-3 px-4 text-center font-bold text-emerald-600">{formatCurrency(daily.totalProfit)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* الإحصائيات الشهرية */}
+                            {summary.monthlyStats.length > 0 && (
+                              <div className="mb-6">
+                                <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                  <PieChart className="w-5 h-5 text-purple-500" />
+                                  الإحصائيات الشهرية
+                                </h5>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="border-b border-gray-200 bg-gray-50">
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">الشهر</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">عدد الأوردرات</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">إجمالي التكلفة</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">ربح الأدمن</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {summary.monthlyStats.map((monthly, index) => (
+                                        <tr key={monthly.month} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-purple-50 transition-colors`}>
+                                          <td className="py-3 px-4 font-medium text-gray-900">{getMonthName(monthly.month)}</td>
+                                          <td className="py-3 px-4 text-center">
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                              {monthly.ordersCount}
+                                            </span>
+                                          </td>
+                                          <td className="py-3 px-4 text-center font-semibold text-gray-900">{formatCurrency(monthly.totalCost)}</td>
+                                          <td className="py-3 px-4 text-center font-bold text-emerald-600">{formatCurrency(monthly.totalProfit)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* تفاصيل الأوردرات الأخيرة */}
+                            <div>
+                              <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-green-500" />
+                                آخر الأوردرات
+                              </h5>
+                              <div className="space-y-2">
+                                {orders
+                                  .filter(order => order.providerId === summary.providerId)
+                                  .slice(0, 5)
+                                  .map((order, index) => (
+                                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                          <DollarSign className="w-4 h-4 text-green-600" />
+                                        </div>
+                                        <div>
+                                          <p className="font-medium text-gray-900">{formatCurrency(order.orderCost)}</p>
+                                          <p className="text-xs text-gray-500">{formatDate(order.orderDate)}</p>
+                                        </div>
+                                      </div>
+                                      <div className="text-left">
+                                        <p className="font-bold text-emerald-600">{formatCurrency(order.adminProfit)}</p>
+                                        <p className="text-xs text-gray-500">ربح ({order.profitPercentage}%)</p>
+                                      </div>
+                                      <button
+                                        onClick={() => handleOrderDelete(order.id)}
+                                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                        title="حذف الأوردر"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {summary.totalOrders === 0 && (
+                          <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <DollarSign className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <p className="text-gray-500 text-lg font-medium">لا توجد أوردرات لهذا المورد</p>
+                            <p className="text-gray-400 text-sm mt-1">اضغط على "إضافة أوردر" لبدء تسجيل الأوردرات</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {providerOrderSummaries.length === 0 && (
+                <div className="text-center py-12">
+                  <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">لا توجد أوردرات حالياً</p>
+                  <p className="text-gray-400 text-sm mt-2">ابدأ بإضافة أوردرات للموردين من صفحة المورّدين</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -2210,6 +2677,19 @@ function Dashboard() {
         onSave={handleBookingSave}
         onDelete={handleBookingDelete}
       />
+
+      {/* Add Order Modal - جديد */}
+      {selectedProviderForOrder && (
+        <AddOrderModal
+          isOpen={showAddOrderModal}
+          onClose={() => {
+            setShowAddOrderModal(false);
+            setSelectedProviderForOrder(null);
+          }}
+          onSave={handleOrderSave}
+          provider={selectedProviderForOrder}
+        />
+      )}
 
       {/* Enhanced Toast Container */}
       <ToastContainer
