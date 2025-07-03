@@ -1405,7 +1405,7 @@ function Dashboard() {
               { id: 'services', label: 'إدارة الخدمات', icon: Package, color: 'from-green-500 to-green-600' },
               { id: 'providers', label: 'إدارة المورّدين', icon: Users, color: 'from-orange-500 to-orange-600' },
               { id: 'bookings', label: 'إدارة الحجوزات', icon: Calendar, color: 'from-red-500 to-red-600' },
-              { id: 'orders', label: 'إدارة الأوردرات', icon: DollarSign, color: 'from-green-600 to-green-700' }
+              { id: 'orders', label: 'إدارة الأرباح', icon: DollarSign, color: 'from-green-600 to-green-700' }
             ].map(({ id, label, icon: Icon, color }) => (
               <button
                 key={id}
@@ -1474,7 +1474,7 @@ function Dashboard() {
                   {activeTab === 'services' && '📦 إدارة الخدمات'}
                   {activeTab === 'providers' && '👥 إدارة المورّدين'}
                   {activeTab === 'bookings' && '📅 إدارة الحجوزات'}
-                  {activeTab === 'orders' && '💰 إدارة الأوردرات'}
+                  {activeTab === 'orders' && '💰 إدارة الأرباح'}
                 </h2>
                 {activeTab === 'bookings' && (
                   <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs animate-pulse">
@@ -1523,58 +1523,7 @@ function Dashboard() {
                 ))}
               </div>
 
-              {/* إحصائيات الأوردرات والأرباح - جديد */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {(() => {
-                  const totalOrders = orders.length;
-                  const totalCost = orders.reduce((sum, order) => sum + order.orderCost, 0);
-                  const totalProfit = orders.reduce((sum, order) => sum + order.adminProfit, 0);
-                  
-                  return [
-                    { 
-                      label: 'إجمالي الأوردرات', 
-                      value: totalOrders.toString(), 
-                      icon: DollarSign, 
-                      color: 'from-green-500 to-green-600', 
-                      bg: 'bg-green-50',
-                      suffix: 'أوردر'
-                    },
-                    { 
-                      label: 'إجمالي التكلفة', 
-                      value: formatCurrency(totalCost), 
-                      icon: TrendingUp, 
-                      color: 'from-blue-500 to-blue-600', 
-                      bg: 'bg-blue-50',
-                      suffix: ''
-                    },
-                    { 
-                      label: 'إجمالي الأرباح (30%)', 
-                      value: formatCurrency(totalProfit), 
-                      icon: PieChart, 
-                      color: 'from-emerald-500 to-emerald-600', 
-                      bg: 'bg-emerald-50',
-                      suffix: ''
-                    }
-                  ].map((stat, index) => (
-                    <div 
-                      key={index}
-                      className={`${stat.bg} rounded-2xl p-6 border border-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 animate-slide-up`}
-                      style={{animationDelay: `${(index + 4) * 0.1}s`}}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-600 text-sm font-medium mb-2">{stat.label}</p>
-                          <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                          {stat.suffix && <p className="text-gray-500 text-xs mt-1">{stat.suffix}</p>}
-                        </div>
-                        <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg transform transition-all duration-300 hover:scale-110`}>
-                          <stat.icon className="w-6 h-6 text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
+              {/* إحصائيات الأوردرات والأرباح - حُذف من الصفحة الرئيسية وأصبح متاح في إدارة الأرباح فقط */}
 
               {/* Enhanced Recent Bookings */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-up" style={{animationDelay: '0.4s'}}>
@@ -2006,7 +1955,7 @@ function Dashboard() {
                               <p className="text-green-900 font-bold text-lg">{formatCurrency(providerSummary.totalCost)}</p>
                             </div>
                             <div className="col-span-2 bg-white/50 rounded-lg p-2">
-                              <p className="text-emerald-600 font-medium">ربح الأدمن</p>
+                              <p className="text-emerald-600 font-medium">ربحك</p>
                               <p className="text-emerald-900 font-bold text-xl">{formatCurrency(providerSummary.totalProfit)}</p>
                             </div>
                           </div>
@@ -2322,11 +2271,11 @@ function Dashboard() {
             </div>
           )}
 
-          {/* Enhanced Orders Tab - جديد */}
+          {/* Enhanced Orders Tab - تحديث الاسم والمحتوى */}
           {activeTab === 'orders' && (
             <div className="animate-fade-in">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">إدارة الأوردرات والأرباح</h3>
+                <h3 className="text-2xl font-bold text-gray-900">إدارة الأرباح</h3>
                 <button
                   onClick={() => loadData()}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-300 transform hover:scale-105"
@@ -2406,80 +2355,121 @@ function Dashboard() {
                 })()}
               </div>
 
-              {/* تفاصيل الموردين مع إحصائياتهم - Accordion Style */}
-              <div className="space-y-4">
+              {/* تفاصيل الموردين مع إحصائياتهم - UI محسن */}
+              <div className="space-y-6">
                 {providerOrderSummaries
                   .filter(summary => providers.find(p => p.id === summary.providerId))
                   .map((summary, providerIndex) => {
                     const provider = providers.find(p => p.id === summary.providerId)!;
                     const isExpanded = expandedProvider === summary.providerId;
+                    
+                    // حساب الإحصائيات الشهرية فقط
+                    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+                    const currentMonthStats = summary.monthlyStats.find(m => m.month === currentMonth) || {
+                      month: currentMonth,
+                      ordersCount: 0,
+                      totalCost: 0,
+                      totalProfit: 0
+                    };
 
                     return (
-                      <div key={summary.providerId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-up" style={{animationDelay: `${(providerIndex + 4) * 0.1}s`}}>
-                        {/* Provider Header - Always Visible */}
+                      <div key={summary.providerId} className="bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 animate-slide-up" style={{animationDelay: `${(providerIndex + 4) * 0.1}s`}}>
+                        {/* Provider Header - تصميم جديد محسن */}
                         <div 
-                          className="p-4 lg:p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white cursor-pointer hover:bg-gray-100 transition-all duration-200"
+                          className="relative p-6 lg:p-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 cursor-pointer hover:from-gray-100 hover:via-gray-50 hover:to-gray-100 transition-all duration-300 group"
                           onClick={() => setExpandedProvider(isExpanded ? null : summary.providerId)}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3 lg:gap-4 flex-1 min-w-0">
-                              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <Users className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                          {/* Background Pattern */}
+                          <div className="absolute inset-0 opacity-5">
+                            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-emerald-500 transform rotate-12 scale-150"></div>
+                          </div>
+                          
+                          <div className="relative z-10">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4 lg:gap-6 flex-1 min-w-0">
+                                {/* Avatar */}
+                                <div className="relative">
+                                  <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-orange-500 via-orange-600 to-emerald-500 rounded-2xl flex items-center justify-center shadow-xl transform group-hover:scale-105 transition-transform duration-300">
+                                    <Users className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
+                                  </div>
+                                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">{summary.totalOrders}</span>
+                                  </div>
+                                </div>
+                                
+                                {/* Provider Info */}
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-xl lg:text-2xl font-bold text-gray-900 mb-1 truncate group-hover:text-orange-600 transition-colors">{summary.providerName}</h4>
+                                  <p className="text-gray-600 text-sm lg:text-base mb-2 truncate flex items-center gap-2">
+                                    <Phone className="w-4 h-4 flex-shrink-0" />
+                                    {provider.phone}
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-1 text-xs lg:text-sm px-3 py-1 rounded-full bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 font-medium">
+                                      <Tag className="w-3 h-3" />
+                                      {categories.find(c => c.id === provider.category)?.name || provider.category}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">
+                                      <Activity className="w-3 h-3" />
+                                      نشط
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-lg lg:text-xl font-bold text-gray-900 truncate">{summary.providerName}</h4>
-                                <p className="text-gray-600 text-xs lg:text-sm truncate">{provider.phone}</p>
-                                <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 mt-1 inline-block">
-                                  {categories.find(c => c.id === provider.category)?.name || provider.category}
-                                </span>
+                              
+                              {/* Stats Cards - Desktop */}
+                              <div className="hidden xl:flex items-center gap-6">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-gray-200">
+                                  <p className="text-sm font-medium text-gray-600 mb-1">أوردرات الشهر</p>
+                                  <p className="text-2xl font-bold text-blue-600">{currentMonthStats.ordersCount}</p>
+                                </div>
+                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-gray-200">
+                                  <p className="text-sm font-medium text-gray-600 mb-1">تكلفة الشهر</p>
+                                  <p className="text-xl font-bold text-green-600">{formatCurrency(currentMonthStats.totalCost)}</p>
+                                </div>
+                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-gray-200">
+                                  <p className="text-sm font-medium text-gray-600 mb-1">ربحك الشهري</p>
+                                  <p className="text-xl font-bold text-emerald-600">{formatCurrency(currentMonthStats.totalProfit)}</p>
+                                </div>
+                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4 text-center shadow-lg border border-emerald-200">
+                                  <p className="text-sm font-medium text-emerald-700 mb-1">الربح العام</p>
+                                  <p className="text-2xl font-bold text-emerald-800">{formatCurrency(summary.totalProfit)}</p>
+                                </div>
                               </div>
-                            </div>
-                            
-                            {/* Quick Stats - Desktop */}
-                            <div className="hidden lg:flex items-center gap-6">
-                              <div className="text-center">
-                                <p className="text-xl lg:text-2xl font-bold text-green-600">{summary.totalOrders}</p>
-                                <p className="text-xs text-gray-500">أوردر</p>
+                              
+                              {/* Stats Cards - Mobile */}
+                              <div className="xl:hidden flex items-center gap-3">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 text-center shadow-md border border-gray-200">
+                                  <p className="text-xs font-medium text-gray-600">الشهر</p>
+                                  <p className="text-lg font-bold text-blue-600">{currentMonthStats.ordersCount}</p>
+                                </div>
+                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-3 text-center shadow-md border border-emerald-200">
+                                  <p className="text-xs font-medium text-emerald-700">الربح العام</p>
+                                  <p className="text-lg font-bold text-emerald-800">{formatCurrency(summary.totalProfit)}</p>
+                                </div>
                               </div>
-                              <div className="text-center">
-                                <p className="text-xl lg:text-2xl font-bold text-blue-600">{formatCurrency(summary.totalCost)}</p>
-                                <p className="text-xs text-gray-500">إجمالي التكلفة</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xl lg:text-2xl font-bold text-emerald-600">{formatCurrency(summary.totalProfit)}</p>
-                                <p className="text-xs text-gray-500">ربح الأدمن</p>
-                              </div>
-                            </div>
-                            
-                            {/* Quick Stats - Mobile */}
-                            <div className="flex lg:hidden items-center gap-2">
-                              <div className="text-center">
-                                <p className="text-sm font-bold text-green-600">{summary.totalOrders}</p>
-                                <p className="text-xs text-gray-500">أوردر</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-sm font-bold text-emerald-600">{formatCurrency(summary.totalProfit)}</p>
-                                <p className="text-xs text-gray-500">ربح</p>
-                              </div>
-                            </div>
-                            
-                            {/* Expand/Collapse Arrow */}
-                            <div className="flex items-center gap-2 lg:gap-4">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAddOrderClick(provider);
-                                }}
-                                className="px-3 py-1 lg:px-4 lg:py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 font-medium flex items-center gap-1 lg:gap-2 text-xs lg:text-sm"
-                              >
-                                <Plus className="w-3 h-3 lg:w-4 lg:h-4" />
-                                <span className="hidden sm:inline">إضافة أوردر</span>
-                                <span className="sm:hidden">إضافة</span>
-                              </button>
-                              <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+                              
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-3 ml-4">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddOrderClick(provider);
+                                  }}
+                                  className="group/btn relative px-4 py-2 lg:px-6 lg:py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Plus className="w-4 h-4 lg:w-5 lg:h-5 group-hover/btn:rotate-90 transition-transform duration-300" />
+                                    <span className="text-sm lg:text-base">إضافة أوردر</span>
+                                  </div>
+                                  <div className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                                </button>
+                                
+                                <div className={`transform transition-all duration-300 p-2 rounded-full hover:bg-white/50 ${isExpanded ? 'rotate-180 bg-white/30' : ''}`}>
+                                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -2487,137 +2477,91 @@ function Dashboard() {
 
                         {/* Expanded Content */}
                         {isExpanded && summary.totalOrders > 0 && (
-                          <div className="p-4 lg:p-6 animate-fade-in">
+                          <div className="p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-white animate-fade-in">
                             {/* Mobile Stats Summary */}
-                            <div className="lg:hidden mb-6">
+                            <div className="xl:hidden mb-8">
                               <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-blue-50 rounded-lg p-3 text-center">
-                                  <p className="text-sm font-medium text-blue-600">إجمالي التكلفة</p>
-                                  <p className="text-lg font-bold text-blue-900">{formatCurrency(summary.totalCost)}</p>
+                                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 text-center shadow-md border border-blue-200">
+                                  <p className="text-sm font-medium text-blue-700 mb-1">تكلفة الشهر</p>
+                                  <p className="text-xl font-bold text-blue-900">{formatCurrency(currentMonthStats.totalCost)}</p>
                                 </div>
-                                <div className="bg-emerald-50 rounded-lg p-3 text-center">
-                                  <p className="text-sm font-medium text-emerald-600">ربح الأدمن</p>
-                                  <p className="text-lg font-bold text-emerald-900">{formatCurrency(summary.totalProfit)}</p>
+                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4 text-center shadow-md border border-emerald-200">
+                                  <p className="text-sm font-medium text-emerald-700 mb-1">ربحك الشهري</p>
+                                  <p className="text-xl font-bold text-emerald-900">{formatCurrency(currentMonthStats.totalProfit)}</p>
                                 </div>
                               </div>
                             </div>
 
-                            {/* الإحصائيات اليومية */}
-                            {summary.dailyStats.length > 0 && (
-                              <div className="mb-6">
-                                <h5 className="text-base lg:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                  <BarChart className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500" />
-                                  الإحصائيات اليومية
-                                </h5>
-                                
-                                {/* Desktop Table */}
-                                <div className="hidden lg:block overflow-x-auto">
-                                  <table className="w-full text-sm">
-                                    <thead>
-                                      <tr className="border-b border-gray-200 bg-gray-50">
-                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">التاريخ</th>
-                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">عدد الأوردرات</th>
-                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">إجمالي التكلفة</th>
-                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">ربح الأدمن</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {summary.dailyStats.slice(0, 7).map((daily, index) => (
-                                        <tr key={daily.date} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
-                                          <td className="py-3 px-4 font-medium text-gray-900">{formatDate(daily.date)}</td>
-                                          <td className="py-3 px-4 text-center">
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                              {daily.ordersCount}
-                                            </span>
-                                          </td>
-                                          <td className="py-3 px-4 text-center font-semibold text-gray-900">{formatCurrency(daily.totalCost)}</td>
-                                          <td className="py-3 px-4 text-center font-bold text-emerald-600">{formatCurrency(daily.totalProfit)}</td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                                
-                                {/* Mobile Cards */}
-                                <div className="lg:hidden space-y-3">
-                                  {summary.dailyStats.slice(0, 5).map((daily, index) => (
-                                    <div key={daily.date} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <h6 className="font-medium text-gray-900 text-sm">{formatDate(daily.date)}</h6>
-                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                          {daily.ordersCount} أوردر
-                                        </span>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-2 text-xs">
-                                        <div>
-                                          <p className="text-gray-600 font-medium">إجمالي التكلفة</p>
-                                          <p className="text-gray-900 font-bold">{formatCurrency(daily.totalCost)}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-emerald-600 font-medium">ربح الأدمن</p>
-                                          <p className="text-emerald-900 font-bold">{formatCurrency(daily.totalProfit)}</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
                             {/* الإحصائيات الشهرية */}
                             {summary.monthlyStats.length > 0 && (
-                              <div className="mb-6">
-                                <h5 className="text-base lg:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                  <PieChart className="w-4 h-4 lg:w-5 lg:h-5 text-purple-500" />
-                                  الإحصائيات الشهرية
-                                </h5>
+                              <div className="mb-8">
+                                <div className="flex items-center gap-3 mb-6">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <PieChart className="w-5 h-5 text-white" />
+                                  </div>
+                                  <h5 className="text-xl lg:text-2xl font-bold text-gray-900">الإحصائيات الشهرية</h5>
+                                </div>
                                 
                                 {/* Desktop Table */}
-                                <div className="hidden lg:block overflow-x-auto">
-                                  <table className="w-full text-sm">
-                                    <thead>
-                                      <tr className="border-b border-gray-200 bg-gray-50">
-                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">الشهر</th>
-                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">عدد الأوردرات</th>
-                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">إجمالي التكلفة</th>
-                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">ربح الأدمن</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {summary.monthlyStats.map((monthly, index) => (
-                                        <tr key={monthly.month} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-purple-50 transition-colors`}>
-                                          <td className="py-3 px-4 font-medium text-gray-900">{getMonthName(monthly.month)}</td>
-                                          <td className="py-3 px-4 text-center">
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                              {monthly.ordersCount}
-                                            </span>
-                                          </td>
-                                          <td className="py-3 px-4 text-center font-semibold text-gray-900">{formatCurrency(monthly.totalCost)}</td>
-                                          <td className="py-3 px-4 text-center font-bold text-emerald-600">{formatCurrency(monthly.totalProfit)}</td>
+                                <div className="hidden lg:block">
+                                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                                    <table className="w-full">
+                                      <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+                                        <tr>
+                                          <th className="text-right py-4 px-6 font-bold text-gray-800">الشهر</th>
+                                          <th className="text-center py-4 px-6 font-bold text-gray-800">عدد الأوردرات</th>
+                                          <th className="text-center py-4 px-6 font-bold text-gray-800">إجمالي التكلفة</th>
+                                          <th className="text-center py-4 px-6 font-bold text-gray-800">ربحك</th>
+                                          <th className="text-center py-4 px-6 font-bold text-gray-800">الربح العام</th>
                                         </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
+                                      </thead>
+                                      <tbody>
+                                        {summary.monthlyStats.map((monthly, index) => (
+                                          <tr key={monthly.month} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-purple-50 transition-colors duration-200`}>
+                                            <td className="py-4 px-6 font-semibold text-gray-900">{getMonthName(monthly.month)}</td>
+                                            <td className="py-4 px-6 text-center">
+                                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                                                {monthly.ordersCount}
+                                              </span>
+                                            </td>
+                                            <td className="py-4 px-6 text-center font-bold text-gray-900">{formatCurrency(monthly.totalCost)}</td>
+                                            <td className="py-4 px-6 text-center font-bold text-emerald-600">{formatCurrency(monthly.totalProfit)}</td>
+                                            <td className="py-4 px-6 text-center">
+                                              <span className="inline-flex items-center px-3 py-2 rounded-lg font-bold text-emerald-800 bg-gradient-to-r from-emerald-100 to-emerald-200 border border-emerald-300">
+                                                {formatCurrency(summary.totalProfit)}
+                                              </span>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
                                 </div>
                                 
                                 {/* Mobile Cards */}
-                                <div className="lg:hidden space-y-3">
+                                <div className="lg:hidden space-y-4">
                                   {summary.monthlyStats.map((monthly, index) => (
-                                    <div key={monthly.month} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <h6 className="font-medium text-gray-900 text-sm">{getMonthName(monthly.month)}</h6>
-                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <div key={monthly.month} className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200">
+                                      <div className="flex items-center justify-between mb-3">
+                                        <h6 className="font-bold text-gray-900 text-lg">{getMonthName(monthly.month)}</h6>
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
                                           {monthly.ordersCount} أوردر
                                         </span>
                                       </div>
-                                      <div className="grid grid-cols-2 gap-2 text-xs">
-                                        <div>
-                                          <p className="text-gray-600 font-medium">إجمالي التكلفة</p>
-                                          <p className="text-gray-900 font-bold">{formatCurrency(monthly.totalCost)}</p>
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-gray-50 rounded-xl p-3 text-center">
+                                          <p className="text-gray-600 font-medium text-sm mb-1">إجمالي التكلفة</p>
+                                          <p className="text-gray-900 font-bold text-lg">{formatCurrency(monthly.totalCost)}</p>
                                         </div>
-                                        <div>
-                                          <p className="text-emerald-600 font-medium">ربح الأدمن</p>
-                                          <p className="text-emerald-900 font-bold">{formatCurrency(monthly.totalProfit)}</p>
+                                        <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                                          <p className="text-emerald-600 font-medium text-sm mb-1">ربحك</p>
+                                          <p className="text-emerald-900 font-bold text-lg">{formatCurrency(monthly.totalProfit)}</p>
+                                        </div>
+                                      </div>
+                                      <div className="mt-3 pt-3 border-t border-gray-200">
+                                        <div className="bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-xl p-3 text-center">
+                                          <p className="text-emerald-700 font-medium text-sm mb-1">الربح العام من المورد</p>
+                                          <p className="text-emerald-900 font-bold text-xl">{formatCurrency(summary.totalProfit)}</p>
                                         </div>
                                       </div>
                                     </div>
@@ -2628,40 +2572,42 @@ function Dashboard() {
 
                             {/* تفاصيل الأوردرات الأخيرة */}
                             <div>
-                              <h5 className="text-base lg:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <Activity className="w-4 h-4 lg:w-5 lg:h-5 text-green-500" />
-                                آخر الأوردرات
-                              </h5>
-                              <div className="space-y-2 lg:space-y-3">
+                              <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                                  <Activity className="w-5 h-5 text-white" />
+                                </div>
+                                <h5 className="text-xl lg:text-2xl font-bold text-gray-900">آخر الأوردرات</h5>
+                              </div>
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {orders
                                   .filter(order => order.providerId === summary.providerId)
-                                  .slice(0, 5)
+                                  .slice(0, 6)
                                   .map((order, index) => (
-                                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                          <DollarSign className="w-4 h-4 text-green-600" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex flex-col lg:flex-row lg:items-center lg:gap-4">
-                                            <div>
-                                              <p className="font-medium text-gray-900 text-sm lg:text-base">{formatCurrency(order.orderCost)}</p>
-                                              <p className="text-xs text-gray-500">{formatDate(order.orderDate)}</p>
-                                            </div>
-                                            <div className="lg:text-left">
-                                              <p className="font-bold text-emerald-600 text-sm lg:text-base">{formatCurrency(order.adminProfit)}</p>
-                                              <p className="text-xs text-gray-500">ربح ({order.profitPercentage}%)</p>
+                                    <div key={order.id} className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                          <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center shadow-md">
+                                            <DollarSign className="w-6 h-6 text-green-600" />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-gray-900 text-lg">{formatCurrency(order.orderCost)}</p>
+                                            <p className="text-sm text-gray-500 mb-1">{formatDate(order.orderDate)}</p>
+                                            <div className="flex items-center gap-2">
+                                              <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-800">
+                                                ربحك: {formatCurrency(order.adminProfit)}
+                                              </span>
+                                              <span className="text-xs text-gray-500">({order.profitPercentage}%)</span>
                                             </div>
                                           </div>
                                         </div>
+                                        <button
+                                          onClick={() => handleOrderDelete(order.id)}
+                                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 transform hover:scale-110"
+                                          title="حذف الأوردر"
+                                        >
+                                          <Trash2 className="w-5 h-5" />
+                                        </button>
                                       </div>
-                                      <button
-                                        onClick={() => handleOrderDelete(order.id)}
-                                        className="p-1 lg:p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0"
-                                        title="حذف الأوردر"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </button>
                                     </div>
                                   ))}
                               </div>
@@ -2671,12 +2617,12 @@ function Dashboard() {
 
                         {/* Empty State for Provider */}
                         {isExpanded && summary.totalOrders === 0 && (
-                          <div className="p-4 lg:p-6 text-center animate-fade-in">
-                            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <DollarSign className="w-6 h-6 lg:w-8 lg:h-8 text-gray-400" />
+                          <div className="p-8 lg:p-12 text-center animate-fade-in bg-gradient-to-br from-gray-50 to-white">
+                            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                              <DollarSign className="w-10 h-10 text-gray-400" />
                             </div>
-                            <p className="text-gray-500 text-base lg:text-lg font-medium">لا توجد أوردرات لهذا المورد</p>
-                            <p className="text-gray-400 text-sm mt-1">اضغط على "إضافة أوردر" لبدء تسجيل الأوردرات</p>
+                            <h6 className="text-gray-500 text-xl font-bold mb-2">لا توجد أوردرات لهذا المورد</h6>
+                            <p className="text-gray-400 text-base">اضغط على "إضافة أوردر" لبدء تسجيل الأوردرات</p>
                           </div>
                         )}
                       </div>
@@ -2686,10 +2632,12 @@ function Dashboard() {
 
               {/* Empty State for All Providers */}
               {providerOrderSummaries.length === 0 && (
-                <div className="text-center py-8 lg:py-12">
-                  <DollarSign className="w-12 h-12 lg:w-16 lg:h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-base lg:text-lg">لا توجد أوردرات حالياً</p>
-                  <p className="text-gray-400 text-sm mt-2">ابدأ بإضافة أوردرات للموردين من صفحة المورّدين</p>
+                <div className="text-center py-12 lg:py-16">
+                  <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                    <DollarSign className="w-12 h-12 text-gray-400" />
+                  </div>
+                  <h4 className="text-gray-500 text-2xl font-bold mb-4">لا توجد أوردرات حالياً</h4>
+                  <p className="text-gray-400 text-lg">ابدأ بإضافة أوردرات للموردين من صفحة المورّدين</p>
                 </div>
               )}
             </div>
