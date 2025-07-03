@@ -158,6 +158,9 @@ function Dashboard() {
   const [selectedProviderForOrder, setSelectedProviderForOrder] = useState<Provider | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [expandedProvider, setExpandedProvider] = useState<string | null>(null);
+  const [expandedDailyStats, setExpandedDailyStats] = useState<string | null>(null);
+  const [expandedMonthlyStats, setExpandedMonthlyStats] = useState<string | null>(null);
+  const [expandedGeneralStats, setExpandedGeneralStats] = useState<string | null>(null);
 
   // Initialize notification sound with better setup
   useEffect(() => {
@@ -2355,274 +2358,302 @@ function Dashboard() {
                 })()}
               </div>
 
-              {/* تفاصيل الموردين مع إحصائياتهم - UI محسن */}
-              <div className="space-y-6">
+              {/* قائمة الموردين - تصميم نظيف ومبسط */}
+              <div className="space-y-4">
                 {providerOrderSummaries
                   .filter(summary => providers.find(p => p.id === summary.providerId))
                   .map((summary, providerIndex) => {
                     const provider = providers.find(p => p.id === summary.providerId)!;
                     const isExpanded = expandedProvider === summary.providerId;
-                    
-                    // حساب الإحصائيات الشهرية فقط
-                    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-                    const currentMonthStats = summary.monthlyStats.find(m => m.month === currentMonth) || {
-                      month: currentMonth,
-                      ordersCount: 0,
-                      totalCost: 0,
-                      totalProfit: 0
-                    };
 
                     return (
-                      <div key={summary.providerId} className="bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 animate-slide-up" style={{animationDelay: `${(providerIndex + 4) * 0.1}s`}}>
-                        {/* Provider Header - تصميم جديد محسن */}
+                      <div key={summary.providerId} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300 animate-slide-up" style={{animationDelay: `${(providerIndex + 4) * 0.1}s`}}>
+                        {/* Provider Header - مبسط ونظيف */}
                         <div 
-                          className="relative p-6 lg:p-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 cursor-pointer hover:from-gray-100 hover:via-gray-50 hover:to-gray-100 transition-all duration-300 group"
+                          className="p-4 lg:p-6 bg-white hover:bg-gray-50 cursor-pointer transition-all duration-200 border-b border-gray-100"
                           onClick={() => setExpandedProvider(isExpanded ? null : summary.providerId)}
                         >
-                          {/* Background Pattern */}
-                          <div className="absolute inset-0 opacity-5">
-                            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-emerald-500 transform rotate-12 scale-150"></div>
-                          </div>
-                          
-                          <div className="relative z-10">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4 lg:gap-6 flex-1 min-w-0">
-                                {/* Avatar */}
-                                <div className="relative">
-                                  <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-orange-500 via-orange-600 to-emerald-500 rounded-2xl flex items-center justify-center shadow-xl transform group-hover:scale-105 transition-transform duration-300">
-                                    <Users className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
-                                  </div>
-                                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
-                                    <span className="text-white text-xs font-bold">{summary.totalOrders}</span>
-                                  </div>
-                                </div>
-                                
-                                {/* Provider Info */}
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="text-xl lg:text-2xl font-bold text-gray-900 mb-1 truncate group-hover:text-orange-600 transition-colors">{summary.providerName}</h4>
-                                  <p className="text-gray-600 text-sm lg:text-base mb-2 truncate flex items-center gap-2">
-                                    <Phone className="w-4 h-4 flex-shrink-0" />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                              {/* Avatar بسيط */}
+                              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                                <Users className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
+                              </div>
+                              
+                              {/* Provider Info */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-lg lg:text-xl font-bold text-gray-900 mb-1 truncate">{summary.providerName}</h4>
+                                <div className="flex items-center gap-3 text-sm text-gray-600">
+                                  <span className="flex items-center gap-1">
+                                    <Phone className="w-4 h-4" />
                                     {provider.phone}
-                                  </p>
-                                  <div className="flex items-center gap-2">
-                                    <span className="inline-flex items-center gap-1 text-xs lg:text-sm px-3 py-1 rounded-full bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 font-medium">
-                                      <Tag className="w-3 h-3" />
-                                      {categories.find(c => c.id === provider.category)?.name || provider.category}
-                                    </span>
-                                    <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">
-                                      <Activity className="w-3 h-3" />
-                                      نشط
-                                    </span>
-                                  </div>
+                                  </span>
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                    {categories.find(c => c.id === provider.category)?.name || provider.category}
+                                  </span>
                                 </div>
                               </div>
-                              
-                              {/* Stats Cards - Desktop */}
-                              <div className="hidden xl:flex items-center gap-6">
-                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-gray-200">
-                                  <p className="text-sm font-medium text-gray-600 mb-1">أوردرات الشهر</p>
-                                  <p className="text-2xl font-bold text-blue-600">{currentMonthStats.ordersCount}</p>
-                                </div>
-                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-gray-200">
-                                  <p className="text-sm font-medium text-gray-600 mb-1">تكلفة الشهر</p>
-                                  <p className="text-xl font-bold text-green-600">{formatCurrency(currentMonthStats.totalCost)}</p>
-                                </div>
-                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-gray-200">
-                                  <p className="text-sm font-medium text-gray-600 mb-1">ربحك الشهري</p>
-                                  <p className="text-xl font-bold text-emerald-600">{formatCurrency(currentMonthStats.totalProfit)}</p>
-                                </div>
-                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4 text-center shadow-lg border border-emerald-200">
-                                  <p className="text-sm font-medium text-emerald-700 mb-1">الربح العام</p>
-                                  <p className="text-2xl font-bold text-emerald-800">{formatCurrency(summary.totalProfit)}</p>
-                                </div>
-                              </div>
-                              
-                              {/* Stats Cards - Mobile */}
-                              <div className="xl:hidden flex items-center gap-3">
-                                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 text-center shadow-md border border-gray-200">
-                                  <p className="text-xs font-medium text-gray-600">الشهر</p>
-                                  <p className="text-lg font-bold text-blue-600">{currentMonthStats.ordersCount}</p>
-                                </div>
-                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-3 text-center shadow-md border border-emerald-200">
-                                  <p className="text-xs font-medium text-emerald-700">الربح العام</p>
-                                  <p className="text-lg font-bold text-emerald-800">{formatCurrency(summary.totalProfit)}</p>
-                                </div>
-                              </div>
-                              
-                              {/* Action Buttons */}
-                              <div className="flex items-center gap-3 ml-4">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddOrderClick(provider);
-                                  }}
-                                  className="group/btn relative px-4 py-2 lg:px-6 lg:py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <Plus className="w-4 h-4 lg:w-5 lg:h-5 group-hover/btn:rotate-90 transition-transform duration-300" />
-                                    <span className="text-sm lg:text-base">إضافة أوردر</span>
-                                  </div>
-                                  <div className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                                </button>
-                                
-                                <div className={`transform transition-all duration-300 p-2 rounded-full hover:bg-white/50 ${isExpanded ? 'rotate-180 bg-white/30' : ''}`}>
-                                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                  </svg>
-                                </div>
-                              </div>
+                            </div>
+                            
+                            {/* Expand Arrow */}
+                            <div className={`transform transition-transform duration-300 p-2 rounded-full hover:bg-gray-100 ${isExpanded ? 'rotate-180' : ''}`}>
+                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
                             </div>
                           </div>
                         </div>
 
                         {/* Expanded Content */}
-                        {isExpanded && summary.totalOrders > 0 && (
-                          <div className="p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-white animate-fade-in">
-                            {/* Mobile Stats Summary */}
-                            <div className="xl:hidden mb-8">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 text-center shadow-md border border-blue-200">
-                                  <p className="text-sm font-medium text-blue-700 mb-1">تكلفة الشهر</p>
-                                  <p className="text-xl font-bold text-blue-900">{formatCurrency(currentMonthStats.totalCost)}</p>
-                                </div>
-                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4 text-center shadow-md border border-emerald-200">
-                                  <p className="text-sm font-medium text-emerald-700 mb-1">ربحك الشهري</p>
-                                  <p className="text-xl font-bold text-emerald-900">{formatCurrency(currentMonthStats.totalProfit)}</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* الإحصائيات الشهرية */}
-                            {summary.monthlyStats.length > 0 && (
-                              <div className="mb-8">
-                                <div className="flex items-center gap-3 mb-6">
-                                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <PieChart className="w-5 h-5 text-white" />
-                                  </div>
-                                  <h5 className="text-xl lg:text-2xl font-bold text-gray-900">الإحصائيات الشهرية</h5>
-                                </div>
-                                
-                                {/* Desktop Table */}
-                                <div className="hidden lg:block">
-                                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                                    <table className="w-full">
-                                      <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
-                                        <tr>
-                                          <th className="text-right py-4 px-6 font-bold text-gray-800">الشهر</th>
-                                          <th className="text-center py-4 px-6 font-bold text-gray-800">عدد الأوردرات</th>
-                                          <th className="text-center py-4 px-6 font-bold text-gray-800">إجمالي التكلفة</th>
-                                          <th className="text-center py-4 px-6 font-bold text-gray-800">ربحك</th>
-                                          <th className="text-center py-4 px-6 font-bold text-gray-800">الربح العام</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {summary.monthlyStats.map((monthly, index) => (
-                                          <tr key={monthly.month} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-purple-50 transition-colors duration-200`}>
-                                            <td className="py-4 px-6 font-semibold text-gray-900">{getMonthName(monthly.month)}</td>
-                                            <td className="py-4 px-6 text-center">
-                                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                                                {monthly.ordersCount}
-                                              </span>
-                                            </td>
-                                            <td className="py-4 px-6 text-center font-bold text-gray-900">{formatCurrency(monthly.totalCost)}</td>
-                                            <td className="py-4 px-6 text-center font-bold text-emerald-600">{formatCurrency(monthly.totalProfit)}</td>
-                                            <td className="py-4 px-6 text-center">
-                                              <span className="inline-flex items-center px-3 py-2 rounded-lg font-bold text-emerald-800 bg-gradient-to-r from-emerald-100 to-emerald-200 border border-emerald-300">
-                                                {formatCurrency(summary.totalProfit)}
-                                              </span>
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                </div>
-                                
-                                {/* Mobile Cards */}
-                                <div className="lg:hidden space-y-4">
-                                  {summary.monthlyStats.map((monthly, index) => (
-                                    <div key={monthly.month} className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200">
-                                      <div className="flex items-center justify-between mb-3">
-                                        <h6 className="font-bold text-gray-900 text-lg">{getMonthName(monthly.month)}</h6>
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                                          {monthly.ordersCount} أوردر
-                                        </span>
+                        {isExpanded && (
+                          <div className="p-4 lg:p-6 bg-gray-50 animate-fade-in">
+                            <div className="space-y-6">
+                              
+                              {/* 1. الإحصائيات اليومية */}
+                              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div 
+                                  className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 cursor-pointer hover:from-blue-100 hover:to-blue-150 transition-all duration-200"
+                                  onClick={() => setExpandedDailyStats(expandedDailyStats === summary.providerId ? null : summary.providerId)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                        <BarChart className="w-5 h-5 text-white" />
                                       </div>
-                                      <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-gray-50 rounded-xl p-3 text-center">
-                                          <p className="text-gray-600 font-medium text-sm mb-1">إجمالي التكلفة</p>
-                                          <p className="text-gray-900 font-bold text-lg">{formatCurrency(monthly.totalCost)}</p>
-                                        </div>
-                                        <div className="bg-emerald-50 rounded-xl p-3 text-center">
-                                          <p className="text-emerald-600 font-medium text-sm mb-1">ربحك</p>
-                                          <p className="text-emerald-900 font-bold text-lg">{formatCurrency(monthly.totalProfit)}</p>
-                                        </div>
-                                      </div>
-                                      <div className="mt-3 pt-3 border-t border-gray-200">
-                                        <div className="bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-xl p-3 text-center">
-                                          <p className="text-emerald-700 font-medium text-sm mb-1">الربح العام من المورد</p>
-                                          <p className="text-emerald-900 font-bold text-xl">{formatCurrency(summary.totalProfit)}</p>
-                                        </div>
+                                      <div>
+                                        <h5 className="text-lg font-bold text-gray-900">الإحصائيات اليومية</h5>
+                                        <p className="text-sm text-gray-600">تفاصيل الأوردرات اليومية</p>
                                       </div>
                                     </div>
-                                  ))}
+                                    <div className={`transform transition-transform duration-300 ${expandedDailyStats === summary.providerId ? 'rotate-180' : ''}`}>
+                                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-
-                            {/* تفاصيل الأوردرات الأخيرة */}
-                            <div>
-                              <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                                  <Activity className="w-5 h-5 text-white" />
-                                </div>
-                                <h5 className="text-xl lg:text-2xl font-bold text-gray-900">آخر الأوردرات</h5>
-                              </div>
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                {orders
-                                  .filter(order => order.providerId === summary.providerId)
-                                  .slice(0, 6)
-                                  .map((order, index) => (
-                                    <div key={order.id} className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                                          <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center shadow-md">
-                                            <DollarSign className="w-6 h-6 text-green-600" />
+                                
+                                {expandedDailyStats === summary.providerId && summary.dailyStats.length > 0 && (
+                                  <div className="p-4 animate-fade-in">
+                                    {/* Desktop Table */}
+                                    <div className="hidden lg:block">
+                                      <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                          <thead>
+                                            <tr className="border-b border-gray-200 bg-gray-50">
+                                              <th className="text-right py-3 px-4 font-semibold text-gray-700">التاريخ</th>
+                                              <th className="text-center py-3 px-4 font-semibold text-gray-700">عدد الأوردرات</th>
+                                              <th className="text-center py-3 px-4 font-semibold text-gray-700">إجمالي التكلفة</th>
+                                              <th className="text-center py-3 px-4 font-semibold text-gray-700">ربحك</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {summary.dailyStats.slice(0, 10).map((daily, index) => (
+                                              <tr key={daily.date} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
+                                                <td className="py-3 px-4 font-medium text-gray-900">{formatDate(daily.date)}</td>
+                                                <td className="py-3 px-4 text-center">
+                                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    {daily.ordersCount}
+                                                  </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-center font-semibold text-gray-900">{formatCurrency(daily.totalCost)}</td>
+                                                <td className="py-3 px-4 text-center font-bold text-emerald-600">{formatCurrency(daily.totalProfit)}</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Mobile Cards */}
+                                    <div className="lg:hidden space-y-3">
+                                      {summary.dailyStats.slice(0, 7).map((daily, index) => (
+                                        <div key={daily.date} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <h6 className="font-medium text-gray-900 text-sm">{formatDate(daily.date)}</h6>
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                              {daily.ordersCount} أوردر
+                                            </span>
                                           </div>
-                                          <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-gray-900 text-lg">{formatCurrency(order.orderCost)}</p>
-                                            <p className="text-sm text-gray-500 mb-1">{formatDate(order.orderDate)}</p>
-                                            <div className="flex items-center gap-2">
-                                              <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-800">
-                                                ربحك: {formatCurrency(order.adminProfit)}
-                                              </span>
-                                              <span className="text-xs text-gray-500">({order.profitPercentage}%)</span>
+                                          <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div>
+                                              <p className="text-gray-600 font-medium">إجمالي التكلفة</p>
+                                              <p className="text-gray-900 font-bold">{formatCurrency(daily.totalCost)}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-emerald-600 font-medium">ربحك</p>
+                                              <p className="text-emerald-900 font-bold">{formatCurrency(daily.totalProfit)}</p>
                                             </div>
                                           </div>
                                         </div>
-                                        <button
-                                          onClick={() => handleOrderDelete(order.id)}
-                                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 transform hover:scale-110"
-                                          title="حذف الأوردر"
-                                        >
-                                          <Trash2 className="w-5 h-5" />
-                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* 2. الإحصائيات الشهرية */}
+                              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div 
+                                  className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 cursor-pointer hover:from-purple-100 hover:to-purple-150 transition-all duration-200"
+                                  onClick={() => setExpandedMonthlyStats(expandedMonthlyStats === summary.providerId ? null : summary.providerId)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                                        <PieChart className="w-5 h-5 text-white" />
+                                      </div>
+                                      <div>
+                                        <h5 className="text-lg font-bold text-gray-900">الإحصائيات الشهرية</h5>
+                                        <p className="text-sm text-gray-600">تفاصيل الأوردرات الشهرية</p>
                                       </div>
                                     </div>
-                                  ))}
+                                    <div className={`transform transition-transform duration-300 ${expandedMonthlyStats === summary.providerId ? 'rotate-180' : ''}`}>
+                                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {expandedMonthlyStats === summary.providerId && summary.monthlyStats.length > 0 && (
+                                  <div className="p-4 animate-fade-in">
+                                    {/* Desktop Table */}
+                                    <div className="hidden lg:block">
+                                      <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                          <thead>
+                                            <tr className="border-b border-gray-200 bg-gray-50">
+                                              <th className="text-right py-3 px-4 font-semibold text-gray-700">الشهر</th>
+                                              <th className="text-center py-3 px-4 font-semibold text-gray-700">عدد الأوردرات</th>
+                                              <th className="text-center py-3 px-4 font-semibold text-gray-700">إجمالي التكلفة</th>
+                                              <th className="text-center py-3 px-4 font-semibold text-gray-700">ربحك</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {summary.monthlyStats.map((monthly, index) => (
+                                              <tr key={monthly.month} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-purple-50 transition-colors`}>
+                                                <td className="py-3 px-4 font-medium text-gray-900">{getMonthName(monthly.month)}</td>
+                                                <td className="py-3 px-4 text-center">
+                                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                    {monthly.ordersCount}
+                                                  </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-center font-semibold text-gray-900">{formatCurrency(monthly.totalCost)}</td>
+                                                <td className="py-3 px-4 text-center font-bold text-emerald-600">{formatCurrency(monthly.totalProfit)}</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Mobile Cards */}
+                                    <div className="lg:hidden space-y-3">
+                                      {summary.monthlyStats.map((monthly, index) => (
+                                        <div key={monthly.month} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <h6 className="font-medium text-gray-900 text-sm">{getMonthName(monthly.month)}</h6>
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                              {monthly.ordersCount} أوردر
+                                            </span>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div>
+                                              <p className="text-gray-600 font-medium">إجمالي التكلفة</p>
+                                              <p className="text-gray-900 font-bold">{formatCurrency(monthly.totalCost)}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-emerald-600 font-medium">ربحك</p>
+                                              <p className="text-emerald-900 font-bold">{formatCurrency(monthly.totalProfit)}</p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
+
+                              {/* 3. الإحصائيات العامة */}
+                              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div 
+                                  className="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 cursor-pointer hover:from-emerald-100 hover:to-emerald-150 transition-all duration-200"
+                                  onClick={() => setExpandedGeneralStats(expandedGeneralStats === summary.providerId ? null : summary.providerId)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                                        <Activity className="w-5 h-5 text-white" />
+                                      </div>
+                                      <div>
+                                        <h5 className="text-lg font-bold text-gray-900">الإحصائيات العامة</h5>
+                                        <p className="text-sm text-gray-600">إجمالي الأعمال مع المورد</p>
+                                      </div>
+                                    </div>
+                                    <div className={`transform transition-transform duration-300 ${expandedGeneralStats === summary.providerId ? 'rotate-180' : ''}`}>
+                                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {expandedGeneralStats === summary.providerId && (
+                                  <div className="p-4 animate-fade-in">
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center border border-blue-200">
+                                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                          <DollarSign className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h6 className="text-sm font-medium text-blue-700 mb-1">إجمالي الأوردرات</h6>
+                                        <p className="text-2xl font-bold text-blue-900">{summary.totalOrders}</p>
+                                        <p className="text-xs text-blue-600 mt-1">أوردر</p>
+                                      </div>
+                                      
+                                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center border border-green-200">
+                                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                          <TrendingUp className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h6 className="text-sm font-medium text-green-700 mb-1">إجمالي التكلفة</h6>
+                                        <p className="text-xl font-bold text-green-900">{formatCurrency(summary.totalCost)}</p>
+                                        <p className="text-xs text-green-600 mt-1">منذ البداية</p>
+                                      </div>
+                                      
+                                      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 text-center border border-emerald-200">
+                                        <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                          <PieChart className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h6 className="text-sm font-medium text-emerald-700 mb-1">ربحك الإجمالي</h6>
+                                        <p className="text-xl font-bold text-emerald-900">{formatCurrency(summary.totalProfit)}</p>
+                                        <p className="text-xs text-emerald-600 mt-1">من هذا المورد</p>
+                                      </div>
+                                    </div>
+                                    
+                                    {summary.lastOrderDate && (
+                                      <div className="mt-4 pt-4 border-t border-gray-200">
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                          <Clock className="w-4 h-4" />
+                                          <span>آخر أوردر: {formatDate(summary.lastOrderDate)}</span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              
                             </div>
                           </div>
                         )}
 
                         {/* Empty State for Provider */}
                         {isExpanded && summary.totalOrders === 0 && (
-                          <div className="p-8 lg:p-12 text-center animate-fade-in bg-gradient-to-br from-gray-50 to-white">
-                            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                              <DollarSign className="w-10 h-10 text-gray-400" />
+                          <div className="p-8 text-center bg-gray-50 animate-fade-in">
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <DollarSign className="w-8 h-8 text-gray-400" />
                             </div>
-                            <h6 className="text-gray-500 text-xl font-bold mb-2">لا توجد أوردرات لهذا المورد</h6>
-                            <p className="text-gray-400 text-base">اضغط على "إضافة أوردر" لبدء تسجيل الأوردرات</p>
+                            <h6 className="text-gray-500 text-lg font-medium mb-2">لا توجد أوردرات لهذا المورد</h6>
+                            <p className="text-gray-400 text-sm">لم يتم تسجيل أي أوردرات لهذا المورد حتى الآن</p>
                           </div>
                         )}
                       </div>
@@ -2632,12 +2663,12 @@ function Dashboard() {
 
               {/* Empty State for All Providers */}
               {providerOrderSummaries.length === 0 && (
-                <div className="text-center py-12 lg:py-16">
-                  <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
-                    <DollarSign className="w-12 h-12 text-gray-400" />
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <DollarSign className="w-10 h-10 text-gray-400" />
                   </div>
-                  <h4 className="text-gray-500 text-2xl font-bold mb-4">لا توجد أوردرات حالياً</h4>
-                  <p className="text-gray-400 text-lg">ابدأ بإضافة أوردرات للموردين من صفحة المورّدين</p>
+                  <h4 className="text-gray-500 text-xl font-bold mb-4">لا توجد أوردرات حالياً</h4>
+                  <p className="text-gray-400 text-base">ابدأ بإضافة أوردرات للموردين من صفحة المورّدين</p>
                 </div>
               )}
             </div>
