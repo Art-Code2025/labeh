@@ -2294,7 +2294,11 @@ function Dashboard() {
                   const totalOrders = orders.length;
                   const totalCost = orders.reduce((sum, order) => sum + order.orderCost, 0);
                   const totalProfit = orders.reduce((sum, order) => sum + order.adminProfit, 0);
-                  const activeProviders = providerOrderSummaries.filter(p => p.totalOrders > 0).length;
+                  // حساب الموردين النشطين فقط من الموردين الموجودين فعلياً
+                  const activeProviders = providerOrderSummaries.filter(p => {
+                    const providerExists = providers.find(provider => provider.id === p.providerId);
+                    return providerExists && p.totalOrders > 0;
+                  }).length;
                   
                   return [
                     { 
@@ -2361,7 +2365,15 @@ function Dashboard() {
               {/* قائمة الموردين - تصميم نظيف ومبسط */}
               <div className="space-y-4">
                 {providerOrderSummaries
-                  .filter(summary => providers.find(p => p.id === summary.providerId))
+                  .filter(summary => {
+                    // التأكد من وجود المورد في قائمة الموردين الحالية
+                    const provider = providers.find(p => p.id === summary.providerId);
+                    if (!provider) {
+                      console.log(`⚠️ [Dashboard] المورد ${summary.providerName} (${summary.providerId}) له أوردرات لكن تم حذفه من قائمة الموردين`);
+                      return false; // إخفاء الموردين المحذوفين
+                    }
+                    return true;
+                  })
                   .map((summary, providerIndex) => {
                     const provider = providers.find(p => p.id === summary.providerId)!;
                     const isExpanded = expandedProvider === summary.providerId;
@@ -2671,6 +2683,72 @@ function Dashboard() {
                   <p className="text-gray-400 text-base">ابدأ بإضافة أوردرات للموردين من صفحة المورّدين</p>
                 </div>
               )}
+
+              {/* تحذير للموردين المحذوفين الذين لديهم أوردرات */}
+              {(() => {
+                const deletedProvidersWithOrders = providerOrderSummaries.filter(summary => {
+                  const provider = providers.find(p => p.id === summary.providerId);
+                  return !provider && summary.totalOrders > 0;
+                });
+
+                if (deletedProvidersWithOrders.length > 0) {
+                  return (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mt-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <AlertCircle className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h5 className="text-lg font-bold text-yellow-800 mb-2">تحذير: موردين محذوفين لديهم أوردرات</h5>
+                          <p className="text-yellow-700 mb-4">
+                            يوجد {deletedProvidersWithOrders.length} مورد محذوف لديهم أوردرات مسجلة. 
+                            هذه الأوردرات مخفية من العرض ولكنها ما زالت تؤثر على الإحصائيات العامة.
+                          </p>
+                          <div className="space-y-3">
+                            {deletedProvidersWithOrders.map((summary) => (
+                              <div key={summary.providerId} className="bg-white rounded-lg p-4 border border-yellow-300">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h6 className="font-medium text-gray-900">{summary.providerName}</h6>
+                                    <p className="text-sm text-gray-600">
+                                      {summary.totalOrders} أوردر • {formatCurrency(summary.totalCost)} • ربح: {formatCurrency(summary.totalProfit)}
+                                    </p>
+                                  </div>
+                                  <button
+                                    onClick={async () => {
+                                      if (window.confirm(`هل أنت متأكد من حذف جميع أوردرات المورد "${summary.providerName}"؟ هذا الإجراء لا يمكن التراجع عنه.`)) {
+                                        try {
+                                          setLoadingOrders(true);
+                                          // حذف جميع أوردرات هذا المورد
+                                          const providerOrders = orders.filter(order => order.providerId === summary.providerId);
+                                          await Promise.all(providerOrders.map(order => ordersAPI.delete(order.id)));
+                                          toast.success(`✅ تم حذف جميع أوردرات المورد "${summary.providerName}"`);
+                                          await loadData(); // إعادة تحميل البيانات
+                                        } catch (error) {
+                                          console.error('Error deleting provider orders:', error);
+                                          toast.error('❌ فشل في حذف الأوردرات');
+                                        } finally {
+                                          setLoadingOrders(false);
+                                        }
+                                      }
+                                    }}
+                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                    disabled={loadingOrders}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    حذف الأوردرات
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           )}
         </div>
