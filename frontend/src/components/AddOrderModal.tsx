@@ -55,14 +55,20 @@ const AddOrderModal: React.FC<AddOrderModalProps> = ({ isOpen, onClose, onSave, 
 
     setLoading(true);
     try {
-      const orderData = {
+      // تجهيز بيانات الأوردر الأساسية
+      const orderData: any = {
         providerId: provider.id,
         providerName: provider.name,
         orderCost: parseFloat(formData.orderCost),
         profitPercentage: parseFloat(formData.profitPercentage),
-        orderDate: new Date(formData.orderDate).toISOString(),
-        notes: formData.notes.trim() || undefined
+        orderDate: new Date(formData.orderDate).toISOString()
       };
+
+      // إضافة الملاحظات فقط إذا كانت غير فارغة
+      const trimmedNotes = formData.notes.trim();
+      if (trimmedNotes) {
+        orderData.notes = trimmedNotes;
+      }
 
       await onSave(orderData);
       
