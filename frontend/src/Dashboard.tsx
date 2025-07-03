@@ -87,6 +87,18 @@ const customScrollbarStyles = `
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
   }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
 `;
 
 // Inject styles
@@ -145,6 +157,7 @@ function Dashboard() {
   const [showAddOrderModal, setShowAddOrderModal] = useState(false);
   const [selectedProviderForOrder, setSelectedProviderForOrder] = useState<Provider | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [expandedProvider, setExpandedProvider] = useState<string | null>(null);
 
   // Initialize notification sound with better setup
   useEffect(() => {
@@ -2312,7 +2325,7 @@ function Dashboard() {
           {/* Enhanced Orders Tab - جديد */}
           {activeTab === 'orders' && (
             <div className="animate-fade-in">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">إدارة الأوردرات والأرباح</h3>
                 <button
                   onClick={() => loadData()}
@@ -2324,7 +2337,7 @@ function Dashboard() {
               </div>
 
               {/* إحصائيات عامة */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                 {(() => {
                   const totalOrders = orders.length;
                   const totalCost = orders.reduce((sum, order) => sum + order.orderCost, 0);
@@ -2337,42 +2350,55 @@ function Dashboard() {
                       value: totalOrders.toString(), 
                       icon: DollarSign, 
                       color: 'from-blue-500 to-blue-600', 
-                      bg: 'bg-blue-50' 
+                      bg: 'bg-blue-50',
+                      suffix: 'أوردر'
                     },
                     { 
                       label: 'إجمالي التكلفة', 
-                      value: formatCurrency(totalCost), 
+                      value: totalCost.toLocaleString('ar-SA', { 
+                        style: 'currency', 
+                        currency: 'SAR', 
+                        minimumFractionDigits: 0 
+                      }), 
                       icon: TrendingUp, 
                       color: 'from-green-500 to-green-600', 
-                      bg: 'bg-green-50' 
+                      bg: 'bg-green-50',
+                      suffix: ''
                     },
                     { 
                       label: 'إجمالي الأرباح', 
-                      value: formatCurrency(totalProfit), 
+                      value: totalProfit.toLocaleString('ar-SA', { 
+                        style: 'currency', 
+                        currency: 'SAR', 
+                        minimumFractionDigits: 0 
+                      }), 
                       icon: PieChart, 
                       color: 'from-emerald-500 to-emerald-600', 
-                      bg: 'bg-emerald-50' 
+                      bg: 'bg-emerald-50',
+                      suffix: ''
                     },
                     { 
                       label: 'موردين نشطين', 
                       value: activeProviders.toString(), 
                       icon: Users, 
                       color: 'from-orange-500 to-orange-600', 
-                      bg: 'bg-orange-50' 
+                      bg: 'bg-orange-50',
+                      suffix: 'مورد'
                     }
                   ].map((stat, index) => (
                     <div 
                       key={index}
-                      className={`${stat.bg} rounded-2xl p-6 border border-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 animate-slide-up`}
+                      className={`${stat.bg} rounded-2xl p-4 lg:p-6 border border-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 animate-slide-up`}
                       style={{animationDelay: `${index * 0.1}s`}}
                     >
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-600 text-sm font-medium mb-1">{stat.label}</p>
-                          <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-600 text-xs lg:text-sm font-medium mb-1 truncate">{stat.label}</p>
+                          <p className="text-lg lg:text-2xl font-bold text-gray-900 leading-tight">{stat.value}</p>
+                          {stat.suffix && <p className="text-gray-500 text-xs mt-1">{stat.suffix}</p>}
                         </div>
-                        <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg`}>
-                          <stat.icon className="w-6 h-6 text-white" />
+                        <div className={`p-2 lg:p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg flex-shrink-0`}>
+                          <stat.icon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
                         </div>
                       </div>
                     </div>
@@ -2380,63 +2406,112 @@ function Dashboard() {
                 })()}
               </div>
 
-              {/* تفاصيل الموردين مع إحصائياتهم */}
-              <div className="space-y-8">
+              {/* تفاصيل الموردين مع إحصائياتهم - Accordion Style */}
+              <div className="space-y-4">
                 {providerOrderSummaries
-                  .filter(summary => providers.find(p => p.id === summary.providerId)) // تفيلتر المورّدين الموجودين فقط
+                  .filter(summary => providers.find(p => p.id === summary.providerId))
                   .map((summary, providerIndex) => {
-                    const provider = providers.find(p => p.id === summary.providerId)!; // استخدام ! لأننا فيلترنا فعلاً
+                    const provider = providers.find(p => p.id === summary.providerId)!;
+                    const isExpanded = expandedProvider === summary.providerId;
 
                     return (
                       <div key={summary.providerId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-up" style={{animationDelay: `${(providerIndex + 4) * 0.1}s`}}>
-                        <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                        {/* Provider Header - Always Visible */}
+                        <div 
+                          className="p-4 lg:p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white cursor-pointer hover:bg-gray-100 transition-all duration-200"
+                          onClick={() => setExpandedProvider(isExpanded ? null : summary.providerId)}
+                        >
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                                <Users className="w-6 h-6 text-white" />
+                            <div className="flex items-center gap-3 lg:gap-4 flex-1 min-w-0">
+                              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Users className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                               </div>
-                              <div>
-                                <h4 className="text-xl font-bold text-gray-900">{summary.providerName}</h4>
-                                <p className="text-gray-600 text-sm">{provider.phone}</p>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-lg lg:text-xl font-bold text-gray-900 truncate">{summary.providerName}</h4>
+                                <p className="text-gray-600 text-xs lg:text-sm truncate">{provider.phone}</p>
                                 <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 mt-1 inline-block">
                                   {categories.find(c => c.id === provider.category)?.name || provider.category}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
+                            
+                            {/* Quick Stats - Desktop */}
+                            <div className="hidden lg:flex items-center gap-6">
                               <div className="text-center">
-                                <p className="text-2xl font-bold text-green-600">{summary.totalOrders}</p>
+                                <p className="text-xl lg:text-2xl font-bold text-green-600">{summary.totalOrders}</p>
                                 <p className="text-xs text-gray-500">أوردر</p>
                               </div>
                               <div className="text-center">
-                                <p className="text-2xl font-bold text-blue-600">{formatCurrency(summary.totalCost)}</p>
+                                <p className="text-xl lg:text-2xl font-bold text-blue-600">{formatCurrency(summary.totalCost)}</p>
                                 <p className="text-xs text-gray-500">إجمالي التكلفة</p>
                               </div>
                               <div className="text-center">
-                                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(summary.totalProfit)}</p>
+                                <p className="text-xl lg:text-2xl font-bold text-emerald-600">{formatCurrency(summary.totalProfit)}</p>
                                 <p className="text-xs text-gray-500">ربح الأدمن</p>
                               </div>
+                            </div>
+                            
+                            {/* Quick Stats - Mobile */}
+                            <div className="flex lg:hidden items-center gap-2">
+                              <div className="text-center">
+                                <p className="text-sm font-bold text-green-600">{summary.totalOrders}</p>
+                                <p className="text-xs text-gray-500">أوردر</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm font-bold text-emerald-600">{formatCurrency(summary.totalProfit)}</p>
+                                <p className="text-xs text-gray-500">ربح</p>
+                              </div>
+                            </div>
+                            
+                            {/* Expand/Collapse Arrow */}
+                            <div className="flex items-center gap-2 lg:gap-4">
                               <button
-                                onClick={() => handleAddOrderClick(provider)}
-                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 font-medium flex items-center gap-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddOrderClick(provider);
+                                }}
+                                className="px-3 py-1 lg:px-4 lg:py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 font-medium flex items-center gap-1 lg:gap-2 text-xs lg:text-sm"
                               >
-                                <Plus className="w-4 h-4" />
-                                إضافة أوردر
+                                <Plus className="w-3 h-3 lg:w-4 lg:h-4" />
+                                <span className="hidden sm:inline">إضافة أوردر</span>
+                                <span className="sm:hidden">إضافة</span>
                               </button>
+                              <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        {summary.totalOrders > 0 && (
-                          <div className="p-6">
+                        {/* Expanded Content */}
+                        {isExpanded && summary.totalOrders > 0 && (
+                          <div className="p-4 lg:p-6 animate-fade-in">
+                            {/* Mobile Stats Summary */}
+                            <div className="lg:hidden mb-6">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                                  <p className="text-sm font-medium text-blue-600">إجمالي التكلفة</p>
+                                  <p className="text-lg font-bold text-blue-900">{formatCurrency(summary.totalCost)}</p>
+                                </div>
+                                <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                                  <p className="text-sm font-medium text-emerald-600">ربح الأدمن</p>
+                                  <p className="text-lg font-bold text-emerald-900">{formatCurrency(summary.totalProfit)}</p>
+                                </div>
+                              </div>
+                            </div>
+
                             {/* الإحصائيات اليومية */}
                             {summary.dailyStats.length > 0 && (
                               <div className="mb-6">
-                                <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                  <BarChart className="w-5 h-5 text-blue-500" />
+                                <h5 className="text-base lg:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                  <BarChart className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500" />
                                   الإحصائيات اليومية
                                 </h5>
-                                <div className="overflow-x-auto">
+                                
+                                {/* Desktop Table */}
+                                <div className="hidden lg:block overflow-x-auto">
                                   <table className="w-full text-sm">
                                     <thead>
                                       <tr className="border-b border-gray-200 bg-gray-50">
@@ -2462,17 +2537,43 @@ function Dashboard() {
                                     </tbody>
                                   </table>
                                 </div>
+                                
+                                {/* Mobile Cards */}
+                                <div className="lg:hidden space-y-3">
+                                  {summary.dailyStats.slice(0, 5).map((daily, index) => (
+                                    <div key={daily.date} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h6 className="font-medium text-gray-900 text-sm">{formatDate(daily.date)}</h6>
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                          {daily.ordersCount} أوردر
+                                        </span>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                          <p className="text-gray-600 font-medium">إجمالي التكلفة</p>
+                                          <p className="text-gray-900 font-bold">{formatCurrency(daily.totalCost)}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-emerald-600 font-medium">ربح الأدمن</p>
+                                          <p className="text-emerald-900 font-bold">{formatCurrency(daily.totalProfit)}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
 
                             {/* الإحصائيات الشهرية */}
                             {summary.monthlyStats.length > 0 && (
                               <div className="mb-6">
-                                <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                  <PieChart className="w-5 h-5 text-purple-500" />
+                                <h5 className="text-base lg:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                  <PieChart className="w-4 h-4 lg:w-5 lg:h-5 text-purple-500" />
                                   الإحصائيات الشهرية
                                 </h5>
-                                <div className="overflow-x-auto">
+                                
+                                {/* Desktop Table */}
+                                <div className="hidden lg:block overflow-x-auto">
                                   <table className="w-full text-sm">
                                     <thead>
                                       <tr className="border-b border-gray-200 bg-gray-50">
@@ -2498,37 +2599,65 @@ function Dashboard() {
                                     </tbody>
                                   </table>
                                 </div>
+                                
+                                {/* Mobile Cards */}
+                                <div className="lg:hidden space-y-3">
+                                  {summary.monthlyStats.map((monthly, index) => (
+                                    <div key={monthly.month} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h6 className="font-medium text-gray-900 text-sm">{getMonthName(monthly.month)}</h6>
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                          {monthly.ordersCount} أوردر
+                                        </span>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                          <p className="text-gray-600 font-medium">إجمالي التكلفة</p>
+                                          <p className="text-gray-900 font-bold">{formatCurrency(monthly.totalCost)}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-emerald-600 font-medium">ربح الأدمن</p>
+                                          <p className="text-emerald-900 font-bold">{formatCurrency(monthly.totalProfit)}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
 
                             {/* تفاصيل الأوردرات الأخيرة */}
                             <div>
-                              <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-green-500" />
+                              <h5 className="text-base lg:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <Activity className="w-4 h-4 lg:w-5 lg:h-5 text-green-500" />
                                 آخر الأوردرات
                               </h5>
-                              <div className="space-y-2">
+                              <div className="space-y-2 lg:space-y-3">
                                 {orders
                                   .filter(order => order.providerId === summary.providerId)
                                   .slice(0, 5)
                                   .map((order, index) => (
                                     <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                           <DollarSign className="w-4 h-4 text-green-600" />
                                         </div>
-                                        <div>
-                                          <p className="font-medium text-gray-900">{formatCurrency(order.orderCost)}</p>
-                                          <p className="text-xs text-gray-500">{formatDate(order.orderDate)}</p>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex flex-col lg:flex-row lg:items-center lg:gap-4">
+                                            <div>
+                                              <p className="font-medium text-gray-900 text-sm lg:text-base">{formatCurrency(order.orderCost)}</p>
+                                              <p className="text-xs text-gray-500">{formatDate(order.orderDate)}</p>
+                                            </div>
+                                            <div className="lg:text-left">
+                                              <p className="font-bold text-emerald-600 text-sm lg:text-base">{formatCurrency(order.adminProfit)}</p>
+                                              <p className="text-xs text-gray-500">ربح ({order.profitPercentage}%)</p>
+                                            </div>
+                                          </div>
                                         </div>
-                                      </div>
-                                      <div className="text-left">
-                                        <p className="font-bold text-emerald-600">{formatCurrency(order.adminProfit)}</p>
-                                        <p className="text-xs text-gray-500">ربح ({order.profitPercentage}%)</p>
                                       </div>
                                       <button
                                         onClick={() => handleOrderDelete(order.id)}
-                                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                        className="p-1 lg:p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0"
                                         title="حذف الأوردر"
                                       >
                                         <Trash2 className="w-4 h-4" />
@@ -2540,12 +2669,13 @@ function Dashboard() {
                           </div>
                         )}
 
-                        {summary.totalOrders === 0 && (
-                          <div className="p-6 text-center">
-                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <DollarSign className="w-8 h-8 text-gray-400" />
+                        {/* Empty State for Provider */}
+                        {isExpanded && summary.totalOrders === 0 && (
+                          <div className="p-4 lg:p-6 text-center animate-fade-in">
+                            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <DollarSign className="w-6 h-6 lg:w-8 lg:h-8 text-gray-400" />
                             </div>
-                            <p className="text-gray-500 text-lg font-medium">لا توجد أوردرات لهذا المورد</p>
+                            <p className="text-gray-500 text-base lg:text-lg font-medium">لا توجد أوردرات لهذا المورد</p>
                             <p className="text-gray-400 text-sm mt-1">اضغط على "إضافة أوردر" لبدء تسجيل الأوردرات</p>
                           </div>
                         )}
@@ -2554,10 +2684,11 @@ function Dashboard() {
                   })}
               </div>
 
+              {/* Empty State for All Providers */}
               {providerOrderSummaries.length === 0 && (
-                <div className="text-center py-12">
-                  <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">لا توجد أوردرات حالياً</p>
+                <div className="text-center py-8 lg:py-12">
+                  <DollarSign className="w-12 h-12 lg:w-16 lg:h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-base lg:text-lg">لا توجد أوردرات حالياً</p>
                   <p className="text-gray-400 text-sm mt-2">ابدأ بإضافة أوردرات للموردين من صفحة المورّدين</p>
                 </div>
               )}

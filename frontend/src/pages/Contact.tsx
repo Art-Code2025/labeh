@@ -231,7 +231,7 @@ const Contact: React.FC = () => {
                 </div>
               </a>
               <a 
-                href="https://www.instagram.com/artc.ode39?igsh=aW4zZTM4Z2I1a29l" 
+                href="https://www.instagram.com/elsadigabualeen?igsh=MWc5aDAxeTVscHNoMA==" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-12 h-12 bg-gradient-to-br from-pink-500 to-yellow-500 rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg text-white" 
