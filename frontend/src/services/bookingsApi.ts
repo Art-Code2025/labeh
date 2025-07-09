@@ -382,9 +382,9 @@ export const bookingsAPI = {
 
   async update(id: string, bookingData: Partial<Booking>): Promise<{ message: string }> {
     try {
-      return await makeApiCall(`/bookings`, {
+      return await makeApiCall(`/bookings?id=${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ id, ...bookingData }),
+        body: JSON.stringify({ ...bookingData }),
       });
     } catch (error) {
       return await updateBookingInFirebase(id, bookingData);
