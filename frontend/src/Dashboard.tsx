@@ -1962,7 +1962,12 @@ function Dashboard() {
                               </button> */}
                               {/* زر التعديل - يعمل في إدارة الحجوزات */}
                               <button
-                                onClick={() => handleBookingEdit(booking)}
+                                onClick={() => {
+                                  setActiveTab('bookings');
+                                  setNewBookingsCount(0);
+                                  // افتح المودال بعد التأكد من التاب
+                                  setTimeout(() => handleBookingEdit(booking), 0);
+                                }}
                                 className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
                               >
                                 <Edit className="w-3 h-3" />
@@ -2461,7 +2466,12 @@ function Dashboard() {
                               </button> */}
                               {/* زر التعديل - يعمل في إدارة الحجوزات */}
                               <button
-                                onClick={() => handleBookingEdit(booking)}
+                                onClick={() => {
+                                  setActiveTab('bookings');
+                                  setNewBookingsCount(0);
+                                  // افتح المودال بعد التأكد من التاب
+                                  setTimeout(() => handleBookingEdit(booking), 0);
+                                }}
                                 className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
                               >
                                 <Edit className="w-3 h-3" />
