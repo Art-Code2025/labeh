@@ -1152,6 +1152,8 @@ function Dashboard() {
         // التعامل مع الحقول الخاصة
         if (booking.customAnswers) {
           Object.keys(booking.customAnswers).forEach(key => {
+            // إذا كان هذا المفتاح موجودًا بالفعل فى customAnswersWithQuestions فتجاهله لتجنب التكرار
+            if (booking.customAnswersWithQuestions && booking.customAnswersWithQuestions[key]) return;
             dynamicFormData[`customAnswers_${key}`] = booking.customAnswers![key];
           });
         }
