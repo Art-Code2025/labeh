@@ -381,14 +381,8 @@ export const bookingsAPI = {
   },
 
   async update(id: string, bookingData: Partial<Booking>): Promise<{ message: string }> {
-    try {
-      return await makeApiCall(`/bookings?id=${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ ...bookingData }),
-      });
-    } catch (error) {
-      return await updateBookingInFirebase(id, bookingData);
-    }
+    // مباشرة إلى Firebase لتجنب خطأ 405 من الـ API
+    return await updateBookingInFirebase(id, bookingData);
   },
 
   async delete(id: string): Promise<{ message: string }> {
