@@ -168,7 +168,7 @@ function Dashboard() {
   const [showProviderModalForm, setShowProviderModalForm] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   
-  // Booking edit modal states - جديد
+  // Booking edit modal states - متاح فقط في إدارة الحجوزات
   const [showBookingEditModal, setShowBookingEditModal] = useState(false);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   
@@ -239,12 +239,15 @@ function Dashboard() {
   // Load data on mount and when activeTab changes
   useEffect(() => {
     loadData(true); // `true` to reset data
-    if (activeTab === 'bookings' || activeTab === 'overview') {
+    
+    // 🔧 بدء الـ real-time فقط للصفحة الرئيسية، مش لإدارة الحجوزات
+    if (activeTab === 'overview') {
       startRealTimeBookings();
     } else {
-      // إيقاف real-time polling عند الخروج من الحجوزات أو نظرة عامة
+      // إيقاف real-time polling عند الخروج من الصفحة الرئيسية
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     }
     
@@ -473,44 +476,15 @@ function Dashboard() {
         
         lastBookingIdsRef.current = currentBookingIds;
         
-        // 🔧 إصلاح مشكلة إعادة كتابة البيانات المحدثة محلياً
-        // بدلاً من إعادة كتابة كل البيانات، سنحافظ على التحديثات المحلية
-        setBookings(prevBookings => {
-          const now = new Date().getTime();
-          const recentlyUpdatedIds = new Set<string>();
-          
-          // البحث عن الحجوزات التي تم تحديثها مؤخراً (خلال آخر 10 ثواني)
-          prevBookings.forEach(booking => {
-            if (booking.updatedAt) {
-              const updatedTime = new Date(booking.updatedAt).getTime();
-              if (now - updatedTime < 10000) { // أقل من 10 ثواني
-                recentlyUpdatedIds.add(booking.id);
-              }
-            }
-          });
-          
-          // دمج البيانات: استخدام البيانات المحلية للحجوزات المحدثة مؤخراً
-          const sortedRealTimeBookings = newBookings.sort((a, b) => {
-            const dateA = new Date(a.createdAt || 0).getTime();
-            const dateB = new Date(b.createdAt || 0).getTime();
-            return dateB - dateA; // الأحدث أولاً
-          });
-          
-          // إنشاء قائمة مدمجة
-          const mergedBookings = sortedRealTimeBookings.map(serverBooking => {
-            if (recentlyUpdatedIds.has(serverBooking.id)) {
-              // استخدام البيانات المحلية للحجوزات المحدثة مؤخراً
-              const localBooking = prevBookings.find(b => b.id === serverBooking.id);
-              if (localBooking) {
-                console.log(`🔄 [Dashboard] الحفاظ على التحديث المحلي للحجز ${serverBooking.id}`);
-                return localBooking;
-              }
-            }
-            return serverBooking;
-          });
-          
-          return mergedBookings;
+        // 🔧 تبسيط الـ real-time للصفحة الرئيسية (بدون تعديل)
+        // ترتيب الحجوزات من الأحدث إلى الأقدم
+        const sortedRealTimeBookings = newBookings.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA; // الأحدث أولاً
         });
+        
+        setBookings(sortedRealTimeBookings);
       } catch (error) {
         console.error('❌ [Dashboard] خطأ في جلب الحجوزات الجديدة:', error);
       }
@@ -1960,14 +1934,6 @@ function Dashboard() {
                             </button>
                             
                             <div className="flex gap-2 flex-1">
-                              <button
-                                onClick={() => handleBookingEdit(booking)}
-                                className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
-                              >
-                                <Edit className="w-3 h-3" />
-                                تعديل
-                              </button>
-                              
                               {booking.status === 'pending' && (
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
@@ -1985,6 +1951,15 @@ function Dashboard() {
                                   إكمال
                                 </button>
                               )}
+                              
+                              {/* رابط للذهاب لإدارة الحجوزات للتعديل */}
+                              <button
+                                onClick={() => setActiveTab('bookings')}
+                                className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
+                              >
+                                <Edit className="w-3 h-3" />
+                                <span className="hidden sm:inline">تعديل</span>
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -2227,15 +2202,15 @@ function Dashboard() {
             </div>
           )}
 
-          {/* Enhanced Bookings Tab */}
+          {/* Enhanced Bookings Tab - بدون Real-time */}
           {activeTab === 'bookings' && (
             <div className="animate-fade-in">
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
                   <h3 className="text-2xl font-bold text-gray-900">الحجوزات</h3>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm animate-pulse">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
-                    <span className="hidden sm:inline">تحديث مباشر</span>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                    <RefreshCw className="w-4 h-4" />
+                    <span className="hidden sm:inline">بيانات ثابتة</span>
                   </div>
                 </div>
                 <button
@@ -2245,6 +2220,23 @@ function Dashboard() {
                   <RefreshCw className="w-4 h-4" />
                   تحديث
                 </button>
+              </div>
+
+              {/* رسالة توضيحية */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <AlertCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h5 className="font-bold text-blue-900 mb-1">وضع التعديل المحسن</h5>
+                    <p className="text-blue-800 text-sm">
+                      • هذه الصفحة للتعديل المتقدم للحجوزات بدون تحديث تلقائي<br/>
+                      • اضغط "تحديث" للحصول على أحدث البيانات<br/>
+                      • للتحديث المباشر، راجع الصفحة الرئيسية
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
@@ -2447,25 +2439,17 @@ function Dashboard() {
                           <div className="flex flex-col sm:flex-row gap-2">
                             <button
                               onClick={() => openProviderModal(booking)}
-                              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
+                              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1 flex-1"
                             >
                               <Send className="w-3 h-3" />
                               إرسال للمورد
                             </button>
                             
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleBookingEdit(booking)}
-                                className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
-                              >
-                                <Edit className="w-3 h-3" />
-                                <span className="hidden sm:inline">تعديل</span>
-                              </button>
-                              
+                            <div className="flex gap-2 flex-1">
                               {booking.status === 'pending' && (
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
-                                  className="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs rounded-lg transition-colors"
+                                  className="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs rounded-lg transition-colors whitespace-nowrap"
                                 >
                                   تأكيد
                                 </button>
@@ -2474,11 +2458,20 @@ function Dashboard() {
                               {booking.status === 'confirmed' && (
                                 <button
                                   onClick={() => handleBookingStatusUpdate(booking.id, 'completed')}
-                                  className="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
+                                  className="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors whitespace-nowrap"
                                 >
                                   إكمال
                                 </button>
                               )}
+                              
+                              {/* رابط للذهاب لإدارة الحجوزات للتعديل */}
+                              <button
+                                onClick={() => setActiveTab('bookings')}
+                                className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
+                              >
+                                <Edit className="w-3 h-3" />
+                                <span className="hidden sm:inline">تعديل</span>
+                              </button>
                             </div>
                           </div>
                         </div>
