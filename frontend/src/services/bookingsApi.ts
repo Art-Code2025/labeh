@@ -203,14 +203,52 @@ export const createBooking = async (bookingData: any): Promise<{id: string}> => 
 
 export const updateBooking = async (bookingId: string, status: Booking['status']) => {
   try {
+    console.log(`🔄 [bookingsApi] تحديث حالة الحجز ${bookingId} إلى ${status}`);
+    
+    // التحقق من صحة البيانات
+    if (!bookingId || !bookingId.trim()) {
+      console.error('❌ [bookingsApi] معرف الحجز مطلوب');
+      throw new Error('معرف الحجز مطلوب');
+    }
+
+    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled', 'in_progress'];
+    if (!validStatuses.includes(status)) {
+      console.error('❌ [bookingsApi] حالة الحجز غير صحيحة:', status);
+      throw new Error('حالة الحجز غير صحيحة');
+    }
+
     const bookingRef = doc(db, 'bookings', bookingId);
-    await updateDoc(bookingRef, {
+    const updateData = {
       status,
       updatedAt: new Date().toISOString()
+    };
+
+    console.log(`📦 [bookingsApi] البيانات المراد تحديثها:`, updateData);
+
+    // محاولة التحديث مع timeout
+    const updatePromise = updateDoc(bookingRef, updateData);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('انتهت مهلة التحديث')), 10000); // 10 ثواني
     });
+
+    await Promise.race([updatePromise, timeoutPromise]);
+
+    console.log(`✅ [bookingsApi] تم تحديث الحجز بنجاح`);
     return true;
-  } catch (error) {
-    console.error('Error updating booking:', error);
+  } catch (error: any) {
+    console.error('❌ [bookingsApi] خطأ في تحديث الحجز:', error);
+    
+    // معالجة أنواع الأخطاء المختلفة
+    if (error.code === 'not-found') {
+      console.error('❌ [bookingsApi] الحجز غير موجود');
+    } else if (error.code === 'permission-denied') {
+      console.error('❌ [bookingsApi] ليس لديك صلاحية لتحديث هذا الحجز');
+    } else if (error.message?.includes('انتهت مهلة التحديث')) {
+      console.error('❌ [bookingsApi] انتهت مهلة التحديث');
+    } else {
+      console.error('❌ [bookingsApi] خطأ غير متوقع:', error.message);
+    }
+    
     return false;
   }
 };

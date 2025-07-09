@@ -472,13 +472,45 @@ function Dashboard() {
         }
         
         lastBookingIdsRef.current = currentBookingIds;
-        // ترتيب الحجوزات من الأحدث إلى الأقدم
-        const sortedRealTimeBookings = newBookings.sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0).getTime();
-          const dateB = new Date(b.createdAt || 0).getTime();
-          return dateB - dateA; // الأحدث أولاً
+        
+        // 🔧 إصلاح مشكلة إعادة كتابة البيانات المحدثة محلياً
+        // بدلاً من إعادة كتابة كل البيانات، سنحافظ على التحديثات المحلية
+        setBookings(prevBookings => {
+          const now = new Date().getTime();
+          const recentlyUpdatedIds = new Set<string>();
+          
+          // البحث عن الحجوزات التي تم تحديثها مؤخراً (خلال آخر 10 ثواني)
+          prevBookings.forEach(booking => {
+            if (booking.updatedAt) {
+              const updatedTime = new Date(booking.updatedAt).getTime();
+              if (now - updatedTime < 10000) { // أقل من 10 ثواني
+                recentlyUpdatedIds.add(booking.id);
+              }
+            }
+          });
+          
+          // دمج البيانات: استخدام البيانات المحلية للحجوزات المحدثة مؤخراً
+          const sortedRealTimeBookings = newBookings.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA; // الأحدث أولاً
+          });
+          
+          // إنشاء قائمة مدمجة
+          const mergedBookings = sortedRealTimeBookings.map(serverBooking => {
+            if (recentlyUpdatedIds.has(serverBooking.id)) {
+              // استخدام البيانات المحلية للحجوزات المحدثة مؤخراً
+              const localBooking = prevBookings.find(b => b.id === serverBooking.id);
+              if (localBooking) {
+                console.log(`🔄 [Dashboard] الحفاظ على التحديث المحلي للحجز ${serverBooking.id}`);
+                return localBooking;
+              }
+            }
+            return serverBooking;
+          });
+          
+          return mergedBookings;
         });
-        setBookings(sortedRealTimeBookings);
       } catch (error) {
         console.error('❌ [Dashboard] خطأ في جلب الحجوزات الجديدة:', error);
       }
@@ -564,6 +596,19 @@ function Dashboard() {
   // Booking handlers
   const handleBookingStatusUpdate = async (bookingId: string, status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'in_progress') => {
     try {
+      console.log(`🔄 [Dashboard] تحديث حالة الحجز ${bookingId} إلى ${status}`);
+      
+      // حفظ الحالة الأصلية للتراجع في حالة الفشل
+      const originalBooking = bookings.find(b => b.id === bookingId);
+      if (!originalBooking) {
+        console.error('❌ [Dashboard] الحجز غير موجود');
+        toast.error('❌ الحجز غير موجود');
+        return;
+      }
+      
+      const originalStatus = originalBooking.status;
+      console.log(`📊 [Dashboard] الحالة الأصلية: ${originalStatus} -> الحالة الجديدة: ${status}`);
+      
       // تحديث الـ local state فورياً للاستجابة السريعة
       setBookings(prevBookings => 
         prevBookings.map(booking => 
@@ -573,7 +618,7 @@ function Dashboard() {
         )
       );
 
-      // إرسال التحديث للقاعدة
+      // إرسال التحديث للقاعدة مع معالجة أفضل للأخطاء
       const success = await updateBooking(bookingId, status);
       
       if (success) {
@@ -586,18 +631,36 @@ function Dashboard() {
           in_progress: 'تم تعديل الحالة إلى قيد التنفيذ'
         };
         
+        console.log(`✅ [Dashboard] تم تحديث الحالة بنجاح: ${statusMessages[status]}`);
         toast.success(`✅ ${statusMessages[status]}`);
       } else {
-        // في حالة الفشل، إعادة البيانات للحالة الأصلية
+        // في حالة الفشل، التراجع للحالة الأصلية
+        console.log(`❌ [Dashboard] فشل في تحديث الحالة، التراجع للحالة الأصلية: ${originalStatus}`);
+        setBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking.id === bookingId 
+              ? { ...booking, status: originalStatus, updatedAt: new Date().toISOString() }
+              : booking
+          )
+        );
         toast.error('❌ فشل في تحديث حالة الحجز');
-        await loadData(); // إعادة تحميل البيانات للتصحيح
       }
     } catch (error) {
-      console.error('Error updating booking status:', error);
-      toast.error('❌ حدث خطأ أثناء تحديث حالة الحجز');
+      console.error('❌ [Dashboard] خطأ أثناء تحديث حالة الحجز:', error);
       
-      // في حالة الخطأ، إعادة تحميل البيانات للتصحيح
-      await loadData();
+      // في حالة الخطأ، التراجع للحالة الأصلية
+      const originalBooking = bookings.find(b => b.id === bookingId);
+      if (originalBooking) {
+        setBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking.id === bookingId 
+              ? { ...booking, status: originalBooking.status, updatedAt: new Date().toISOString() }
+              : booking
+          )
+        );
+      }
+      
+      toast.error('❌ حدث خطأ أثناء تحديث حالة الحجز');
     }
   };
 
@@ -1076,6 +1139,23 @@ function Dashboard() {
       };
     }, [isOpen]);
 
+    // إضافة التحكم بالـ ESC key
+    useEffect(() => {
+      const handleEscKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && isOpen) {
+          onClose();
+        }
+      };
+
+      if (isOpen) {
+        document.addEventListener('keydown', handleEscKey);
+      }
+
+      return () => {
+        document.removeEventListener('keydown', handleEscKey);
+      };
+    }, [isOpen, onClose]);
+
     useEffect(() => {
       if (booking) {
         // إنشاء form data ديناميكي من بيانات الحجز
@@ -1310,8 +1390,20 @@ function Dashboard() {
     if (!isOpen || !booking) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in modal-overlay" dir="rtl">
-        <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar-dark shadow-2xl animate-slide-up modal-content">
+      <div 
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in modal-overlay" 
+        dir="rtl"
+        onClick={(e) => {
+          // إغلاق الـ modal عند النقر على الـ overlay
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div 
+          className="bg-gray-800 border border-gray-700 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar-dark shadow-2xl animate-slide-up modal-content"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="sticky top-0 bg-gray-800 pb-4 mb-4 border-b border-gray-700 z-10">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -1319,7 +1411,10 @@ function Dashboard() {
                 تعديل الحجز
               </h3>
               <button 
-                onClick={onClose}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
                 className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200 transform hover:scale-110"
               >
                 <X className="w-5 h-5" />
@@ -1339,7 +1434,10 @@ function Dashboard() {
 
           <div className="flex gap-3 mt-6 pt-4 border-t border-gray-700">
             <button
-              onClick={handleSave}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSave();
+              }}
               disabled={saving}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
@@ -1357,7 +1455,10 @@ function Dashboard() {
             </button>
             
             <button
-              onClick={handleDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
               disabled={deleting}
               className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
