@@ -1971,7 +1971,7 @@ function Dashboard() {
                                 className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
                               >
                                 <Edit className="w-3 h-3" />
-                                <span className="hidden sm:inline">تعديل</span>
+                                <span>تعديل</span>
                               </button>
                             </div>
                           </div>
@@ -2475,7 +2475,7 @@ function Dashboard() {
                                 className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
                               >
                                 <Edit className="w-3 h-3" />
-                                <span className="hidden sm:inline">تعديل</span>
+                                <span>تعديل</span>
                               </button>
                             </div>
                           </div>
