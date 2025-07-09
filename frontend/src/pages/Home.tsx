@@ -1346,7 +1346,7 @@ const Home: React.FC = () => {
                 <p className="flex items-center justify-center lg:justify-start gap-1">
                   تم التطوير بواسطة 
                   <a 
-                    href="https://www.instagram.com/artc.ode39?igsh=aW4zZTM4Z2I1a29l" 
+                    href="https://www.instagram.com/elsadigabualeen?igsh=MWc5aDAxeTVscHNoMA==" 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-300 flex items-center gap-1 hover:underline"

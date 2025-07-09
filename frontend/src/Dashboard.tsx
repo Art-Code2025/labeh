@@ -53,10 +53,10 @@ import AddOrderModal from './components/AddOrderModal';
 // Add custom scrollbar styles and animations
 const customScrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(75, 85, 99, 0.3);
+    background: rgba(55, 65, 81, 0.3);
     border-radius: 10px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -65,6 +65,21 @@ const customScrollbarStyles = `
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(59, 130, 246, 0.8);
+  }
+
+  .custom-scrollbar-dark::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-scrollbar-dark::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 10px;
+  }
+  .custom-scrollbar-dark::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.7);
+    border-radius: 10px;
+  }
+  .custom-scrollbar-dark::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.9);
   }
 
   @keyframes fade-in {
@@ -98,6 +113,16 @@ const customScrollbarStyles = `
 
   .animate-float {
     animation: float 3s ease-in-out infinite;
+  }
+
+  /* Modal specific styles */
+  .modal-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .modal-content {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
 `;
 
@@ -537,26 +562,42 @@ function Dashboard() {
   };
 
   // Booking handlers
-  const handleBookingStatusUpdate = async (bookingId: string, status: 'pending' | 'confirmed' | 'completed' | 'cancelled') => {
+  const handleBookingStatusUpdate = async (bookingId: string, status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'in_progress') => {
     try {
+      // تحديث الـ local state فورياً للاستجابة السريعة
+      setBookings(prevBookings => 
+        prevBookings.map(booking => 
+          booking.id === bookingId 
+            ? { ...booking, status, updatedAt: new Date().toISOString() }
+            : booking
+        )
+      );
+
+      // إرسال التحديث للقاعدة
       const success = await updateBooking(bookingId, status);
+      
       if (success) {
-        // Update local state
-        setBookings(prevBookings => 
-          prevBookings.map(booking => 
-            booking.id === bookingId 
-              ? { ...booking, status, updatedAt: new Date().toISOString() }
-              : booking
-          )
-        );
+        // رسالة نجاح حسب الحالة
+        const statusMessages = {
+          pending: 'تم تعديل الحالة إلى معلق',
+          confirmed: 'تم تأكيد الحجز',
+          completed: 'تم إكمال الحجز',
+          cancelled: 'تم إلغاء الحجز',
+          in_progress: 'تم تعديل الحالة إلى قيد التنفيذ'
+        };
         
-        toast.success(`تم ${status === 'confirmed' ? 'تأكيد' : status === 'completed' ? 'إكمال' : 'إلغاء'} الحجز بنجاح`);
+        toast.success(`✅ ${statusMessages[status]}`);
       } else {
-        toast.error('فشل في تحديث حالة الحجز');
+        // في حالة الفشل، إعادة البيانات للحالة الأصلية
+        toast.error('❌ فشل في تحديث حالة الحجز');
+        await loadData(); // إعادة تحميل البيانات للتصحيح
       }
     } catch (error) {
       console.error('Error updating booking status:', error);
-      toast.error('حدث خطأ أثناء تحديث حالة الحجز');
+      toast.error('❌ حدث خطأ أثناء تحديث حالة الحجز');
+      
+      // في حالة الخطأ، إعادة تحميل البيانات للتصحيح
+      await loadData();
     }
   };
 
@@ -1022,6 +1063,19 @@ function Dashboard() {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
+    // منع scroll للـ body عند فتح الـ modal
+    useEffect(() => {
+      if (isOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'unset';
+      }
+      
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
+    }, [isOpen]);
+
     useEffect(() => {
       if (booking) {
         // إنشاء form data ديناميكي من بيانات الحجز
@@ -1105,11 +1159,24 @@ function Dashboard() {
         if (Object.keys(customAnswersWithQuestions).length > 0) {
           updateData.customAnswersWithQuestions = customAnswersWithQuestions;
         }
+
+        // تحديث الـ local state قبل الحفظ لـ immediate feedback
+        setBookings(prevBookings => 
+          prevBookings.map(b => 
+            b.id === booking.id 
+              ? { ...b, ...updateData, updatedAt: new Date().toISOString() }
+              : b
+          )
+        );
         
         await onSave(booking.id, updateData);
+        toast.success('✅ تم تحديث الحجز بنجاح');
         onClose();
       } catch (error) {
         console.error('Error saving booking:', error);
+        toast.error('❌ فشل في تحديث الحجز');
+        // إعادة تحميل البيانات في حالة الخطأ
+        await loadData();
       } finally {
         setSaving(false);
       }
@@ -1122,12 +1189,18 @@ function Dashboard() {
       setDeleting(true);
       try {
         await onDelete(booking.id);
+        toast.success('✅ تم حذف الحجز بنجاح');
         onClose();
       } catch (error) {
         console.error('Error deleting booking:', error);
+        toast.error('❌ فشل في حذف الحجز');
       } finally {
         setDeleting(false);
       }
+    };
+
+    const handleFieldChange = (key: string, value: any) => {
+      setFormData((prev: any) => ({ ...prev, [key]: value }));
     };
 
     const renderField = (key: string, value: any) => {
@@ -1135,12 +1208,12 @@ function Dashboard() {
       
       if (key === 'status') {
         return (
-          <div key={key}>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+          <div key={key} className="animate-slide-up">
+            <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
             <select
               value={formData[key] || ''}
-              onChange={(e) => setFormData((prev: any) => ({ ...prev, [key]: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onChange={(e) => handleFieldChange(key, e.target.value)}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             >
               <option value="pending">معلق</option>
               <option value="confirmed">مؤكد</option>
@@ -1154,41 +1227,43 @@ function Dashboard() {
       
       if (key === 'urgentDelivery') {
         return (
-          <div key={key} className="flex items-center gap-2">
+          <div key={key} className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-xl animate-slide-up">
             <input
               type="checkbox"
               id={key}
               checked={!!formData[key]}
-              onChange={(e) => setFormData((prev: any) => ({ ...prev, [key]: e.target.checked }))}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              onChange={(e) => handleFieldChange(key, e.target.checked)}
+              className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2 bg-gray-700"
             />
-            <label htmlFor={key} className="text-sm font-medium text-gray-700">{label}</label>
+            <label htmlFor={key} className="text-sm font-medium text-gray-300 cursor-pointer">{label}</label>
           </div>
         );
       }
       
       if (key === 'notes' || key === 'serviceDetails' || key === 'issueDescription') {
         return (
-          <div key={key}>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+          <div key={key} className="animate-slide-up">
+            <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
             <textarea
               value={formData[key] || ''}
-              onChange={(e) => setFormData((prev: any) => ({ ...prev, [key]: e.target.value }))}
+              onChange={(e) => handleFieldChange(key, e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+              placeholder={`اكتب ${label}...`}
             />
           </div>
         );
       }
       
       return (
-        <div key={key}>
-          <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+        <div key={key} className="animate-slide-up">
+          <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
           <input
             type={key.includes('email') ? 'email' : key.includes('phone') || key.includes('Phone') ? 'tel' : 'text'}
             value={formData[key] || ''}
-            onChange={(e) => setFormData((prev: any) => ({ ...prev, [key]: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={(e) => handleFieldChange(key, e.target.value)}
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+            placeholder={`اكتب ${label}...`}
           />
         </div>
       );
@@ -1235,26 +1310,38 @@ function Dashboard() {
     if (!isOpen || !booking) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
-        <div className="bg-white rounded-2xl p-8 max-w-2xl w-full border border-gray-200 relative max-h-[90vh] overflow-y-auto">
-          <button onClick={onClose} className="absolute top-3 left-3 text-gray-400 hover:text-gray-600">
-            <X className="w-5 h-5" />
-          </button>
-          
-          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <Edit className="w-5 h-5 text-blue-500" />
-            تعديل الحجز - {booking.serviceName}
-          </h3>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in modal-overlay" dir="rtl">
+        <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar-dark shadow-2xl animate-slide-up modal-content">
+          <div className="sticky top-0 bg-gray-800 pb-4 mb-4 border-b border-gray-700 z-10">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Edit className="w-5 h-5 text-blue-400" />
+                تعديل الحجز
+              </h3>
+              <button 
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200 transform hover:scale-110"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mt-2 p-3 bg-blue-900/20 rounded-xl border border-blue-800/30">
+              <p className="text-blue-300 text-sm font-medium">{booking.serviceName}</p>
+              <p className="text-blue-400 text-xs mt-1">
+                العميل: {booking.fullName || booking.customerName || 'غير محدد'}
+              </p>
+            </div>
+          </div>
 
-          <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="space-y-4">
             {Object.keys(formData).map(key => renderField(key, formData[key]))}
           </div>
 
-          <div className="flex gap-3 mt-6">
+          <div className="flex gap-3 mt-6 pt-4 border-t border-gray-700">
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               {saving ? (
                 <>
@@ -1272,7 +1359,7 @@ function Dashboard() {
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               {deleting ? (
                 <>
@@ -1300,30 +1387,58 @@ function Dashboard() {
 
   const handleBookingSave = async (bookingId: string, data: Partial<Booking>) => {
     try {
+      // تحديث الـ local state فورياً للاستجابة السريعة
+      setBookings(prevBookings => 
+        prevBookings.map(booking => 
+          booking.id === bookingId 
+            ? { ...booking, ...data, updatedAt: new Date().toISOString() }
+            : booking
+        )
+      );
+
+      // إرسال التحديث للقاعدة
       await bookingsAPI.update(bookingId, {
         ...data,
         updatedAt: new Date().toISOString()
       });
-      toast.success('✅ تم تحديث الحجز بنجاح');
+
+      // إغلاق الـ modal
       setShowBookingEditModal(false);
       setEditingBooking(null);
-      await loadData(); // إعادة تحميل البيانات
+      
+      // عدم إعادة تحميل البيانات لأن الـ local state محدث بالفعل
+      // await loadData(); // تم إزالة هذا السطر للسرعة
     } catch (error) {
       console.error('Error updating booking:', error);
       toast.error('❌ فشل في تحديث الحجز');
+      
+      // في حالة الخطأ، إعادة تحميل البيانات للتصحيح
+      await loadData();
     }
   };
 
   const handleBookingDelete = async (bookingId: string) => {
     try {
+      // تحديث الـ local state فورياً - إزالة الحجز
+      setBookings(prevBookings => 
+        prevBookings.filter(booking => booking.id !== bookingId)
+      );
+
+      // إرسال طلب الحذف للقاعدة
       await bookingsAPI.delete(bookingId);
-      toast.success('✅ تم حذف الحجز بنجاح');
+      
+      // إغلاق الـ modal
       setShowBookingEditModal(false);
       setEditingBooking(null);
-      await loadData(); // إعادة تحميل البيانات
+      
+      // عدم إعادة تحميل البيانات لأن الـ local state محدث بالفعل
+      // await loadData(); // تم إزالة هذا السطر للسرعة
     } catch (error) {
       console.error('Error deleting booking:', error);
       toast.error('❌ فشل في حذف الحجز');
+      
+      // في حالة الخطأ، إعادة تحميل البيانات للتصحيح
+      await loadData();
     }
   };
 
